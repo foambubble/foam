@@ -105,15 +105,8 @@ export {
   dailyNotePattern,
   dailyNoteRule,
   defaultDailyNotePath,
-  ignoredDailyNoteSettingsNotice,
-  legacyDailyNoteFrontmatter,
-  legacyDailyNoteTemplate,
 } from './templates/daily-note-location';
-export type {
-  DailyNoteRule,
-  IgnoredDailyNoteSettingsFix,
-  IgnoredDailyNoteSettingsNotice,
-} from './templates/daily-note-location';
+export type { DailyNoteRule } from './templates/daily-note-location';
 export { prepareDailyNote } from './templates/daily-note-creation';
 export type { DailyNoteCreation } from './templates/daily-note-creation';
 
@@ -174,11 +167,7 @@ export type { RenderContext } from './query/render-context';
 export { createRenderContext } from './query/render-context';
 
 // Config
-export type {
-  IFoamConfig,
-  IFoamConfigSource,
-  LegacyDailyNoteSettings,
-} from './config';
+export type { IFoamConfig, IFoamConfigSource } from './config';
 export { Config, DefaultFoamConfig, cascadeFoamConfig } from './config';
 export {
   ALWAYS_EXCLUDED,
@@ -189,7 +178,6 @@ export {
 export { Logger, BaseLogger, ConsoleLogger, NoOpLogger } from './utils/log';
 export type { ILogger, LogLevel, LogLevelThreshold } from './utils/log';
 export { toSlug } from './utils/slug';
-export { convertDateformatToDayjs } from './utils/date-format';
 export { calendarDate, parseIsoDate, formatIsoDate } from './utils/date';
 export { isSubsequence } from './utils/string';
 export { extractHashtags, extractTagsFromProp, HASHTAG_REGEX } from './utils/hashtags';

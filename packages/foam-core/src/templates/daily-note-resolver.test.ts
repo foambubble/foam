@@ -1,12 +1,7 @@
 import { URI } from '../model/uri';
 import { FoamGraph } from '../model/graph';
-import { FoamError } from '../common/errors';
-import { LegacyDailyNoteSettings } from '../config';
 import { resolveDailyNote } from './daily-note-resolver';
-import { legacyDailyNoteTemplate } from './daily-note-location';
 import { createTestNote, createTestWorkspace } from '../../test/test-utils';
-
-const NO_SETTINGS: LegacyDailyNoteSettings = {};
 
 function makeReadFile(files: Record<string, string>) {
   return async (uri: URI): Promise<string> => {
@@ -18,10 +13,8 @@ function makeReadFile(files: Record<string, string>) {
   };
 }
 
-function makeFoam(...roots: URI[]) {
-  const workspace = createTestWorkspace(
-    roots.length > 0 ? roots : [URI.file('/workspace')]
-  );
+function makeFoam(workspaceRoot = URI.file('/workspace')) {
+  const workspace = createTestWorkspace([workspaceRoot]);
   const graph = new FoamGraph(workspace);
   return { workspace, graph } as any;
 }
@@ -44,8 +37,7 @@ foam_template:
       date,
       templateUri,
       foam,
-      readFile,
-      NO_SETTINGS
+      readFile
     );
 
     expect(result.filepath.path).toContain('2024-01-17');
@@ -63,8 +55,7 @@ foam_template:
       date,
       templateUri,
       foam,
-      readFile,
-      NO_SETTINGS
+      readFile
     );
 
     expect(result.filepath.toFsPath()).toBe(
@@ -79,8 +70,7 @@ foam_template:
       date,
       undefined,
       foam,
-      makeReadFile({}),
-      NO_SETTINGS
+      makeReadFile({})
     );
 
     expect(result.filepath.toFsPath()).toBe(
@@ -88,129 +78,6 @@ foam_template:
     );
     expect(result.content).toBe('# 2024-01-17\n');
   });
-
-  it('refuses while openDailyNote settings it no longer reads would have placed the note, saying how to keep them', async () => {
-    const settings = { directory: 'diary', titleFormat: 'fullDate' };
-
-    const result = resolveDailyNote(
-      date,
-      undefined,
-      makeFoam(),
-      makeReadFile({}),
-      settings
-    );
-
-    await expect(result).rejects.toThrow(FoamError);
-    await expect(result).rejects.toMatchObject({ code: 'invalid_input' });
-    await expect(result).rejects.toThrow(
-      /foam\.openDailyNote\.directory and foam\.openDailyNote\.titleFormat are no longer used/
-    );
-    await expect(result).rejects.toThrow(
-      legacyDailyNoteTemplate(settings, [URI.file('/workspace')])
-    );
-  });
-
-  it('creates the note as usual when the openDailyNote settings spell out what Foam does without them', async () => {
-    const result = await resolveDailyNote(
-      date,
-      undefined,
-      makeFoam(),
-      makeReadFile({}),
-      { directory: 'journal', filenameFormat: 'yyyy-mm-dd', fileExtension: 'md' }
-    );
-
-    expect(result.filepath.toFsPath()).toBe(
-      URI.file('/workspace/journal/2024-01-17.md').toFsPath()
-    );
-    expect(result.content).toBe('# 2024-01-17\n');
-  });
-
-  it('refuses without offering a template while the openDailyNote settings put daily notes outside the workspace, which a template cannot reach', async () => {
-    const result = resolveDailyNote(
-      date,
-      undefined,
-      makeFoam(),
-      makeReadFile({}),
-      { directory: '/home/me/diary' }
-    );
-
-    await expect(result).rejects.toThrow(
-      'foam.openDailyNote.directory is no longer used. A daily note template cannot keep daily notes outside the workspace, where foam.openDailyNote.directory puts them.'
-    );
-    await expect(result).rejects.not.toThrow('foam_template');
-  });
-
-  it('refuses while the openDailyNote settings would have placed the note from a template without a filepath, naming the filepath to add', async () => {
-    const templateUri = URI.file('/workspace/.foam/templates/daily-note.md');
-    const readFile = makeReadFile({ [templateUri.toFsPath()]: '# Day\n' });
-
-    const result = resolveDailyNote(date, templateUri, makeFoam(), readFile, {
-      fileExtension: 'txt',
-      titleFormat: 'fullDate',
-    });
-
-    await expect(result).rejects.toThrow(
-      /foam\.openDailyNote\.fileExtension is no longer used/
-    );
-    await expect(result).rejects.toThrow(
-      "filepath: '/journal/${FOAM_DATE_FORMAT:YYYY-MM-DD}.txt'"
-    );
-  });
-
-  it('creates the note where and as the openDailyNote settings did, from the template that reproduces them', async () => {
-    const templateUri = URI.file('/workspace/.foam/templates/daily-note.md');
-    const readFile = makeReadFile({
-      [templateUri.toFsPath()]: legacyDailyNoteTemplate(
-        {
-          directory: 'diary',
-          filenameFormat: 'dd-mm-yyyy',
-          fileExtension: 'markdown',
-          titleFormat: 'fullDate',
-        },
-        [URI.file('/workspace')]
-      ),
-    });
-
-    const result = await resolveDailyNote(
-      date,
-      templateUri,
-      makeFoam(),
-      readFile,
-      NO_SETTINGS
-    );
-
-    expect(result.filepath.toFsPath()).toBe(
-      URI.file('/workspace/diary/17-01-2024.markdown').toFsPath()
-    );
-    expect(result.content).toBe('# Wednesday, January 17, 2024\n');
-  });
-
-  // Where the old writer put a note for each directory, against where the
-  // template built from it puts one
-  it.each([
-    ['an absolute directory inside the workspace', '/workspace/diary', [URI.file('/workspace')], '/workspace/diary/2024-01-17.md'],
-    ['a directory named like the single root', 'journal', [URI.file('/home/me/journal')], '/home/me/journal/journal/2024-01-17.md'],
-    ['a directory in a root other than the first', 'diary/daily', [URI.file('/ws/notes'), URI.file('/ws/diary')], '/ws/diary/daily/2024-01-17.md'],
-    ['a directory in the first of several roots', 'daily', [URI.file('/ws/notes'), URI.file('/ws/diary')], '/ws/notes/daily/2024-01-17.md'],
-  ])(
-    'creates the note where the openDailyNote settings did, from the template that reproduces them, for %s',
-    async (_, directory, roots, expected) => {
-      const templateUri = roots[0].joinPath('.foam', 'templates', 'daily-note.md');
-      const readFile = makeReadFile({
-        [templateUri.toFsPath()]: legacyDailyNoteTemplate({ directory }, roots),
-      });
-
-      const result = await resolveDailyNote(
-        date,
-        templateUri,
-        makeFoam(...roots),
-        readFile,
-        NO_SETTINGS
-      );
-
-      expect(result.filepath.toFsPath()).toBe(URI.file(expected).toFsPath());
-    }
-  );
 
   it('resolves FOAM_DATE_* variables in content', async () => {
     const templateUri = URI.file('/workspace/.foam/templates/daily-note.md');
@@ -229,8 +96,7 @@ Day: \${FOAM_DATE_DATE}`;
       date,
       templateUri,
       foam,
-      readFile,
-      NO_SETTINGS
+      readFile
     );
 
     expect(result.content).toContain('Year: 2024');
@@ -253,8 +119,7 @@ Title: \${FOAM_TITLE}`;
       date,
       templateUri,
       foam,
-      readFile,
-      NO_SETTINGS
+      readFile
     );
 
     expect(result.content).toContain('Title: 2024-01-17');
@@ -276,7 +141,6 @@ Month: \${FOAM_DATE_MONTH_NAME}`;
       templateUri,
       foam,
       readFile,
-      NO_SETTINGS,
       { locale: 'en-US' }
     );
     const jaResult = await resolveDailyNote(
@@ -284,7 +148,6 @@ Month: \${FOAM_DATE_MONTH_NAME}`;
       templateUri,
       foam,
       readFile,
-      NO_SETTINGS,
       { locale: 'ja-JP' }
     );
 
@@ -312,8 +175,7 @@ Previous: [[\${FOAM_PREVIOUS_DAILY_NOTE}]]`;
       date,
       templateUri,
       foam,
-      readFile,
-      NO_SETTINGS
+      readFile
     );
 
     expect(result.content).toContain('Previous: [[2024-01-15]]');
@@ -333,8 +195,7 @@ Previous: [[\${FOAM_PREVIOUS_DAILY_NOTE}]]`;
       date,
       templateUri,
       foam,
-      readFile,
-      NO_SETTINGS
+      readFile
     );
 
     expect(result.content).toBe('Previous: [[2024-01-15]]');
@@ -355,8 +216,7 @@ Previous: \${FOAM_PREVIOUS_DAILY_NOTE:none yet}`;
       date,
       templateUri,
       foam,
-      readFile,
-      NO_SETTINGS
+      readFile
     );
 
     expect(result.content).toContain('Previous: none yet');

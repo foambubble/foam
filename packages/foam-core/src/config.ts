@@ -1,16 +1,3 @@
-/**
- * The `foam.openDailyNote.*` settings that used to place and title daily
- * notes; a setting the user did not set is `undefined`. Foam no longer
- * follows them: it reads them only to say they are ignored and to offer a
- * daily-note template that does what they did.
- */
-export interface LegacyDailyNoteSettings {
-  directory?: string;
-  filenameFormat?: string;
-  fileExtension?: string;
-  titleFormat?: string;
-}
-
 export interface IFoamConfig {
   // Files
   getFilesInclude(): string[];
@@ -24,7 +11,6 @@ export interface IFoamConfig {
   getTemplatesFolder(): string;
 
   // Daily notes
-  getLegacyDailyNoteSettings(): LegacyDailyNoteSettings;
   getOpenDailyNoteOnStartup(): boolean;
 
   // Date
@@ -100,7 +86,6 @@ export function cascadeFoamConfig(
     getAttachmentExtensions: () => get('getAttachmentExtensions'),
     getNewNotePath: () => get('getNewNotePath'),
     getTemplatesFolder: () => get('getTemplatesFolder'),
-    getLegacyDailyNoteSettings: () => get('getLegacyDailyNoteSettings'),
     getOpenDailyNoteOnStartup: () => get('getOpenDailyNoteOnStartup'),
     getDateLocale: () => get('getDateLocale'),
     getDateSnippetsAfterCompletion: () => get('getDateSnippetsAfterCompletion'),
@@ -131,7 +116,6 @@ export class DefaultFoamConfig implements IFoamConfig {
   }
   getNewNotePath(): 'root' | 'currentDir' { return 'root'; }
   getTemplatesFolder() { return '.foam/templates'; }
-  getLegacyDailyNoteSettings(): LegacyDailyNoteSettings { return {}; }
   getOpenDailyNoteOnStartup() { return false; }
   getDateLocale() { return 'default'; }
   getDateSnippetsAfterCompletion(): 'noop' | 'createNote' | 'navigateToNote' { return 'createNote'; }
@@ -178,7 +162,6 @@ export class Config {
   static getAttachmentExtensions(): string[] { return Config.defaultConfig.getAttachmentExtensions(); }
   static getNewNotePath(): 'root' | 'currentDir' { return Config.defaultConfig.getNewNotePath(); }
   static getTemplatesFolder(): string { return Config.defaultConfig.getTemplatesFolder(); }
-  static getLegacyDailyNoteSettings(): LegacyDailyNoteSettings { return Config.defaultConfig.getLegacyDailyNoteSettings(); }
   static getOpenDailyNoteOnStartup(): boolean { return Config.defaultConfig.getOpenDailyNoteOnStartup(); }
   static getDateLocale(): string { return Config.defaultConfig.getDateLocale(); }
   static getDateSnippetsAfterCompletion(): 'noop' | 'createNote' | 'navigateToNote' { return Config.defaultConfig.getDateSnippetsAfterCompletion(); }

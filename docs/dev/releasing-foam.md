@@ -104,19 +104,45 @@ Nothing in CI enforces any of this; it's a review-time and release-time responsi
    - Update `./packages/foam-vscode/WHATS_NEW.md` if the release has something users should act on or learn to use. It is shown on update when its _content hash_ changes, so leaving it untouched shows nothing — appropriate for a release with no new features.
    - `git add -A && git commit -m "Release"`
    - `yarn tag-release` - Create per-package tags (`vscode@<version>`, `cli@<version>`, `core@<version>`):
-     - The script reads each package's current version from `package.json` and skips any tag that already exists.
-6. Publish
-   - `yarn release` to release them all, otherwise
-     - `yarn release-extension` (packages and publishes to VS Marketplace and OpenVSX)
-     - `yarn release-cli` (packages and publishes `@foam/cli` to npm as `foam-cli`)
-     - `yarn release-core` (publishes `@foam/core` to npm)
-7. Push
-   - `git push && git push --tags`
-8. Update the release notes in GitHub
+     - The script reads each package's current version from `package.json`, skips any tag that already exists, and prints the command to push the new ones.
+6. Push and publish
+
+   - `git push`
+   - Push the tags with the command `yarn tag-release` printed, e.g. `git push origin vscode@0.47.2 cli@0.48.0`. Each tag starts the [Release workflow](../../.github/workflows/release.yml), which publishes that package:
+
+     - `cli@` to npm as `foam-cli`
+     - `core@` to npm as `foam-core`
+     - `vscode@` to the VS Code Marketplace and Open VSX, once the Marketplace trusted publisher exists. Until then a `vscode@` tag starts nothing, so publish the extension from your machine with the login `vsce login` stored, which stops working on 1 December 2026:
+
+       ```
+       yarn workspace foam-vscode clean
+       yarn workspace foam-vscode build:node --production
+       yarn workspace foam-vscode build:web --production
+       yarn workspace foam-vscode package
+       cd packages/foam-vscode
+       npx @vscode/vsce@3.6.0 publish --packagePath foam-vscode-<version>.vsix
+       npx ovsx@1.3.0 publish foam-vscode-<version>.vsix -p $OPENVSX_TOKEN
+       ```
+
+   - Don't use `git push --tags`: GitHub starts no workflow for a push of more than three tags, so one stray local tag means nothing publishes.
+   - Check the runs in the Actions tab. A failed run can be re-run; a registry that already has the version is skipped.
+
+7. Update the release notes in GitHub
    - In GitHub, top right, click on "releases"
    - Select "tags" in top left
    - Select the tag that was just released, click "edit" and copy release information from `CHANGELOG.md`
    - Publish (no need to attach artifacts)
-9. Announce on Discord
+8. Announce on Discord
 
-Steps 1 to 8 should really be replaced by a GitHub action...
+## Publishing setup
+
+The Release workflow stores no tokens. Each registry trusts `.github/workflows/release.yml` in `foambubble/foam`, running in the `release` environment, through OIDC (trusted publishing). Renaming the workflow file or the environment breaks publishing until every entry below is updated. Each entry takes owner `foambubble`, repository `foam`, workflow `release.yml` and environment `release`:
+
+- **VS Code Marketplace:** on the [publisher management page](https://marketplace.visualstudio.com/manage), publisher `foam` → Trusted Publishing.
+- **Open VSX:** [Trusted Publishers](https://open-vsx.org/user-settings/trusted-publishers), namespace `foam`.
+- **npm:** on `foam-cli` and on `foam-core`, Settings → Trusted publisher → GitHub Actions. A new entry expires unless it publishes within two days, so add it just before that package's next release.
+
+Two GitHub settings decide who can publish:
+
+- **The `release` environment** (Settings → Environments) lets only tags matching `vscode@*`, `cli@*` and `core@*` deploy to it, with no required reviewers. The registries trust a run by its workflow file name, not by what triggered it. Without the environment, anyone with write access could publish from a branch that runs an edited `release.yml`.
+- **A tag ruleset** (Settings → Rules → Rulesets) restricts creating, updating and deleting those tags to the maintainers. A tag push runs the workflow as it is in the tagged commit, so whoever can push a release tag can publish.

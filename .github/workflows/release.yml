@@ -1,0 +1,64 @@
+name: Release
+
+# Publishes the package a release tag names:
+#   vscode@<version> → VS Code Marketplace and Open VSX
+#   cli@<version>    → npm, as foam-cli
+#   core@<version>   → npm, as foam-core
+#
+# Every registry trusts this workflow by its file name and the `release`
+# environment through OIDC (trusted publishing), so no publishing token is
+# stored in the repository. Renaming this file or the environment breaks
+# publishing until each registry's trusted publisher is updated. See
+# docs/dev/releasing-foam.md.
+
+on:
+  push:
+    # 'vscode@*' joins these once the Marketplace trusted publisher for the
+    # `foam` publisher exists; until then a vscode tag must start nothing.
+    tags:
+      - 'cli@*'
+      - 'core@*'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish ${{ github.ref_name }}
+    # Only release tags may deploy to this environment. The registries require
+    # it, so a run of an edited copy of this file from a branch can't publish.
+    environment: release
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Install npm with trusted publishing
+        # Trusted publishing needs npm 11.5.1+; Node 22 ships npm 10.
+        run: npm install -g npm@11.21.1
+      - name: Resolve package from tag
+        id: package
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          case "$TAG" in
+            vscode@*) workspace=foam-vscode dir=packages/foam-vscode ;;
+            cli@*) workspace=@foam/cli dir=packages/foam-cli ;;
+            core@*) workspace=@foam/core dir=packages/foam-core ;;
+          esac
+          version=$(node -p "require('./$dir/package.json').version")
+          if [ "${TAG#*@}" != "$version" ]; then
+            echo "::error::Tag $TAG does not match version $version in $dir/package.json"
+            exit 1
+          fi
+          echo "workspace=$workspace" >> "$GITHUB_OUTPUT"
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
+      - name: Build Packages
+        run: yarn build
+      - name: Publish
+        run: yarn workspace ${{ steps.package.outputs.workspace }} release

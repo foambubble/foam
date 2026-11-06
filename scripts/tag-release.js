@@ -45,12 +45,15 @@ function main() {
     process.exit(1);
   }
 
-  const results = targets.map(tagOne);
-  const anyCreated = results.some(r => r.created);
-  if (!anyCreated) {
+  const created = targets.map(tagOne).filter(r => r.created);
+  if (created.length === 0) {
     console.log('Nothing to tag.');
   } else {
-    console.log('\nPush with: git push --tags');
+    // Name the tags: GitHub starts no workflow for a push of more than three
+    // tags, which `git push --tags` can reach with one stray local tag.
+    console.log(
+      `\nPush with: git push origin ${created.map(r => r.tag).join(' ')}`
+    );
   }
 }
 

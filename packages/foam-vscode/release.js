@@ -6,9 +6,10 @@
 // relying on vsce's `vscode:prepublish` lifecycle hook) so the flow is
 // inspectable from this single file.
 //
-// Required env vars:
-//   - OPENVSX_TOKEN (consumed by the `publish:openvsx` script)
-// Marketplace auth comes from the local `vsce` CLI session.
+// Both registries authenticate through GitHub Actions OIDC (trusted
+// publishing), so this only publishes from a workflow job with
+// `id-token: write`. Both uploads skip a version the registry already has,
+// so a rerun after a partial failure completes the other one.
 //
 const { execSync } = require('child_process');
 
@@ -26,12 +27,5 @@ run('yarn package');
 // 3. Upload to the Marketplace.
 run('yarn publish:vscode');
 
-// 4. Upload the same vsix to OpenVSX. Fail fast if the token is missing
-//    so the user knows step 3 succeeded but step 4 didn't.
-if (!process.env.OPENVSX_TOKEN) {
-  throw new Error(
-    'OPENVSX_TOKEN env var is required to publish to OpenVSX. ' +
-      'Marketplace upload succeeded; rerun this script after exporting the token.'
-  );
-}
+// 4. Upload the same vsix to OpenVSX.
 run('yarn publish:openvsx');

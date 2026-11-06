@@ -106,13 +106,27 @@ Nothing in CI enforces any of this; it's a review-time and release-time responsi
    - `yarn tag-release` - Create per-package tags (`vscode@<version>`, `cli@<version>`, `core@<version>`):
      - The script reads each package's current version from `package.json`, skips any tag that already exists, and prints the command to push the new ones.
 6. Push and publish
+
    - `git push`
    - Push the tags with the command `yarn tag-release` printed, e.g. `git push origin vscode@0.47.2 cli@0.48.0`. Each tag starts the [Release workflow](../../.github/workflows/release.yml), which publishes that package:
-     - `vscode@` to the VS Code Marketplace and Open VSX
+
      - `cli@` to npm as `foam-cli`
      - `core@` to npm as `foam-core`
+     - `vscode@` to the VS Code Marketplace and Open VSX, once the Marketplace trusted publisher exists. Until then a `vscode@` tag starts nothing, so publish the extension from your machine with the login `vsce login` stored, which stops working on 1 December 2026:
+
+       ```
+       yarn workspace foam-vscode clean
+       yarn workspace foam-vscode build:node --production
+       yarn workspace foam-vscode build:web --production
+       yarn workspace foam-vscode package
+       cd packages/foam-vscode
+       npx @vscode/vsce@3.6.0 publish --packagePath foam-vscode-<version>.vsix
+       npx ovsx@1.3.0 publish foam-vscode-<version>.vsix -p $OPENVSX_TOKEN
+       ```
+
    - Don't use `git push --tags`: GitHub starts no workflow for a push of more than three tags, so one stray local tag means nothing publishes.
    - Check the runs in the Actions tab. A failed run can be re-run; a registry that already has the version is skipped.
+
 7. Update the release notes in GitHub
    - In GitHub, top right, click on "releases"
    - Select "tags" in top left

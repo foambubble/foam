@@ -13,8 +13,9 @@ name: Release
 
 on:
   push:
+    # 'vscode@*' joins these once the Marketplace trusted publisher for the
+    # `foam` publisher exists; until then a vscode tag must start nothing.
     tags:
-      - 'vscode@*'
       - 'cli@*'
       - 'core@*'
 

@@ -62,6 +62,46 @@ export interface GraphStyle {
   showNodesOfType?: Record<string, boolean>;
 }
 
+export interface Forces {
+  collide: number;
+  repel: number;
+  link: number;
+  velocityDecay: number;
+}
+
+export type LinkAnimation = 'forward' | 'off' | 'reverse';
+
+export type GraphScope = 'full' | { depth: number };
+
+export type Labels = 'always' | { fade: number };
+
+export interface Selection {
+  neighborDepth: number;
+  centerOnSelect: boolean;
+  zoomOnSelect: boolean;
+}
+
+/**
+ * The graph view's interactive display state, persisted by the host
+ * per view name. Every field is optional: a restore applies only what is
+ * present, and the host's store preserves fields it does not know, so
+ * entries can be added here without a storage migration.
+ */
+export interface GraphViewState {
+  showNodesOfType?: Record<string, boolean>;
+  groups?: GroupRule[];
+  localStylePatch?: GraphStyle;
+  labels?: Labels;
+  forces?: Forces;
+  selection?: Selection;
+  graphScope?: GraphScope;
+  nodeFontSizeMultiplier?: number;
+  nodeSizeMultiplier?: number;
+  linkWidthMultiplier?: number;
+  animateLinks?: LinkAnimation;
+  labelMaxLength?: number;
+}
+
 /** Config for a built-in special type (tag, attachment, image, placeholder) */
 export interface BuiltinTypeConfig {
   enabled?: boolean;
@@ -94,12 +134,25 @@ export interface ShowGraphArgs {
 export type ExtensionMessage =
   | { type: 'didUpdateStyle'; payload: GraphStyle }
   | { type: 'didUpdateGraphData'; payload: GraphData }
+  // Always sent when a view is (re)opened, even with an empty state: it
+  // resets the interactive state, so one view's tweaks cannot leak into
+  // another. viewName tells the webview which bucket later changes belong
+  // to, so a save debounced across a view switch cannot land in the wrong
+  // bucket.
+  | {
+      type: 'didRestoreViewState';
+      payload: { viewName: string; state: GraphViewState };
+    }
   | { type: 'didSelectNote'; payload: string };
 
 // Webview → Extension
 export type WebviewMessage =
   | { type: 'webviewDidLoad' }
   | { type: 'webviewDidSelectNode'; payload: string }
+  | {
+      type: 'webviewDidChangeViewState';
+      payload: { viewName?: string; state: GraphViewState };
+    }
   | {
       type: 'error';
       payload: {

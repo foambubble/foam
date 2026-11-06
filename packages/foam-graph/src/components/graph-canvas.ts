@@ -10,6 +10,7 @@ import {
 } from 'd3-force';
 import { scaleLinear } from 'd3-scale';
 import { Painter } from '../lib/painter';
+import { DEFAULT_LABEL_MAX_LENGTH, truncateLabel } from '../lib/labels';
 import {
   getNodeFillAndBorder,
   getLinkColor,
@@ -145,6 +146,7 @@ export class GraphCanvas extends LitElement {
   @property({ type: Number }) nodeFontSizeMultiplier: number = 1;
   @property({ type: Number }) nodeSizeMultiplier: number = 1;
   @property({ type: Number }) linkWidthMultiplier: number = 2;
+  @property({ type: Number }) labelMaxLength: number = DEFAULT_LABEL_MAX_LENGTH;
   @property({ type: String }) animateLinks: LinkAnimation = 'forward';
   @property({ type: Array }) groups: GroupRule[] = [];
   @property({ type: Number }) maxFitZoom: number | null = null;
@@ -159,10 +161,22 @@ export class GraphCanvas extends LitElement {
     nodeFontSizeMultiplier: 1,
     nodeSizeMultiplier: 1,
     linkWidthMultiplier: 2,
+    labelMaxLength: DEFAULT_LABEL_MAX_LENGTH,
+    // Truncated labels, cached per node: the paint loop runs per node per
+    // frame, so truncating there would allocate a string every frame.
+    labelByNodeId: {} as Record<string, string>,
     animateLinks: 'forward' as LinkAnimation,
     colorMode: 'type' as 'none' | 'directory' | 'type',
     groups: [] as GroupRule[],
   };
+
+  private _rebuildLabelCache() {
+    const labels: Record<string, string> = {};
+    for (const info of Object.values(this.rs.nodeInfo)) {
+      labels[info.id] = truncateLabel(info.title, this.rs.labelMaxLength);
+    }
+    this.rs.labelByNodeId = labels;
+  }
 
   private readonly getNodeSize = scaleLinear()
     .domain([0, 30])
@@ -269,7 +283,7 @@ export class GraphCanvas extends LitElement {
           painter
             .circle(node.x, node.y, size, fill, border)
             .screenText(
-              info.title,
+              this.rs.labelByNodeId[node.id] ?? info.title,
               labelPosition.x,
               labelPosition.y,
               fontSize,
@@ -396,6 +410,10 @@ export class GraphCanvas extends LitElement {
       );
     }
 
+    if (changed.has('labelMaxLength')) {
+      this.rs.labelMaxLength = this.labelMaxLength;
+    }
+
     if (changed.has('animateLinks')) {
       this.rs.animateLinks = this.animateLinks;
       this.graphInstance?.linkDirectionalParticleSpeed(
@@ -411,16 +429,25 @@ export class GraphCanvas extends LitElement {
       };
       this.rs.nodeInfo = nextGraph.nodeInfo;
       this._updateGraphData(nextGraph);
+    }
 
-      if (this.visibleGraph && this.firstGraphLoad && this.graphInstance) {
-        this.firstGraphLoad = false;
-        this.graphInstance.zoom(this.graphInstance.zoom() * 1.5);
-        this.graphInstance.cooldownTicks(100);
-        this.graphInstance.onEngineStop(() => {
-          this.graphInstance!.onEngineStop(() => {});
-          this.zoomToFit(500);
-        });
-      }
+    if (changed.has('visibleGraph') || changed.has('labelMaxLength')) {
+      this._rebuildLabelCache();
+    }
+
+    if (
+      changed.has('visibleGraph') &&
+      this.visibleGraph &&
+      this.firstGraphLoad &&
+      this.graphInstance
+    ) {
+      this.firstGraphLoad = false;
+      this.graphInstance.zoom(this.graphInstance.zoom() * 1.5);
+      this.graphInstance.cooldownTicks(100);
+      this.graphInstance.onEngineStop(() => {
+        this.graphInstance!.onEngineStop(() => {});
+        this.zoomToFit(500);
+      });
     }
   }
 

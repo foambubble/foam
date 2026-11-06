@@ -13,7 +13,14 @@ import {
 } from './lib/graph-view-model';
 import { mergeStyles, resolveStyle } from './lib/style';
 import { hashString, hashToHSL } from './lib/colors';
-import type { GraphData, GraphStyle, GroupMatch, GroupRule } from './protocol';
+import { DEFAULT_LABEL_MAX_LENGTH } from './lib/labels';
+import type {
+  GraphData,
+  GraphStyle,
+  GraphViewState,
+  GroupMatch,
+  GroupRule,
+} from './protocol';
 import type {
   GraphModel,
   ResolvedStyle,
@@ -28,6 +35,40 @@ import type { GraphCanvas } from './components/graph-canvas';
 import type { GroupDraft } from './components/control-panel';
 import './components/graph-canvas';
 import './components/control-panel';
+
+/**
+ * Built-in defaults for the interactive display state — the base layer a
+ * view restore starts from, under the declared style and the saved state.
+ */
+const defaultViewState = () => ({
+  showNodesOfType: {
+    placeholder: true,
+    image: false,
+    attachment: false,
+    note: true,
+    tag: true,
+  } as Record<string, boolean>,
+  groups: [] as GroupRule[],
+  localStylePatch: {} as GraphStyle,
+  labels: { fade: 0 } as Labels,
+  forces: {
+    collide: 1,
+    repel: 10,
+    link: 30,
+    velocityDecay: 0.4,
+  } as Forces,
+  selection: {
+    neighborDepth: 1,
+    centerOnSelect: true,
+    zoomOnSelect: true,
+  } as Selection,
+  graphScope: 'full' as GraphScope,
+  nodeFontSizeMultiplier: 1,
+  nodeSizeMultiplier: 2,
+  linkWidthMultiplier: 2,
+  animateLinks: 'forward' as LinkAnimation,
+  labelMaxLength: DEFAULT_LABEL_MAX_LENGTH,
+});
 
 @customElement('foam-graph')
 export class FoamGraph extends LitElement {
@@ -45,21 +86,15 @@ export class FoamGraph extends LitElement {
   @property({ type: Object }) graphStyle: GraphStyle | null = null;
   @property({ type: Boolean }) showControls = false;
   @property({ type: String }) focusNodeId: string | null = null;
-  @property({ type: Object }) graphScope: GraphScope = 'full';
+  @property({ type: Object }) graphScope: GraphScope =
+    defaultViewState().graphScope;
   @property({ type: Number }) maxFitZoom: number | null = null;
-  @property({ type: Object }) labels: Labels = { fade: 0 };
-  @property({ type: Object }) forces: Forces = {
-    collide: 1,
-    repel: 10,
-    link: 30,
-    velocityDecay: 0.4,
-  };
-  @property({ type: Number }) linkWidthMultiplier: number = 2;
-  @property({ type: Object }) selection: Selection = {
-    neighborDepth: 1,
-    centerOnSelect: true,
-    zoomOnSelect: true,
-  };
+  @property({ type: Object }) labels: Labels = defaultViewState().labels;
+  @property({ type: Object }) forces: Forces = defaultViewState().forces;
+  @property({ type: Number }) linkWidthMultiplier: number =
+    defaultViewState().linkWidthMultiplier;
+  @property({ type: Object }) selection: Selection =
+    defaultViewState().selection;
 
   @query('foam-graph-canvas') private canvas!: GraphCanvas;
 
@@ -67,18 +102,24 @@ export class FoamGraph extends LitElement {
   @state() private graphModel: GraphModel | null = null;
   @state() private selectedNodeIds = new Set<string>();
   @state() private hoverNodeId: string | null = null;
-  @state() private showNodesOfType: Record<string, boolean> = {
-    placeholder: true,
-    image: false,
-    attachment: false,
-    note: true,
-    tag: true,
-  };
-  @state() private nodeFontSizeMultiplier: number = 1;
-  @state() private nodeSizeMultiplier: number = 2;
-  @state() private animateLinks: LinkAnimation = 'forward';
-  @state() private localStylePatch: GraphStyle = {};
-  @state() private groups: GroupRule[] = [];
+  @state() private showNodesOfType: Record<string, boolean> =
+    defaultViewState().showNodesOfType;
+  @state() private nodeFontSizeMultiplier: number =
+    defaultViewState().nodeFontSizeMultiplier;
+  @state() private nodeSizeMultiplier: number =
+    defaultViewState().nodeSizeMultiplier;
+  @state() private labelMaxLength: number = defaultViewState().labelMaxLength;
+  @state() private animateLinks: LinkAnimation =
+    defaultViewState().animateLinks;
+  @state() private localStylePatch: GraphStyle =
+    defaultViewState().localStylePatch;
+  @state() private groups: GroupRule[] = defaultViewState().groups;
+  /**
+   * The user's layer of the display state: the last restored state, then
+   * the full snapshot after each user change (what the host persists).
+   * Null until a host first restores a view state.
+   */
+  private userLayer: GraphViewState | null = null;
   @state() private groupDraft: GroupDraft = {
     active: false,
     property: 'type',
@@ -112,12 +153,30 @@ export class FoamGraph extends LitElement {
       shouldRecomputeGraphStates = true;
     }
 
-    if (changed.has('graphStyle') && this.graphStyle?.groups) {
+    // Once a view state has been applied, a re-sent style (inline
+    // show-graph config, a foam.graph.style edit, re-invoking the open
+    // view) is re-layered under the user's state rather than written over
+    // it: defaults → new style → user layer. An untouched view follows the
+    // style; one the user adjusted keeps their choices, which the next save
+    // would otherwise persist as a reset.
+    if (changed.has('graphStyle') && this.userLayer) {
+      this.applyViewState(this.userLayer);
+    }
+
+    if (
+      changed.has('graphStyle') &&
+      !this.userLayer &&
+      this.graphStyle?.groups
+    ) {
       this.groups = this.graphStyle.groups;
       shouldRecomputeVisibleGraph = true;
     }
 
-    if (changed.has('graphStyle') && this.graphStyle?.showNodesOfType) {
+    if (
+      changed.has('graphStyle') &&
+      !this.userLayer &&
+      this.graphStyle?.showNodesOfType
+    ) {
       this.showNodesOfType = {
         ...this.showNodesOfType,
         ...this.graphStyle.showNodesOfType,
@@ -180,12 +239,12 @@ export class FoamGraph extends LitElement {
         .nodeFontSizeMultiplier=${this.nodeFontSizeMultiplier}
         .nodeSizeMultiplier=${this.nodeSizeMultiplier}
         .linkWidthMultiplier=${this.linkWidthMultiplier}
+        .labelMaxLength=${this.labelMaxLength}
         .animateLinks=${this.animateLinks}
         .maxFitZoom=${this.maxFitZoom}
         @canvas-node-click=${(e: CustomEvent) =>
           this._onCanvasNodeClick(e.detail)}
-        @canvas-node-hover=${(e: CustomEvent) =>
-          (this.hoverNodeId = e.detail)}
+        @canvas-node-hover=${(e: CustomEvent) => (this.hoverNodeId = e.detail)}
         @canvas-background-click=${(e: CustomEvent) =>
           this._onCanvasBackgroundClick(e.detail)}
       ></foam-graph-canvas>
@@ -203,12 +262,15 @@ export class FoamGraph extends LitElement {
             .nodeFontSizeMultiplier=${this.nodeFontSizeMultiplier}
             .nodeSizeMultiplier=${this.nodeSizeMultiplier}
             .linkWidthMultiplier=${this.linkWidthMultiplier}
+            .labelMaxLength=${this.labelMaxLength}
             .animateLinks=${this.animateLinks}
             .forces=${this.forces}
             .selection=${this.selection}
             .graphScope=${this.graphScope}
-            @graph-scope-change=${(e: CustomEvent) =>
-              (this.graphScope = e.detail)}
+            @graph-scope-change=${(e: CustomEvent) => {
+              this.graphScope = e.detail;
+              this._emitViewStateChange();
+            }}
             @style-change=${(e: CustomEvent) => this._onStyleChange(e.detail)}
             @toggle-node-type=${(e: CustomEvent) =>
               this._onToggleNodeType(e.detail)}
@@ -224,21 +286,140 @@ export class FoamGraph extends LitElement {
               (this.groupDraft = { ...this.groupDraft, active: false })}
             @draft-change=${(e: CustomEvent) => (this.groupDraft = e.detail)}
             @add-group=${() => this._onAddGroup()}
-            @text-fade-change=${(e: CustomEvent) => (this.labels = { fade: e.detail })}
-            @font-size-multiplier-change=${(e: CustomEvent) =>
-              (this.nodeFontSizeMultiplier = e.detail)}
-            @node-size-multiplier-change=${(e: CustomEvent) =>
-              (this.nodeSizeMultiplier = e.detail)}
-            @link-width-multiplier-change=${(e: CustomEvent) =>
-              (this.linkWidthMultiplier = e.detail)}
-            @animate-links-change=${(e: CustomEvent) =>
-              (this.animateLinks = e.detail)}
-            @forces-change=${(e: CustomEvent) => (this.forces = e.detail)}
-            @selection-change=${(e: CustomEvent) =>
-              (this.selection = e.detail)}
+            @text-fade-change=${(e: CustomEvent) => {
+              this.labels = { fade: e.detail };
+              this._emitViewStateChange();
+            }}
+            @font-size-multiplier-change=${(e: CustomEvent) => {
+              this.nodeFontSizeMultiplier = e.detail;
+              this._emitViewStateChange();
+            }}
+            @node-size-multiplier-change=${(e: CustomEvent) => {
+              this.nodeSizeMultiplier = e.detail;
+              this._emitViewStateChange();
+            }}
+            @link-width-multiplier-change=${(e: CustomEvent) => {
+              this.linkWidthMultiplier = e.detail;
+              this._emitViewStateChange();
+            }}
+            @label-max-length-change=${(e: CustomEvent) =>
+              this._onLabelMaxLengthChange(e.detail)}
+            @animate-links-change=${(e: CustomEvent) => {
+              this.animateLinks = e.detail;
+              this._emitViewStateChange();
+            }}
+            @forces-change=${(e: CustomEvent) => {
+              this.forces = e.detail;
+              this._emitViewStateChange();
+            }}
+            @selection-change=${(e: CustomEvent) => {
+              this.selection = e.detail;
+              this._emitViewStateChange();
+            }}
           ></foam-control-panel>`
         : null}
     `;
+  }
+
+  /** Snapshot of the interactive display state, for persistence. */
+  getViewState(): GraphViewState {
+    return {
+      showNodesOfType: { ...this.showNodesOfType },
+      groups: this.groups,
+      localStylePatch: this.localStylePatch,
+      labels: this.labels,
+      forces: this.forces,
+      selection: this.selection,
+      graphScope: this.graphScope,
+      nodeFontSizeMultiplier: this.nodeFontSizeMultiplier,
+      nodeSizeMultiplier: this.nodeSizeMultiplier,
+      linkWidthMultiplier: this.linkWidthMultiplier,
+      animateLinks: this.animateLinks,
+      labelMaxLength: this.labelMaxLength,
+    };
+  }
+
+  /**
+   * Applies a persisted display state with replace semantics: the state is
+   * layered over built-in defaults and the declared style, never over the
+   * live interactive state — otherwise a previously shown view's tweaks
+   * would leak into the one being restored.
+   */
+  applyViewState(state: GraphViewState) {
+    this.userLayer = state;
+    const defaults = defaultViewState();
+    this.showNodesOfType = defaults.showNodesOfType;
+    this.groups = defaults.groups;
+    this.localStylePatch = defaults.localStylePatch;
+    this.labels = defaults.labels;
+    this.forces = defaults.forces;
+    this.selection = defaults.selection;
+    this.graphScope = defaults.graphScope;
+    this.nodeFontSizeMultiplier = defaults.nodeFontSizeMultiplier;
+    this.nodeSizeMultiplier = defaults.nodeSizeMultiplier;
+    this.linkWidthMultiplier = defaults.linkWidthMultiplier;
+    this.animateLinks = defaults.animateLinks;
+    this.labelMaxLength = defaults.labelMaxLength;
+
+    // the declared style (base settings + view config) sits between the
+    // defaults and the saved state, as on a cold load
+    if (this.graphStyle?.groups) this.groups = this.graphStyle.groups;
+    if (this.graphStyle?.showNodesOfType) {
+      this.showNodesOfType = {
+        ...this.showNodesOfType,
+        ...this.graphStyle.showNodesOfType,
+      };
+    }
+
+    if (state.showNodesOfType) {
+      this.showNodesOfType = {
+        ...this.showNodesOfType,
+        ...state.showNodesOfType,
+      };
+    }
+    if (state.groups) this.groups = state.groups;
+    if (state.localStylePatch) this.localStylePatch = state.localStylePatch;
+    if (state.labels !== undefined) this.labels = state.labels;
+    if (state.forces) this.forces = state.forces;
+    if (state.selection) this.selection = state.selection;
+    if (state.graphScope !== undefined) this.graphScope = state.graphScope;
+    if (state.nodeFontSizeMultiplier !== undefined) {
+      this.nodeFontSizeMultiplier = state.nodeFontSizeMultiplier;
+    }
+    if (state.nodeSizeMultiplier !== undefined) {
+      this.nodeSizeMultiplier = state.nodeSizeMultiplier;
+    }
+    if (state.linkWidthMultiplier !== undefined) {
+      this.linkWidthMultiplier = state.linkWidthMultiplier;
+    }
+    if (state.animateLinks !== undefined) {
+      this.animateLinks = state.animateLinks;
+    }
+    if (state.labelMaxLength !== undefined) {
+      this.labelMaxLength = state.labelMaxLength;
+    }
+
+    if (this.graphModel) {
+      this.showNodesOfType = deriveNodeTypeFilters(
+        this.graphModel,
+        this.resolvedStyle,
+        this.showNodesOfType
+      );
+    }
+    this._recomputeVisibleGraph();
+    this._recomputeGraphStates();
+  }
+
+  /**
+   * Announces that the user changed a display option. Carries no payload:
+   * the host pulls `getViewState()` when it is ready to persist (e.g.
+   * after a debounce), so one snapshot is built per save, not per tick.
+   */
+  private _emitViewStateChange() {
+    this.userLayer = this.getViewState();
+    this.dispatchEvent(
+      new CustomEvent('view-state-change', { bubbles: true, composed: true })
+    );
   }
 
   selectNote(noteId: string) {
@@ -282,12 +463,18 @@ export class FoamGraph extends LitElement {
     this._recomputeVisibleGraphIfSelectionAffectsScope();
   }
 
+  private _onLabelMaxLengthChange(value: number) {
+    this.labelMaxLength = value;
+    this._emitViewStateChange();
+  }
+
   private _onToggleNodeType(detail: { type: string; visible: boolean }) {
     this.showNodesOfType = {
       ...this.showNodesOfType,
       [detail.type]: detail.visible,
     };
     this._recomputeVisibleGraph();
+    this._emitViewStateChange();
   }
 
   private _onUpdateGroup(detail: { index: number; patch: Partial<GroupRule> }) {
@@ -295,11 +482,13 @@ export class FoamGraph extends LitElement {
       index === detail.index ? { ...group, ...detail.patch } : group
     );
     this._recomputeVisibleGraph();
+    this._emitViewStateChange();
   }
 
   private _onDeleteGroup(index: number) {
     this.groups = this.groups.filter((_, i) => i !== index);
     this._recomputeVisibleGraph();
+    this._emitViewStateChange();
   }
 
   private _onAddGroup() {
@@ -320,6 +509,7 @@ export class FoamGraph extends LitElement {
     ];
     this.groupDraft = { ...this.groupDraft, active: false, value: '' };
     this._recomputeVisibleGraph();
+    this._emitViewStateChange();
   }
 
   private _onStyleChange(patch: Partial<ResolvedStyle>) {
@@ -329,6 +519,7 @@ export class FoamGraph extends LitElement {
       ...(colorMode !== undefined ? { colorMode } : {}),
       style: { ...this.localStylePatch?.style, ...styleProps },
     };
+    this._emitViewStateChange();
   }
 
   private _pruneInteractionState() {

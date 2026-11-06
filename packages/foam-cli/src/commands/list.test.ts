@@ -1,12 +1,5 @@
 import path from 'node:path';
-import {
-  BaseLogger,
-  ConsoleLogger,
-  FoamGraph,
-  FoamTags,
-  Logger,
-  LogLevel,
-} from '@foam/core';
+import { ConsoleLogger, FoamGraph, FoamTags, Logger } from '@foam/core';
 import { setColorsEnabled } from '../support/colors';
 
 setColorsEnabled(false);
@@ -212,20 +205,15 @@ describe('listTemplates', () => {
           '# Template\n\nSee [example](https://example.com) and [note](note.md).\n',
       },
       async ({ rootUri }) => {
-        const warnings: string[] = [];
-        class CapturingLogger extends BaseLogger {
-          log(level: LogLevel, msg?: string): void {
-            if (level === 'warn') warnings.push(String(msg));
-          }
-        }
-        Logger.setDefaultLogger(new CapturingLogger());
+        const logger = new TestLogger();
+        Logger.setDefaultLogger(logger);
         try {
           const result = await listTemplates(rootUri);
           expect(result.map(t => t.name)).toEqual(['t']);
         } finally {
           Logger.setDefaultLogger(new ConsoleLogger());
         }
-        expect(warnings).toEqual([]);
+        expect(logger.warnings).toEqual([]);
       }
     ));
 });

@@ -49,7 +49,7 @@ The mechanism, at the level a reviewer of this spec should weigh in on:
 
 1. **Where preferences persist.** Per workspace, in extension-side storage
    (`ExtensionContext.workspaceState`), as one object under one key. Filters
-   and display choices depend on the vault's content, so per-workspace is
+   and display choices depend on the workspace's content, so per-workspace is
    the right scope, and webview `setState` does not survive closing the
    panel. `settings.json` is the wrong home because these values are the
    write target of UI gestures: persisting them through configuration would

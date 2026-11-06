@@ -346,6 +346,42 @@ describe('foam-graph', () => {
     expect(state.showNodesOfType?.tag).toBe(true);
   });
 
+  // an untouched view (empty saved state) must still follow a re-sent
+  // style: inline show-graph config, live foam.graph.style edits
+  it('applies a re-sent style to a view with no saved state', () => {
+    const element = new FoamGraph();
+    element.applyViewState({});
+
+    element.graphStyle = {
+      groups: [
+        {
+          id: 'declared',
+          label: 'Declared',
+          color: '#222222',
+          enabled: true,
+          match: { property: 'type', value: 'note' },
+        },
+      ],
+      showNodesOfType: { tag: false },
+    };
+    (element as any).updated(new Map([['graphStyle', null]]));
+
+    const state = element.getViewState();
+    expect(state.groups?.map(group => group.id)).toEqual(['declared']);
+    expect(state.showNodesOfType?.tag).toBe(false);
+  });
+
+  it('keeps a user change made after the restore when a style is re-sent', () => {
+    const element = new FoamGraph();
+    element.applyViewState({});
+    (element as any)._onToggleNodeType({ type: 'tag', visible: false });
+
+    element.graphStyle = { showNodesOfType: { tag: true } };
+    (element as any).updated(new Map([['graphStyle', null]]));
+
+    expect(element.getViewState().showNodesOfType?.tag).toBe(false);
+  });
+
   it('keeps the declared style layer when restoring a view state', () => {
     const element = new FoamGraph();
     element.graphStyle = { showNodesOfType: { tag: false } };

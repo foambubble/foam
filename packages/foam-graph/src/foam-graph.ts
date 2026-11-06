@@ -114,7 +114,12 @@ export class FoamGraph extends LitElement {
   @state() private localStylePatch: GraphStyle =
     defaultViewState().localStylePatch;
   @state() private groups: GroupRule[] = defaultViewState().groups;
-  private hasAppliedViewState = false;
+  /**
+   * The user's layer of the display state: the last restored state, then
+   * the full snapshot after each user change (what the host persists).
+   * Null until a host first restores a view state.
+   */
+  private userLayer: GraphViewState | null = null;
   @state() private groupDraft: GroupDraft = {
     active: false,
     property: 'type',
@@ -148,15 +153,19 @@ export class FoamGraph extends LitElement {
       shouldRecomputeGraphStates = true;
     }
 
-    // Once a view state has been applied, groups and type filters are the
-    // user's: a later style (e.g. re-invoking show-graph for the open view)
-    // must not overwrite them, or the next save would persist the reset.
-    // Restores re-layer from the style themselves (see applyViewState).
-    const styleOwnsInteractiveState = !this.hasAppliedViewState;
+    // Once a view state has been applied, a re-sent style (inline
+    // show-graph config, a foam.graph.style edit, re-invoking the open
+    // view) is re-layered under the user's state rather than written over
+    // it: defaults → new style → user layer. An untouched view follows the
+    // style; one the user adjusted keeps their choices, which the next save
+    // would otherwise persist as a reset.
+    if (changed.has('graphStyle') && this.userLayer) {
+      this.applyViewState(this.userLayer);
+    }
 
     if (
       changed.has('graphStyle') &&
-      styleOwnsInteractiveState &&
+      !this.userLayer &&
       this.graphStyle?.groups
     ) {
       this.groups = this.graphStyle.groups;
@@ -165,7 +174,7 @@ export class FoamGraph extends LitElement {
 
     if (
       changed.has('graphStyle') &&
-      styleOwnsInteractiveState &&
+      !this.userLayer &&
       this.graphStyle?.showNodesOfType
     ) {
       this.showNodesOfType = {
@@ -337,7 +346,7 @@ export class FoamGraph extends LitElement {
    * would leak into the one being restored.
    */
   applyViewState(state: GraphViewState) {
-    this.hasAppliedViewState = true;
+    this.userLayer = state;
     const defaults = defaultViewState();
     this.showNodesOfType = defaults.showNodesOfType;
     this.groups = defaults.groups;
@@ -407,6 +416,7 @@ export class FoamGraph extends LitElement {
    * after a debounce), so one snapshot is built per save, not per tick.
    */
   private _emitViewStateChange() {
+    this.userLayer = this.getViewState();
     this.dispatchEvent(
       new CustomEvent('view-state-change', { bubbles: true, composed: true })
     );

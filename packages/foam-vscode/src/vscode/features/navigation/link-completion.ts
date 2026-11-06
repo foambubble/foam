@@ -4,7 +4,6 @@ import { FoamGraph } from '@foam/core';
 import { Resource } from '@foam/core';
 import { URI } from '@foam/core';
 import { FoamWorkspace } from '@foam/core';
-import { getFoamVsCodeConfig } from '../../config';
 import { fromVsCodeUri, toVsCodeUri } from '../../utils/vsc-utils';
 import { getNoteTooltip, getFoamDocSelectors } from '../../services/editor';
 import { getContentCacheFor } from '../../services/content-cache';
@@ -185,9 +184,9 @@ export class WikilinkCompletionProvider
       return null;
     }
 
-    const labelStyle = getCompletionLabelSetting();
-    const aliasSetting = getCompletionAliasSetting();
-    const linkFormat = getCompletionLinkFormatSetting();
+    const labelStyle = Config.getCompletionLabel();
+    const aliasSetting = Config.getCompletionUseAlias();
+    const linkFormat = Config.getCompletionLinkFormat();
 
     // Use safe range that VS Code accepts - replace content inside brackets only
     const replacementRange = new vscode.Range(
@@ -337,26 +336,6 @@ class ResourceCompletionItem extends vscode.CompletionItem {
   ) {
     super(label, type);
   }
-}
-
-function getCompletionLabelSetting() {
-  const labelStyle: 'path' | 'title' | 'identifier' =
-    getFoamVsCodeConfig('completion.label');
-  return labelStyle;
-}
-
-function getCompletionAliasSetting() {
-  const aliasStyle: 'never' | 'whenPathDiffersFromTitle' = getFoamVsCodeConfig(
-    'completion.useAlias'
-  );
-  return aliasStyle;
-}
-
-function getCompletionLinkFormatSetting() {
-  const linkFormat: 'wikilink' | 'link' = getFoamVsCodeConfig(
-    'completion.linkFormat'
-  );
-  return linkFormat;
 }
 
 const normalize = (text: string) => text.toLocaleLowerCase().trim();

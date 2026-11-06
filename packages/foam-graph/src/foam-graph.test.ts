@@ -207,14 +207,14 @@ describe('foam-graph', () => {
   });
 
   // AC-4: a changed truncation length reaches the canvas binding
-  it('passes an applied titleMaxLength to the canvas', () => {
+  it('passes an applied labelMaxLength to the canvas', () => {
     const element = new FoamGraph();
     element.showControls = false;
 
-    element.applyViewState({ titleMaxLength: 7 });
+    element.applyViewState({ labelMaxLength: 7 });
 
     const t = element.render() as TemplateResult;
-    expect(t.strings.join('')).toContain('.titleMaxLength=');
+    expect(t.strings.join('')).toContain('.labelMaxLength=');
     expect(t.values).toContain(7);
   });
 
@@ -222,14 +222,14 @@ describe('foam-graph', () => {
     const element = new FoamGraph();
 
     element.applyViewState({
-      titleMaxLength: 10,
+      labelMaxLength: 10,
       showNodesOfType: { placeholder: false, note: true },
       nodeSizeMultiplier: 3,
       animateLinks: 'off',
     });
 
     const state = element.getViewState();
-    expect(state.titleMaxLength).toBe(10);
+    expect(state.labelMaxLength).toBe(10);
     expect(state.showNodesOfType?.placeholder).toBe(false);
     expect(state.nodeSizeMultiplier).toBe(3);
     expect(state.animateLinks).toBe('off');
@@ -300,9 +300,9 @@ describe('foam-graph', () => {
       emitted = true;
     });
 
-    (element as any)._onTitleMaxLengthChange(7);
+    (element as any)._onLabelMaxLengthChange(7);
 
-    expect(element.getViewState().titleMaxLength).toBe(7);
+    expect(element.getViewState().labelMaxLength).toBe(7);
     expect(emitted).toBe(true);
   });
 
@@ -312,10 +312,10 @@ describe('foam-graph', () => {
     const element = new FoamGraph();
 
     (element as any)._onToggleNodeType({ type: 'placeholder', visible: false });
-    element.applyViewState({ titleMaxLength: 10 });
+    element.applyViewState({ labelMaxLength: 10 });
 
     const state = element.getViewState();
-    expect(state.titleMaxLength).toBe(10);
+    expect(state.labelMaxLength).toBe(10);
     expect(state.showNodesOfType?.placeholder).toBe(true);
   });
 

@@ -1,4 +1,4 @@
-export const DEFAULT_TITLE_MAX_LENGTH = 24;
+export const DEFAULT_LABEL_MAX_LENGTH = 24;
 
 /**
  * Shortens a node label for display. The graph model keeps full titles

@@ -33,7 +33,7 @@ draws the label (`packages/foam-graph/src/components/graph-canvas.ts:272`),
 which is type-agnostic — placeholders are truncated because nothing special
 happens to them anymore. Truncating at paint rather than in the model
 matters: group rules match on `title` substrings
-(`lib/groups.ts`), so the model must keep the full text. `titleMaxLength`
+(`lib/groups.ts`), so the model must keep the full text. `labelMaxLength`
 becomes a field of `GraphViewState` with default 24 and a control-panel
 input next to the existing label-fade slider.
 
@@ -49,11 +49,11 @@ functional caller besides `cutTitle`.
 ## Work breakdown
 
 1. `packages/foam-graph/src/protocol.ts`: add `GraphViewState` (the fields
-   listed above plus `titleMaxLength`), extend `ExtensionMessage` with
+   listed above plus `labelMaxLength`), extend `ExtensionMessage` with
    `didRestoreViewState` and `WebviewMessage` with
    `webviewDidChangeViewState`.
 2. `packages/foam-graph`: `labels.ts` helper + test; apply it in
-   `graph-canvas.ts` with `titleMaxLength` passed down as a property;
+   `graph-canvas.ts` with `labelMaxLength` passed down as a property;
    `getViewState`/`applyViewState` on `FoamGraph`, a `view-state-change`
    event dispatched from the mutating handlers; max-label-length control in
    `control-panel.ts` following the existing slider rows; wire both message
@@ -80,7 +80,7 @@ functional caller besides `cutTitle`.
 - AC-3 → `packages/foam-graph/src/lib/labels.test.ts` (truncation incl. the
   `<= 0` disable; the paint path is type-agnostic, see Risks)
 - AC-4 → `packages/foam-graph/src/foam-graph.test.ts` (apply a view state
-  with a new `titleMaxLength`, assert it reaches the canvas binding)
+  with a new `labelMaxLength`, assert it reaches the canvas binding)
 - AC-5 → `packages/foam-vscode/.../graph-webview.test.ts` (the exported
   message handler with a `MapBasedMemento`: `webviewDidChangeViewState`
   writes, a fresh handler's `webviewDidLoad` replays for the same view name
@@ -121,7 +121,7 @@ The spec has no open questions left; these are the calls made while planning:
   graph; a plain overwrite on save would turn that into permanent loss of
   a saved preference once the type reappears.
 - **Labels are truncated into a cache**, rebuilt when `visibleGraph` or
-  `titleMaxLength` changes — the paint loop runs per node per frame, so
+  `labelMaxLength` changes — the paint loop runs per node per frame, so
   truncating there would allocate per frame.
 - **Default bucket name** → `"Default"`, the same name `resolveViewStyle`
   already falls back to (`graph-webview/index.ts:287`), so a nameless open

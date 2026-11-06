@@ -13,7 +13,7 @@ import {
 } from './lib/graph-view-model';
 import { mergeStyles, resolveStyle } from './lib/style';
 import { hashString, hashToHSL } from './lib/colors';
-import { DEFAULT_TITLE_MAX_LENGTH } from './lib/labels';
+import { DEFAULT_LABEL_MAX_LENGTH } from './lib/labels';
 import type {
   GraphData,
   GraphStyle,
@@ -67,7 +67,7 @@ const defaultViewState = () => ({
   nodeSizeMultiplier: 2,
   linkWidthMultiplier: 2,
   animateLinks: 'forward' as LinkAnimation,
-  titleMaxLength: DEFAULT_TITLE_MAX_LENGTH,
+  labelMaxLength: DEFAULT_LABEL_MAX_LENGTH,
 });
 
 @customElement('foam-graph')
@@ -108,7 +108,7 @@ export class FoamGraph extends LitElement {
     defaultViewState().nodeFontSizeMultiplier;
   @state() private nodeSizeMultiplier: number =
     defaultViewState().nodeSizeMultiplier;
-  @state() private titleMaxLength: number = defaultViewState().titleMaxLength;
+  @state() private labelMaxLength: number = defaultViewState().labelMaxLength;
   @state() private animateLinks: LinkAnimation =
     defaultViewState().animateLinks;
   @state() private localStylePatch: GraphStyle =
@@ -230,7 +230,7 @@ export class FoamGraph extends LitElement {
         .nodeFontSizeMultiplier=${this.nodeFontSizeMultiplier}
         .nodeSizeMultiplier=${this.nodeSizeMultiplier}
         .linkWidthMultiplier=${this.linkWidthMultiplier}
-        .titleMaxLength=${this.titleMaxLength}
+        .labelMaxLength=${this.labelMaxLength}
         .animateLinks=${this.animateLinks}
         .maxFitZoom=${this.maxFitZoom}
         @canvas-node-click=${(e: CustomEvent) =>
@@ -253,7 +253,7 @@ export class FoamGraph extends LitElement {
             .nodeFontSizeMultiplier=${this.nodeFontSizeMultiplier}
             .nodeSizeMultiplier=${this.nodeSizeMultiplier}
             .linkWidthMultiplier=${this.linkWidthMultiplier}
-            .titleMaxLength=${this.titleMaxLength}
+            .labelMaxLength=${this.labelMaxLength}
             .animateLinks=${this.animateLinks}
             .forces=${this.forces}
             .selection=${this.selection}
@@ -293,8 +293,8 @@ export class FoamGraph extends LitElement {
               this.linkWidthMultiplier = e.detail;
               this._emitViewStateChange();
             }}
-            @title-max-length-change=${(e: CustomEvent) =>
-              this._onTitleMaxLengthChange(e.detail)}
+            @label-max-length-change=${(e: CustomEvent) =>
+              this._onLabelMaxLengthChange(e.detail)}
             @animate-links-change=${(e: CustomEvent) => {
               this.animateLinks = e.detail;
               this._emitViewStateChange();
@@ -326,7 +326,7 @@ export class FoamGraph extends LitElement {
       nodeSizeMultiplier: this.nodeSizeMultiplier,
       linkWidthMultiplier: this.linkWidthMultiplier,
       animateLinks: this.animateLinks,
-      titleMaxLength: this.titleMaxLength,
+      labelMaxLength: this.labelMaxLength,
     };
   }
 
@@ -350,7 +350,7 @@ export class FoamGraph extends LitElement {
     this.nodeSizeMultiplier = defaults.nodeSizeMultiplier;
     this.linkWidthMultiplier = defaults.linkWidthMultiplier;
     this.animateLinks = defaults.animateLinks;
-    this.titleMaxLength = defaults.titleMaxLength;
+    this.labelMaxLength = defaults.labelMaxLength;
 
     // the declared style (base settings + view config) sits between the
     // defaults and the saved state, as on a cold load
@@ -386,8 +386,8 @@ export class FoamGraph extends LitElement {
     if (state.animateLinks !== undefined) {
       this.animateLinks = state.animateLinks;
     }
-    if (state.titleMaxLength !== undefined) {
-      this.titleMaxLength = state.titleMaxLength;
+    if (state.labelMaxLength !== undefined) {
+      this.labelMaxLength = state.labelMaxLength;
     }
 
     if (this.graphModel) {
@@ -453,8 +453,8 @@ export class FoamGraph extends LitElement {
     this._recomputeVisibleGraphIfSelectionAffectsScope();
   }
 
-  private _onTitleMaxLengthChange(value: number) {
-    this.titleMaxLength = value;
+  private _onLabelMaxLengthChange(value: number) {
+    this.labelMaxLength = value;
     this._emitViewStateChange();
   }
 

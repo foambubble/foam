@@ -402,7 +402,7 @@ describe('graph view state persistence', () => {
       undefined
     )({
       type: 'webviewDidChangeViewState',
-      payload: { viewName: 'Journal', state: { titleMaxLength: 10 } },
+      payload: { viewName: 'Journal', state: { labelMaxLength: 10 } },
     });
 
     const reopened = makeStatePanel('Foam Graph: Journal');
@@ -414,7 +414,7 @@ describe('graph view state persistence', () => {
     )({ type: 'webviewDidLoad' });
     expect(reopened.webview.postMessage).toHaveBeenCalledWith({
       type: 'didRestoreViewState',
-      payload: { viewName: 'Journal', state: { titleMaxLength: 10 } },
+      payload: { viewName: 'Journal', state: { labelMaxLength: 10 } },
     });
 
     const other = makeStatePanel('Foam Graph: Other');
@@ -444,17 +444,17 @@ describe('graph view state persistence', () => {
       undefined
     )({
       type: 'webviewDidChangeViewState',
-      payload: { viewName: 'Journal', state: { titleMaxLength: 10 } },
+      payload: { viewName: 'Journal', state: { labelMaxLength: 10 } },
     });
 
     const all = memento.get<any>(VIEW_STATE_KEY);
-    expect(all.Journal.titleMaxLength).toBe(10);
+    expect(all.Journal.labelMaxLength).toBe(10);
     expect(all.Default).toBeUndefined();
   });
 
   it('restores state after the style and before the graph data', async () => {
     const memento = new MapBasedMemento();
-    await saveViewState(memento, 'Default', { titleMaxLength: 10 });
+    await saveViewState(memento, 'Default', { labelMaxLength: 10 });
 
     const panel = makeStatePanel('Foam Graph');
     await createWebviewMessageHandler(
@@ -481,15 +481,15 @@ describe('graph view state persistence', () => {
     const memento = new MapBasedMemento();
     await memento.update(VIEW_STATE_KEY, {
       Future: { someNewThing: true },
-      Default: { titleMaxLength: 12, unknownField: 'kept' },
+      Default: { labelMaxLength: 12, unknownField: 'kept' },
     });
 
-    await saveViewState(memento, 'Default', { titleMaxLength: 5 });
+    await saveViewState(memento, 'Default', { labelMaxLength: 5 });
 
     const all = memento.get<any>(VIEW_STATE_KEY);
     expect(all.Future).toEqual({ someNewThing: true });
     expect(all.Default.unknownField).toBe('kept');
-    expect(all.Default.titleMaxLength).toBe(5);
+    expect(all.Default.labelMaxLength).toBe(5);
   });
 
   it('merges type filters key-wise on save instead of overwriting them', async () => {
@@ -501,7 +501,7 @@ describe('graph view state persistence', () => {
     // a later snapshot taken while no daily note exists lacks the key
     await saveViewState(memento, 'Default', {
       showNodesOfType: { note: true },
-      titleMaxLength: 10,
+      labelMaxLength: 10,
     });
 
     const all = memento.get<any>(VIEW_STATE_KEY);
@@ -519,7 +519,7 @@ describe('retargetGraphPanel', () => {
 
   it('restores the target view state when the view changes', async () => {
     const memento = new MapBasedMemento();
-    await saveViewState(memento, 'Journal', { titleMaxLength: 10 });
+    await saveViewState(memento, 'Journal', { labelMaxLength: 10 });
     const panel = makeStatePanel('Foam Graph');
 
     retargetGraphPanel(panel, memento, {}, 'Journal');
@@ -527,7 +527,7 @@ describe('retargetGraphPanel', () => {
     expect(panel.title).toBe('Foam Graph: Journal');
     expect(panel.webview.postMessage).toHaveBeenCalledWith({
       type: 'didRestoreViewState',
-      payload: { viewName: 'Journal', state: { titleMaxLength: 10 } },
+      payload: { viewName: 'Journal', state: { labelMaxLength: 10 } },
     });
   });
 

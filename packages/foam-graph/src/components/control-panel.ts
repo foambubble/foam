@@ -2,7 +2,7 @@ import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import './autocomplete-input';
 import { getTypeColor } from '../lib/colors';
-import { DEFAULT_TITLE_MAX_LENGTH } from '../lib/labels';
+import { DEFAULT_LABEL_MAX_LENGTH } from '../lib/labels';
 import type { ResolvedStyle, Forces, Selection, GraphScope } from '../lib/types';
 import type { GroupRule, GroupMatch } from '../protocol';
 
@@ -328,7 +328,7 @@ export class ControlPanel extends LitElement {
   @property({ type: Array }) groups: GroupRule[] = [];
 
   @property({ type: Number }) textFade: number = 0;
-  @property({ type: Number }) titleMaxLength: number = DEFAULT_TITLE_MAX_LENGTH;
+  @property({ type: Number }) labelMaxLength: number = DEFAULT_LABEL_MAX_LENGTH;
   @property({ type: Number }) nodeFontSizeMultiplier: number = 1;
   @property({ type: Number }) nodeSizeMultiplier: number = 1.5;
   @property({ type: Number }) linkWidthMultiplier: number = 2;
@@ -593,15 +593,15 @@ export class ControlPanel extends LitElement {
               min="0"
               max="60"
               step="1"
-              .value=${String(this.titleMaxLength)}
+              .value=${String(this.labelMaxLength)}
               @input=${(e: Event) =>
                 this._emit(
-                  'title-max-length-change',
+                  'label-max-length-change',
                   parseInt((e.target as HTMLInputElement).value)
                 )}
             />
             <span class="value"
-              >${this.titleMaxLength > 0 ? this.titleMaxLength : 'all'}</span
+              >${this.labelMaxLength > 0 ? this.labelMaxLength : 'all'}</span
             >
           </label>
           <label class="slider-row">

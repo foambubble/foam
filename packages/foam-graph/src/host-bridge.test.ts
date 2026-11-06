@@ -9,10 +9,10 @@ import type { GraphViewState } from './protocol';
  */
 const makeElement = () => {
   const element: any = {
-    state: { titleMaxLength: 24 } as GraphViewState,
+    state: { labelMaxLength: 24 } as GraphViewState,
     getViewState: () => ({ ...element.state }),
     applyViewState: (state: GraphViewState) => {
-      element.state = { titleMaxLength: 24, ...state };
+      element.state = { labelMaxLength: 24, ...state };
     },
     selectNote: vi.fn(),
   };
@@ -73,18 +73,18 @@ describe('createHostBridge', () => {
       payload: { viewName: 'Journal', state: {} },
     });
 
-    element.state.titleMaxLength = 10; // user gesture...
+    element.state.labelMaxLength = 10; // user gesture...
     bridge.scheduleViewStateSave();
     bridge.handleMessage({
       // ...then a switch to another view before the debounce fires
       type: 'didRestoreViewState',
-      payload: { viewName: 'Clean', state: { titleMaxLength: 30 } },
+      payload: { viewName: 'Clean', state: { labelMaxLength: 30 } },
     });
 
     expect(post).toHaveBeenCalledTimes(1);
     const { viewName, state } = post.mock.calls[0][0].payload;
     expect(viewName).toBe('Journal');
-    expect(state.titleMaxLength).toBe(10);
+    expect(state.labelMaxLength).toBe(10);
   });
 
   it('flushes a pending save before an incoming style can leak into it', () => {
@@ -96,7 +96,7 @@ describe('createHostBridge', () => {
       payload: { viewName: 'Journal', state: {} },
     });
 
-    element.state.titleMaxLength = 10; // user gesture...
+    element.state.labelMaxLength = 10; // user gesture...
     bridge.scheduleViewStateSave();
     bridge.handleMessage({
       // ...then a view switch: the new view's declared style arrives
@@ -108,7 +108,7 @@ describe('createHostBridge', () => {
     expect(post).toHaveBeenCalledTimes(1);
     const { viewName, state } = post.mock.calls[0][0].payload;
     expect(viewName).toBe('Journal');
-    expect(state.titleMaxLength).toBe(10);
+    expect(state.labelMaxLength).toBe(10);
     expect(state.showNodesOfType?.tag).toBeUndefined();
   });
 

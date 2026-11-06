@@ -147,7 +147,7 @@ describe('computeFitZoom', () => {
 });
 
 // AC-4, canvas path: labels reflect a changed truncation length because the
-// cache the paint loop reads is rebuilt on titleMaxLength changes
+// cache the paint loop reads is rebuilt on labelMaxLength changes
 describe('label cache', () => {
   const longTitle = 'a'.repeat(30);
   const makeVisibleGraph = () =>
@@ -181,8 +181,8 @@ describe('label cache', () => {
     canvas.visibleGraph = makeVisibleGraph();
     (canvas as any).updated(new Map([['visibleGraph', null]]));
 
-    canvas.titleMaxLength = 10;
-    (canvas as any).updated(new Map([['titleMaxLength', null]]));
+    canvas.labelMaxLength = 10;
+    (canvas as any).updated(new Map([['labelMaxLength', null]]));
 
     expect((canvas as any).rs.labelByNodeId.n1).toBe('a'.repeat(10) + '...');
   });

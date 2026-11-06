@@ -99,7 +99,7 @@ export interface GraphViewState {
   nodeSizeMultiplier?: number;
   linkWidthMultiplier?: number;
   animateLinks?: LinkAnimation;
-  titleMaxLength?: number;
+  labelMaxLength?: number;
 }
 
 /** Config for a built-in special type (tag, attachment, image, placeholder) */

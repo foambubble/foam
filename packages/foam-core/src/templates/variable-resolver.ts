@@ -84,6 +84,17 @@ export class Resolver implements VariableResolver {
     this.givenValues.set(name, value);
   }
 
+  /**
+   * Whether `FOAM_TITLE` can be resolved without prompting: it was given
+   * upfront, or an earlier resolution in this pass (e.g. of the template
+   * content) already requested it.
+   */
+  isTitleAvailable(): boolean {
+    return (
+      this.givenValues.has('FOAM_TITLE') || this.promises.has('FOAM_TITLE')
+    );
+  }
+
   getVariables(): Record<string, string> {
     return Object.fromEntries(this.givenValues);
   }

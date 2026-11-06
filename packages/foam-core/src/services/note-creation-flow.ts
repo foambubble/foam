@@ -43,6 +43,14 @@ export interface NoteCreationHooks {
   writeNote: (uri: URI, content: string) => Promise<void>;
   /** Runs once the note is written, e.g. to link the source selection to it. */
   onDidCreate?: (uri: URI) => Promise<void>;
+  /**
+   * Opens the note as an unsaved editor instead of writing a file. Providing
+   * it declares the capability: a markdown template with no `filepath`, no
+   * `fallbackFilepath` and no title variable then opens unsaved, and the
+   * user names the note on save (#1243). Without it, a filename is derived
+   * from the title as before. `onDidCreate` does not run — there is no URI.
+   */
+  openUnsaved?: (content: string) => Promise<void>;
 }
 
 export interface NoteCreationRequest {
@@ -71,7 +79,9 @@ export type NoteCreationOutcome =
   /** A file exists at `uri` and `onFileExists` chose to stop. */
   | { status: 'exists'; uri: URI }
   /** `onRelativePath` chose to stop; nothing was written. */
-  | { status: 'cancelled' };
+  | { status: 'cancelled' }
+  /** The note opened as an unsaved editor via `openUnsaved`; no file exists. */
+  | { status: 'opened-unsaved' };
 
 /**
  * Whether a note may be created at `target`.
@@ -123,8 +133,18 @@ export async function createNote(
     trigger,
     template,
     resolver,
-    { defaultFilepath: fallbackFilepath }
+    {
+      defaultFilepath: fallbackFilepath,
+      canOpenUnsaved: hooks.openUnsaved !== undefined,
+    }
   );
+
+  if ('unsaved' in result) {
+    // No target to resolve, check or write; the editor owns the note until
+    // the user saves it, so onDidCreate (which needs a URI) does not run.
+    await hooks.openUnsaved(result.content);
+    return { status: 'opened-unsaved' };
+  }
 
   const onRelativePath =
     hooks.onRelativePath ?? (async (uri: URI) => asAbsoluteUri(uri, roots));

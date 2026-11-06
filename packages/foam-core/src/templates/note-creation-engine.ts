@@ -5,6 +5,7 @@ import { Logger } from '../utils/log';
 import {
   NoteCreationResult,
   NoteCreationTrigger,
+  ProcessedTemplate,
   Template,
   TemplateContext,
   isCommandTrigger,
@@ -38,6 +39,15 @@ export interface ProcessTemplateOptions {
    * known. JavaScript templates return their own filepath.
    */
   defaultFilepath?: URI;
+  /**
+   * Whether the client can open the note as an unsaved editor. When set, a
+   * markdown template with no `filepath`, no `defaultFilepath` and no title
+   * available (see `Resolver.isTitleAvailable`) yields an
+   * `UnsavedNoteResult` instead of a title prompt, so the user names the
+   * note on save (#1243). Clients without the capability keep deriving a
+   * filename from the title.
+   */
+  canOpenUnsaved?: boolean;
 }
 
 /**
@@ -61,11 +71,11 @@ export class NoteCreationEngine {
     template: Template,
     resolver: Resolver,
     options: ProcessTemplateOptions = {}
-  ): Promise<NoteCreationResult> {
+  ): Promise<ProcessedTemplate> {
     Logger.info(`Processing ${template.type} template`);
     this.logTriggerInfo(trigger);
 
-    let result: NoteCreationResult | null = null;
+    let result: ProcessedTemplate | null = null;
     switch (template.type) {
       case 'javascript':
         result = await this.executeJSTemplate(trigger, template, resolver);
@@ -131,7 +141,7 @@ export class NoteCreationEngine {
     template: Template & { type: 'markdown' },
     resolver: Resolver,
     options: ProcessTemplateOptions
-  ): Promise<NoteCreationResult> {
+  ): Promise<ProcessedTemplate> {
     // Use the provided resolver directly for variable resolution
     const resolvedContent = await resolver.resolveText(template.content);
 
@@ -148,6 +158,18 @@ export class NoteCreationEngine {
     const templateFilepath = metadata.get('filepath');
     if (!templateFilepath && options.defaultFilepath) {
       return { filepath: options.defaultFilepath, content: cleanContent };
+    }
+
+    // No target anywhere and no title to derive one from: the title prompt
+    // belongs to the FOAM_TITLE family of variables, so a template that uses
+    // none of them must not trigger it (#1243). When the client can open an
+    // unsaved editor, the user names the note on save instead.
+    if (
+      !templateFilepath &&
+      options.canOpenUnsaved &&
+      !resolver.isTitleAvailable()
+    ) {
+      return { unsaved: true, content: cleanContent };
     }
 
     // Determine filepath - get variables from resolver for default generation

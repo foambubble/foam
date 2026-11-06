@@ -130,8 +130,9 @@ export async function noteCreate(
       { uri: outcome.uri.toFsPath() }
     );
   }
-  if (outcome.status === 'cancelled') {
-    // Unreachable: relative targets resolve against the root, never cancel.
+  if (outcome.status === 'cancelled' || outcome.status === 'opened-unsaved') {
+    // Unreachable: relative targets resolve against the root, never cancel,
+    // and these hooks provide no `openUnsaved`, so notes are always files.
     throw new FoamError('io_error', 'Note creation was cancelled');
   }
 

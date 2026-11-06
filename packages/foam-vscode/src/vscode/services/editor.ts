@@ -280,6 +280,19 @@ export async function createDocAndFocus(
   await note.document.save();
 }
 
+/**
+ * Opens an unsaved (untitled) markdown editor and inserts the given snippet,
+ * so tabstops stay active. The user names and places the note on save.
+ */
+export async function openUnsavedDocAndFocus(
+  text: SnippetString,
+  viewColumn: ViewColumn = ViewColumn.Active
+) {
+  const document = await workspace.openTextDocument({ language: 'markdown' });
+  const editor = await window.showTextDocument(document, viewColumn);
+  await editor.insertSnippet(text);
+}
+
 export async function replaceSelection(
   document: TextDocument,
   selection: Selection,

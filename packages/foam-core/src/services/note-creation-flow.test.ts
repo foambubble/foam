@@ -129,6 +129,62 @@ describe('createNote', () => {
       expect(titleRequests).toBe(0);
     });
 
+    it('opens an unsaved note when the template has no target and no title variable (#1243)', async () => {
+      const opened: string[] = [];
+      let titleRequests = 0;
+      const resolver = new Resolver(
+        new Map(),
+        new Date(),
+        undefined,
+        'default',
+        {
+          resolveTitle: async () => {
+            titleRequests++;
+            return 'Prompted';
+          },
+          resolveSelectedText: () => '',
+          resolveCurrentDir: () => '/ws',
+        }
+      );
+      const { hooks, writes, created } = makeHooks(markdown('body'), {
+        openUnsaved: async content => {
+          opened.push(content);
+        },
+      });
+      const outcome = await createNote(request('', { resolver }), hooks);
+      expect(outcome).toEqual({ status: 'opened-unsaved' });
+      expect(opened).toEqual(['body']);
+      expect(writes).toEqual([]);
+      expect(created).toEqual([]);
+      expect(titleRequests).toBe(0);
+    });
+
+    it('keeps creating a file named from the title prompt when the client cannot open unsaved notes', async () => {
+      let titleRequests = 0;
+      const resolver = new Resolver(
+        new Map(),
+        new Date(),
+        undefined,
+        'default',
+        {
+          resolveTitle: async () => {
+            titleRequests++;
+            return 'Prompted';
+          },
+          resolveSelectedText: () => '',
+          resolveCurrentDir: () => '/ws',
+        }
+      );
+      const { hooks, writes } = makeHooks(markdown('body'));
+      const outcome = await createNote(request('', { resolver }), hooks);
+      expect(titleRequests).toBe(1);
+      expect(outcome).toEqual({
+        status: 'created',
+        uri: root.joinPath('Prompted.md'),
+      });
+      expect(writes).toEqual([[root.joinPath('Prompted.md'), 'body']]);
+    });
+
     it('resolves Foam variables in JavaScript template content', async () => {
       const template: Template = {
         type: 'javascript',

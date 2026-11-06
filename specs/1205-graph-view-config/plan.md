@@ -67,8 +67,7 @@ functional caller besides `cutTitle`.
    directions.
 4. Remove the setting and plumbing (work item above); drop `cutTitle` and
    the `transformTitle` argument in `generateGraphData`.
-5. Tests per the map below; update `docs/user/features/graph-view.md` with a
-   short section on display preferences persisting per view.
+5. Tests per the map below.
 
 ## AC verification map
 
@@ -89,7 +88,6 @@ functional caller besides `cutTitle`.
 - AC-6 → human (reload window, reopen graph)
 - AC-7 → `packages/foam-vscode/.../graph-webview.test.ts` (store round-trip
   preserves unknown buckets and unknown fields)
-- AC-8 → human (docs read)
 - AC-9 → `packages/foam-graph/src/foam-graph.test.ts` (filters restored via
   `applyViewState`, then `graphData` arrival does not clobber them) and the
   AC-5 test exercising the same round-trip at the feature layer
@@ -160,4 +158,4 @@ The spec has no open questions left; these are the calls made while planning:
   added later.
 - **Groups double-up.** A view that declares groups and has saved state will
   show the saved copy (which includes those groups as last seen). Consistent
-  with saved-state-wins, but a surprise worth one line in the docs section.
+  with saved-state-wins, but a possible surprise for users.

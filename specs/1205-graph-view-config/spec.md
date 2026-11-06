@@ -41,7 +41,7 @@ not part of it.
 Removing a user-visible setting is worth a release-notes callout when this
 ships (fragments are written at release time; `.changeset/` is untouched
 here). No page under `docs/user/` documents `foam.graph.titleMaxLength`
-today, so the docs work is describing the new behavior, not deleting the old.
+today, so there is nothing to delete from the user docs.
 
 ## Decisions
 
@@ -131,10 +131,6 @@ The mechanism, at the level a reviewer of this spec should weigh in on:
   know, when preferences are loaded and saved again, then the unknown keys
   survive unchanged.
   _verify: unit_
-- **AC-8**: Given `docs/user/features/graph-view.md`, when a user reads it,
-  then it describes the truncation preference and that control-panel
-  preferences persist per workspace.
-  _verify: human_
 - **AC-9**: Given node type filters changed in the control panel, when the
   graph is reopened with the same view, then the filters are restored (the
   #1574 scenario).
@@ -150,6 +146,9 @@ The mechanism, at the level a reviewer of this spec should weigh in on:
 - Carrying over a user's customized `titleMaxLength` value from
   `settings.json`. The value is dropped; the preference's default preserves
   today's default behavior.
+- A user-docs section on display preferences. Persistence is invisible
+  when it works, and the Label Length control explains itself in the
+  panel; the maintainer judged a section unnecessary.
 - An explicit "save current view as a named view" control-panel action — a
   deliberate settings write that would bridge preferences back into
   `foam.graph.views`, giving sync and shareability on demand. A possible

@@ -304,6 +304,13 @@ describe('resolveViewStyle', () => {
     expect(style.colorMode).toBe('type');
   });
 
+  it('treats an empty view name as no view name, falling back to Default', () => {
+    mockViews([{ name: 'Default', colorBy: 'directory' }]);
+    const { style, view } = resolveViewStyle({ view: '' });
+    expect(style.colorMode).toBe('directory');
+    expect(view).toBeUndefined();
+  });
+
   it('named view show.enabled is applied to showNodesOfType', () => {
     mockViews([
       {

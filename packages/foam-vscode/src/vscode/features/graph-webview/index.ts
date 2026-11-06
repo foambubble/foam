@@ -353,8 +353,10 @@ export function resolveViewStyle(args?: ShowGraphArgs): {
 
   let style: GraphStyle = getGraphStyle();
 
+  // an empty view name means no view name
+  const viewName = args?.view || undefined;
   // If no view name given and no inline config, fall back to the "Default" named view
-  const namedView = args?.view ?? (args?.config ? undefined : 'Default');
+  const namedView = viewName ?? (args?.config ? undefined : 'Default');
 
   if (namedView) {
     const view = views.find(v => v.name === namedView);
@@ -367,7 +369,7 @@ export function resolveViewStyle(args?: ShowGraphArgs): {
     style = mergeStyles(style, viewConfigToStyle(args.config));
   }
 
-  return { style, view: args?.view };
+  return { style, view: viewName };
 }
 
 export function handleActiveResourceChange(

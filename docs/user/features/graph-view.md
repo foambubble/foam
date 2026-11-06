@@ -135,17 +135,6 @@ You can also pass a config inline without a named view:
 
 All fields are optional. When both `view` and `config` are provided, `config` is merged on top of the named view.
 
-## Display Preferences
-
-The graph remembers the changes you make in its control panel — type filters, label length, sliders, custom groups. Close the graph or reload VS Code, and it comes back the way you left it. Preferences are saved per workspace, and each named view keeps its own: tweaks made while the `Journal` view is open don't affect the default view.
-
-Long node labels are shortened with the **Label Length** slider in the **Appearance** section (drag it to 0 to show full labels). Only the label on the canvas is shortened — group rules that match on `title` always see the full title.
-
-Two things to know:
-
-- Saved preferences win over a view's configuration in `foam.graph.views`: once you've adjusted a view by hand, later edits to its entry in `settings.json` won't show until you adjust those controls again.
-- `foam.graph.titleMaxLength` is no longer a setting. Use the **Label Length** slider instead.
-
 ## What's Next?
 
 With graph view mastery, you're ready to explore advanced Foam features:

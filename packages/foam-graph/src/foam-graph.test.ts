@@ -319,6 +319,33 @@ describe('foam-graph', () => {
     expect(state.showNodesOfType?.placeholder).toBe(true);
   });
 
+  // re-invoking show-graph for the open view re-sends only its style; that
+  // must not clobber the restored-and-tweaked state the next save persists
+  it('keeps the live state when a style arrives after a view state was applied', () => {
+    const element = new FoamGraph();
+    const userGroup = {
+      id: 'mine',
+      label: 'Mine',
+      color: '#111111',
+      enabled: true,
+      match: { property: 'type', value: 'note' },
+    };
+    element.applyViewState({
+      groups: [userGroup],
+      showNodesOfType: { tag: true },
+    });
+
+    element.graphStyle = {
+      groups: [{ ...userGroup, id: 'declared', label: 'Declared' }],
+      showNodesOfType: { tag: false },
+    };
+    (element as any).updated(new Map([['graphStyle', null]]));
+
+    const state = element.getViewState();
+    expect(state.groups?.map(group => group.id)).toEqual(['mine']);
+    expect(state.showNodesOfType?.tag).toBe(true);
+  });
+
   it('keeps the declared style layer when restoring a view state', () => {
     const element = new FoamGraph();
     element.graphStyle = { showNodesOfType: { tag: false } };

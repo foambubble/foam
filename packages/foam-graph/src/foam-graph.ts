@@ -114,6 +114,7 @@ export class FoamGraph extends LitElement {
   @state() private localStylePatch: GraphStyle =
     defaultViewState().localStylePatch;
   @state() private groups: GroupRule[] = defaultViewState().groups;
+  private hasAppliedViewState = false;
   @state() private groupDraft: GroupDraft = {
     active: false,
     property: 'type',
@@ -147,12 +148,26 @@ export class FoamGraph extends LitElement {
       shouldRecomputeGraphStates = true;
     }
 
-    if (changed.has('graphStyle') && this.graphStyle?.groups) {
+    // Once a view state has been applied, groups and type filters are the
+    // user's: a later style (e.g. re-invoking show-graph for the open view)
+    // must not overwrite them, or the next save would persist the reset.
+    // Restores re-layer from the style themselves (see applyViewState).
+    const styleOwnsInteractiveState = !this.hasAppliedViewState;
+
+    if (
+      changed.has('graphStyle') &&
+      styleOwnsInteractiveState &&
+      this.graphStyle?.groups
+    ) {
       this.groups = this.graphStyle.groups;
       shouldRecomputeVisibleGraph = true;
     }
 
-    if (changed.has('graphStyle') && this.graphStyle?.showNodesOfType) {
+    if (
+      changed.has('graphStyle') &&
+      styleOwnsInteractiveState &&
+      this.graphStyle?.showNodesOfType
+    ) {
       this.showNodesOfType = {
         ...this.showNodesOfType,
         ...this.graphStyle.showNodesOfType,
@@ -322,6 +337,7 @@ export class FoamGraph extends LitElement {
    * would leak into the one being restored.
    */
   applyViewState(state: GraphViewState) {
+    this.hasAppliedViewState = true;
     const defaults = defaultViewState();
     this.showNodesOfType = defaults.showNodesOfType;
     this.groups = defaults.groups;

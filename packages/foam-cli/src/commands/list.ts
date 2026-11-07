@@ -81,10 +81,7 @@ export async function listTemplates(rootUri: URI) {
       if (ext === '.md') {
         try {
           const content = await fs.readFile(fullPath, 'utf8');
-          const resource = parser.parse(
-            { path: fullPath, scheme: 'file' } as any,
-            content
-          );
+          const resource = parser.parse(URI.file(fullPath), content);
           description = resource.properties['foam_template']?.description;
         } catch {
           // ignore parse errors

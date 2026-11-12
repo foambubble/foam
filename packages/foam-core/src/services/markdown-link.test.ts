@@ -180,6 +180,42 @@ describe('MarkdownLink', () => {
     });
   });
 
+  describe('wikilink section range', () => {
+    it('should cover the section text of a wikilink', () => {
+      const link = parser.parse(getRandomURI(), `see [[note#My Section]]`)
+        .links[0];
+      const start = 'see [[note#'.length;
+      expect(MarkdownLink.getSectionRange(link)).toEqual(
+        Range.create(0, start, 0, start + 'My Section'.length)
+      );
+    });
+    it('should exclude the alias and account for the embed marker', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `see ![[note#My Section|alias]]`
+      ).links[0];
+      const start = 'see ![[note#'.length;
+      expect(MarkdownLink.getSectionRange(link)).toEqual(
+        Range.create(0, start, 0, start + 'My Section'.length)
+      );
+    });
+    it('should cover the section of a link to the same note', () => {
+      const link = parser.parse(getRandomURI(), `[[#My Section]]`).links[0];
+      expect(MarkdownLink.getSectionRange(link)).toEqual(
+        Range.create(0, 3, 0, 3 + 'My Section'.length)
+      );
+    });
+    it('should return undefined for a wikilink without a section', () => {
+      const link = parser.parse(getRandomURI(), `see [[note]]`).links[0];
+      expect(MarkdownLink.getSectionRange(link)).toBeUndefined();
+    });
+    it('should return undefined for a direct link', () => {
+      const link = parser.parse(getRandomURI(), `see [text](note.md#section)`)
+        .links[0];
+      expect(MarkdownLink.getSectionRange(link)).toBeUndefined();
+    });
+  });
+
   describe('parse direct link', () => {
     it('should parse target', () => {
       const link = parser.parse(getRandomURI(), `this is a [link](to/path.md)`)

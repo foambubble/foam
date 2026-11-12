@@ -1,4 +1,5 @@
 import { ResourceLink } from '../model/note';
+import { Range } from '../model/range';
 import { URI } from '../model/uri';
 import { TextEdit } from './text-edit';
 
@@ -20,6 +21,8 @@ function parseWikilink(text: string) {
   return {
     target: hash < 0 ? reference : reference.slice(0, hash),
     section: hash < 0 ? '' : reference.slice(hash + 1),
+    /** Offset of `section` in `text`, -1 without a `#` */
+    sectionOffset: hash < 0 ? -1 : open + 2 + hash + 1,
     alias: pipe < 0 ? '' : inner.slice(pipe + 1),
   };
 }
@@ -106,6 +109,23 @@ export abstract class MarkdownLink {
     } catch (e) {
       throw new Error(`Couldn't parse link ${link.rawText} - ${e}`);
     }
+  }
+
+  /**
+   * Range of `section` in `[[target#section|alias]]`, block anchors included.
+   * Undefined for other link types and for wikilinks without a section.
+   */
+  public static getSectionRange(link: ResourceLink): Range | undefined {
+    if (link.type !== 'wikilink') {
+      return undefined;
+    }
+    const wikilink = parseWikilink(link.rawText);
+    if (!wikilink?.section) {
+      return undefined;
+    }
+    const { line, character } = link.range.start;
+    const start = character + wikilink.sectionOffset;
+    return Range.create(line, start, line, start + wikilink.section.length);
   }
 
   public static createUpdateLinkEdit(

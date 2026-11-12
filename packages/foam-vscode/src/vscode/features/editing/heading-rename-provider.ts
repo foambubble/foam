@@ -1,13 +1,15 @@
 import * as vscode from 'vscode';
-import { Foam } from '@foam/core';
+import { Foam, URI } from '@foam/core';
 import { Resource, Section } from '@foam/core';
 import { HeadingEdit } from '@foam/core';
 import { Logger } from '@foam/core';
+import { MarkdownLink } from '@foam/core';
 import { Position } from '@foam/core';
 import { Range } from '@foam/core';
 import {
   fromVsCodeUri,
   toVsCodeRange,
+  toVsCodeUri,
   toVsCodeWorkspaceEdit,
 } from '../../utils/vsc-utils';
 
@@ -31,37 +33,35 @@ export class HeadingRenameProvider implements vscode.RenameProvider {
     position: vscode.Position,
     _token: vscode.CancellationToken
   ): Promise<vscode.Range | { range: vscode.Range; placeholder: string }> {
-    const section = this.getSectionOnHeadingLine(document, position);
-    if (!section) {
+    const target = this.getRenameTarget(document, position);
+    if (!target) {
       throw new Error('Cannot rename: cursor is not on a heading');
     }
 
-    return {
-      range: toVsCodeRange(
-        getHeadingLabelRange(document, section.range.start.line, section.label)
-      ),
-      placeholder: section.label,
-    };
+    return { range: target.range, placeholder: target.section.label };
   }
 
-  provideRenameEdits(
+  async provideRenameEdits(
     document: vscode.TextDocument,
     position: vscode.Position,
     newName: string,
     _token: vscode.CancellationToken
-  ): vscode.ProviderResult<vscode.WorkspaceEdit> {
-    const section = this.getSectionOnHeadingLine(document, position);
-    if (!section) {
+  ): Promise<vscode.WorkspaceEdit> {
+    const target = this.getRenameTarget(document, position);
+    if (!target) {
       throw new Error('Cannot rename: cursor is not on a heading');
     }
 
-    const fileUri = fromVsCodeUri(document.uri);
-    const oldLabel = section.label;
+    const fileUri = target.uri;
+    const oldLabel = target.section.label;
 
-    // Edit 1: update the heading text in the current document
+    // Edit 1: update the heading text in the note that holds it
+    const headingDocument = fileUri.isEqual(fromVsCodeUri(document.uri))
+      ? document
+      : await vscode.workspace.openTextDocument(toVsCodeUri(fileUri));
     const headingLabelRange = getHeadingLabelRange(
-      document,
-      section.range.start.line,
+      headingDocument,
+      target.section.range.start.line,
       oldLabel
     );
     const headingEdit = {
@@ -96,24 +96,53 @@ export class HeadingRenameProvider implements vscode.RenameProvider {
   }
 
   /**
-   * Returns the section at the given position only when the position is on the
-   * heading line itself (not in the section body). Uses Resource.getSectionAtPosition
-   * to find the enclosing section, then verifies the line matches the heading.
+   * The heading to rename: the one on the cursor line, otherwise the one the
+   * wikilink section under the cursor points to. `range` is the text the
+   * rename box covers in `document`.
    */
-  private getSectionOnHeadingLine(
+  private getRenameTarget(
     document: vscode.TextDocument,
     position: vscode.Position
-  ): Section | undefined {
+  ): { uri: URI; section: Section; range: vscode.Range } | undefined {
     const resource = this.foam.workspace.find(fromVsCodeUri(document.uri));
     if (!resource) {
       return undefined;
     }
     const foamPosition = Position.create(position.line, position.character);
     const section = Resource.getSectionAtPosition(resource, foamPosition);
-    if (!section || section.range.start.line !== position.line) {
+    if (section && section.range.start.line === position.line) {
+      return {
+        uri: resource.uri,
+        section,
+        range: getHeadingLabelRange(
+          document,
+          section.range.start.line,
+          section.label
+        ),
+      };
+    }
+
+    const link = resource.links.find(l =>
+      Range.containsPosition(l.range, foamPosition)
+    );
+    const sectionRange = link && MarkdownLink.getSectionRange(link);
+    if (!sectionRange || !Range.containsPosition(sectionRange, foamPosition)) {
       return undefined;
     }
-    return section;
+    const linked = this.foam.workspace.find(
+      this.foam.workspace.resolveLink(resource, link)
+    );
+    const linkedSection =
+      linked &&
+      Resource.findSection(linked, MarkdownLink.analyzeLink(link).section);
+    if (!linkedSection) {
+      return undefined;
+    }
+    return {
+      uri: linked.uri,
+      section: linkedSection,
+      range: toVsCodeRange(sectionRange),
+    };
   }
 }
 

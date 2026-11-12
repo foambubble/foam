@@ -271,3 +271,55 @@ describe('Incremental graph update equivalence', () => {
     graph.dispose();
   });
 });
+
+describe('Building a graph in batches', () => {
+  function workspaceWithLinks() {
+    const workspace = createTestWorkspace();
+    workspace
+      .set(
+        createTestNote({
+          uri: '/a.md',
+          links: [{ slug: 'b' }, { slug: 'ghost' }],
+        })
+      )
+      .set(createTestNote({ uri: '/b.md', links: [{ slug: 'c' }] }))
+      .set(
+        createTestNote({
+          uri: '/c.md',
+          links: [{ slug: 'a' }, { slug: 'ghost' }],
+        })
+      )
+      .set(createTestNote({ uri: '/d.md' }))
+      .set(createTestNote({ uri: '/e.md', links: [{ slug: 'd' }] }));
+    return workspace;
+  }
+
+  it('connects the same links as a graph built at once, pausing between batches', async () => {
+    const workspace = workspaceWithLinks();
+    let pauses = 0;
+
+    const graph = await FoamGraph.fromWorkspaceInBatches(workspace, {
+      batchSize: 2,
+      pause: async () => {
+        pauses++;
+      },
+    });
+
+    expectEquivalentToRebuild(graph, workspace);
+    expect(pauses).toBe(2);
+  });
+
+  it('follows the workspace once built when monitoring', async () => {
+    const workspace = workspaceWithLinks();
+    const graph = await FoamGraph.fromWorkspaceInBatches(workspace, {
+      batchSize: 2,
+      pause: async () => undefined,
+      keepMonitoring: true,
+    });
+
+    workspace.set(createTestNote({ uri: '/ghost.md', links: [{ slug: 'e' }] }));
+    workspace.delete(workspace.find('/d.md')!.uri);
+
+    expectEquivalentToRebuild(graph, workspace);
+  });
+});

@@ -84,19 +84,55 @@ export class FoamGraph implements IDisposable {
     const graph = new FoamGraph(workspace);
     graph.update();
     if (keepMonitoring) {
-      // Incremental handlers, not a full rebuild — see onResource* below. Each
-      // touches only the affected connections, then fires onDidUpdate. They are
-      // NOT debounced: debouncing coalesces events, but incremental updates need
-      // every event (each carries a distinct diff to apply).
-      graph.disposables.push(
-        workspace.onDidAdd(resource => graph.onResourceAdded(resource)),
-        workspace.onDidUpdate(({ old, new: updated }) =>
-          graph.onResourceUpdated(old, updated)
-        ),
-        workspace.onDidDelete(resource => graph.onResourceDeleted(resource))
-      );
+      graph.monitor();
     }
     return graph;
+  }
+
+  /**
+   * Like {@link fromWorkspace}, but connects the resources `batchSize` at a
+   * time and awaits `pause` between batches, so a single-threaded host stays
+   * responsive while a large workspace is connected. The workspace must not
+   * change until the returned promise settles.
+   */
+  public static async fromWorkspaceInBatches(
+    workspace: FoamWorkspace,
+    options: {
+      batchSize: number;
+      pause: () => Promise<void>;
+      keepMonitoring?: boolean;
+    }
+  ): Promise<FoamGraph> {
+    const graph = new FoamGraph(workspace);
+    let connected = 0;
+    for (const resource of workspace.resources()) {
+      graph.connectResource(resource);
+      if (++connected % options.batchSize === 0) {
+        await options.pause();
+      }
+    }
+    graph.onDidUpdateEmitter.fire();
+    if (options.keepMonitoring) {
+      graph.monitor();
+    }
+    return graph;
+  }
+
+  /**
+   * Follows the workspace with incremental handlers, not a full rebuild — see
+   * onResource* below. Each touches only the affected connections, then fires
+   * onDidUpdate. They are NOT debounced: debouncing coalesces events, but
+   * incremental updates need every event (each carries a distinct diff to
+   * apply).
+   */
+  private monitor() {
+    this.disposables.push(
+      this.workspace.onDidAdd(resource => this.onResourceAdded(resource)),
+      this.workspace.onDidUpdate(({ old, new: updated }) =>
+        this.onResourceUpdated(old, updated)
+      ),
+      this.workspace.onDidDelete(resource => this.onResourceDeleted(resource))
+    );
   }
 
   /**

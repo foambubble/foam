@@ -26,7 +26,7 @@ Markdown links reach the same sections, by the heading's slug — its text in lo
 - External file: `[link text](other-file.md#section-name)`
 - Same document: `[link text](#section-name)`
 
-To rename a section, press `F2` on its heading, or on the section part of any link to it, in either syntax.
+To rename a section, press `F2` on its heading, or on the section part of a wikilink or of a markdown link from another note.
 
 ## Block Links
 

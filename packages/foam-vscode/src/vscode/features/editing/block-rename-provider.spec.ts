@@ -1,24 +1,17 @@
 /* @unit-ready */
 import * as vscode from 'vscode';
 import { createMarkdownParser } from '@foam/core';
-import { FoamGraph } from '@foam/core';
 import {
   cleanWorkspace,
   closeEditors,
   createFile,
   showInEditor,
 } from '../../../test/test-utils-vscode';
-import { createTestWorkspace } from '../../../test/test-utils';
+import { buildFoamLike, createTestWorkspace } from '../../../test/test-utils';
 import { toVsCodeUri } from '../../utils/vsc-utils';
 import { BlockRenameProvider } from './block-rename-provider';
 
 const parser = createMarkdownParser([]);
-
-const buildFoamLike = (ws: ReturnType<typeof createTestWorkspace>) => ({
-  workspace: ws,
-  graph: FoamGraph.fromWorkspace(ws),
-  dispose: () => {},
-});
 
 describe('BlockRenameProvider', () => {
   beforeEach(async () => {

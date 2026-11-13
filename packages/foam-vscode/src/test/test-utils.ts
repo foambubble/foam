@@ -5,7 +5,21 @@
  * them here so existing imports keep working, and override the few values
  * that need to be foam-vscode-specific (e.g. TEST_DATA_DIR).
  */
-import { URI } from '@foam/core';
+import { createMarkdownParser, FoamGraph, URI } from '@foam/core';
+import { createTestWorkspace } from '@foam/core/test';
+
+/**
+ * Enough of a Foam to build a provider with: the workspace it was given, a
+ * graph over it, and a parser. Providers read no more than these.
+ */
+export const buildFoamLike = (
+  workspace: ReturnType<typeof createTestWorkspace>
+) => ({
+  workspace,
+  graph: FoamGraph.fromWorkspace(workspace),
+  services: { parser: createMarkdownParser([]) },
+  dispose: () => {},
+});
 
 export {
   InMemoryDataStore,

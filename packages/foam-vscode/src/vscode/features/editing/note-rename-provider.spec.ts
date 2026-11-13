@@ -1,6 +1,6 @@
 /* @unit-ready */
 import * as vscode from 'vscode';
-import { createMarkdownParser, FoamGraph } from '@foam/core';
+import { createMarkdownParser } from '@foam/core';
 import {
   cleanWorkspace,
   closeEditors,
@@ -12,17 +12,14 @@ import {
   showInEditor,
   waitForNoteInFoamWorkspace,
 } from '../../../test/test-utils-vscode';
-import { createTestWorkspace, waitForExpect } from '../../../test/test-utils';
+import {
+  buildFoamLike,
+  createTestWorkspace,
+  waitForExpect,
+} from '../../../test/test-utils';
 import { NoteRenameProvider } from './note-rename-provider';
 
 const parser = createMarkdownParser([]);
-
-const buildFoamLike = (ws: ReturnType<typeof createTestWorkspace>) => ({
-  workspace: ws,
-  graph: FoamGraph.fromWorkspace(ws),
-  services: { parser },
-  dispose: () => {},
-});
 
 describe('NoteRenameProvider', () => {
   describe('prepareRename', () => {

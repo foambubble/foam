@@ -401,8 +401,10 @@ export function requiresSource(field: string): boolean {
 }
 
 function getSectionContent(r: Resource, source: string, label: string): string | undefined {
-  // Case-sensitive: matches `Resource.findSection` so labels work the same way
-  // in `section[Foo]` selects as in `![[note#Foo]]` embeds.
+  // The heading's own text, exactly. A link names a heading by its text or by
+  // its slug, through `Resource.findSection`, so `![[note#my-section]]` embeds
+  // what `section[my-section]` does not select. Widening this to match would
+  // change which notes a saved query returns, which is its own decision.
   const section = r.sections.find(s => s.label === label);
   if (!section) return undefined;
   // Section range is half-open at end.line; skip the heading, which spans two

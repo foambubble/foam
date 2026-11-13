@@ -35,6 +35,48 @@ describe('Rename dispatch', () => {
       name
     );
 
+  /**
+   * The box F2 opens comes from `prepareRename`, which
+   * `executeDocumentRenameProvider` skips. This is the command behind it —
+   * internal, but the only way to ask which provider the box itself comes
+   * from. Only the placeholder is read: it tells the two apart without
+   * depending on the shape the internal range comes back in.
+   */
+  const prepare = (uri: vscode.Uri, position: vscode.Position) =>
+    vscode.commands.executeCommand<{ text?: string; placeholder?: string }>(
+      '_executePrepareRename',
+      uri,
+      position
+    );
+
+  it('should open the rename box on a wikilink section from Foam, not the built-in', async () => {
+    const target = await createFile('# Note\n\n## My Section\n', [
+      'dispatch',
+      'boxed.md',
+    ]);
+    const links = await createFile(`Wiki [[boxed#My Section]]\n`, [
+      'dispatch',
+      'boxed-links.md',
+    ]);
+    await Promise.all(
+      [target, links].map(n => waitForNoteInFoamWorkspace(n.uri))
+    );
+    (await getFoamFromVSCode()).graph.update();
+    const { doc } = await showInEditor(links.uri);
+
+    const box = await prepare(
+      doc.uri,
+      new vscode.Position(0, 'Wiki [[boxed#My'.length)
+    );
+
+    // VS Code reads `[boxed#My Section]` as a shorthand reference link and
+    // would offer all of it; Foam offers the section alone
+    expect(box.text ?? box.placeholder).toEqual('My Section');
+
+    await deleteFile(target.uri);
+    await deleteFile(links.uri);
+  });
+
   it('should give a section rename started on a markdown link to Foam, wikilinks and all', async () => {
     const target = await createFile('# Note\n\n## My Section\n\nBody.\n', [
       'dispatch',

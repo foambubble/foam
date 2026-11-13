@@ -1,4 +1,5 @@
 import './foam-graph';
+import { createHostBridge } from './host-bridge';
 import type { ExtensionMessage, WebviewMessage } from './protocol';
 import type { FoamGraph } from './foam-graph';
 
@@ -12,7 +13,8 @@ const vscode = (() => {
   } catch {
     // Not in VS Code — provide a mock for browser-based development
     return {
-      postMessage: (msg: unknown) => console.log('[mock vscode] postMessage', msg),
+      postMessage: (msg: unknown) =>
+        console.log('[mock vscode] postMessage', msg),
     };
   }
 })();
@@ -21,19 +23,12 @@ const element = document.createElement('foam-graph') as FoamGraph;
 element.showControls = true;
 document.getElementById('app')!.appendChild(element);
 
+const bridge = createHostBridge(element, message =>
+  vscode.postMessage(message)
+);
+
 window.addEventListener('message', (event: MessageEvent) => {
-  const message = event.data as ExtensionMessage;
-  switch (message.type) {
-    case 'didUpdateGraphData':
-      element.graphData = message.payload;
-      break;
-    case 'didUpdateStyle':
-      element.graphStyle = message.payload;
-      break;
-    case 'didSelectNote':
-      element.selectNote(message.payload);
-      break;
-  }
+  bridge.handleMessage(event.data as ExtensionMessage);
 });
 
 element.addEventListener('node-click', (e: Event) => {
@@ -42,6 +37,17 @@ element.addEventListener('node-click', (e: Event) => {
     payload: (e as CustomEvent).detail,
   });
 });
+
+element.addEventListener('view-state-change', () => {
+  bridge.scheduleViewStateSave();
+});
+
+element.addEventListener('view-state-reset', () => {
+  bridge.resetViewState();
+});
+
+// Best effort: don't lose a change made just before the panel is closed.
+window.addEventListener('pagehide', () => bridge.flushPendingViewState());
 
 window.addEventListener('error', (error: ErrorEvent) => {
   vscode.postMessage({

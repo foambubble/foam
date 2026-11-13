@@ -105,6 +105,8 @@ Open a named view via a keybinding in `keybindings.json`:
 }
 ```
 
+Each view remembers what you change in the graph panel (filters, groups, sliders), so tune your `Journal` view once and its shortcut will always bring it back that way. If you later edit the view in `foam.graph.views`, press **Reset view** at the bottom of the panel to pick up the new settings.
+
 You can also pass a config inline without a named view:
 
 ```json

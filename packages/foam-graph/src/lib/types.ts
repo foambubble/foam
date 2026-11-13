@@ -1,5 +1,15 @@
 import type { NodeInfo, GroupRule } from '../protocol';
 
+// Shared display-option shapes live in the protocol (they are part of the
+// persisted view state); re-exported here for the view-internal modules.
+export type {
+  Forces,
+  Labels,
+  LinkAnimation,
+  GraphScope,
+  Selection,
+} from '../protocol';
+
 export interface GraphModelNode extends NodeInfo {
   neighbors: string[];
   links: GraphModelLink[];
@@ -54,21 +64,3 @@ export interface GraphStates {
   linkStates: Map<string, LinkState>;
 }
 
-export interface Forces {
-  collide: number;
-  repel: number;
-  link: number;
-  velocityDecay: number;
-}
-
-export type LinkAnimation = 'forward' | 'off' | 'reverse';
-
-export type GraphScope = 'full' | { depth: number };
-
-export type Labels = 'always' | { fade: number };
-
-export interface Selection {
-  neighborDepth: number;
-  centerOnSelect: boolean;
-  zoomOnSelect: boolean;
-}

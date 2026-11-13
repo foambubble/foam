@@ -146,9 +146,9 @@ The mechanism, at the level a reviewer of this spec should weigh in on:
 - Carrying over a user's customized `titleMaxLength` value from
   `settings.json`. The value is dropped; the preference's default preserves
   today's default behavior.
-- A user-docs section on display preferences. Persistence is invisible
-  when it works, and the Label Length control explains itself in the
-  panel; the maintainer judged a section unnecessary.
+- A user-docs section on display preferences: the maintainer judged one
+  sentence under Named Views enough, tying per-view persistence to the
+  views users already define.
 - An explicit "save current view as a named view" control-panel action — a
   deliberate settings write that would bridge preferences back into
   `foam.graph.views`, giving sync and shareability on demand. A possible

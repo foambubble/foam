@@ -105,6 +105,8 @@ Open a named view via a keybinding in `keybindings.json`:
 }
 ```
 
+Each view remembers what you change in the graph panel (filters, groups, sliders), so tune your `Journal` view once and its shortcut will always bring it back that way.
+
 You can also pass a config inline without a named view:
 
 ```json

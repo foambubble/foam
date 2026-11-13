@@ -213,7 +213,9 @@ export async function renameSection(
     graph,
     workspace,
     resource.uri,
-    oldLabel,
+    // The heading's own text: `oldLabel` may name it by slug, which would
+    // then fail to match the links that spell it out
+    section.label,
     newLabel
   );
 

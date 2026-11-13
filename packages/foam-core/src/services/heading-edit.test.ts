@@ -555,6 +555,107 @@ Content.
         ['/note-c.md', Range.create(0, 0, 0, 22)],
       ]);
     });
+
+    it('should rewrite each link in the syntax it was written in', () => {
+      const ws = createTestWorkspace();
+      const noteA = createNoteFromMarkdown('/note-a.md', '## My Section\n');
+      const noteB = createNoteFromMarkdown(
+        '/note-b.md',
+        [
+          '[[note-a#My Section]]',
+          '[exact](<note-a.md#My Section>)',
+          '[slug](note-a.md#my-section)',
+        ].join('\n\n')
+      );
+      ws.set(noteA).set(noteB);
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const result = HeadingEdit.createRenameSectionEdits(
+        graph,
+        ws,
+        noteA.uri,
+        'My Section',
+        'New Section'
+      );
+
+      expect(result.totalOccurrences).toBe(3);
+      expect(result.edits.map(e => e.edit.newText)).toEqual([
+        '[[note-a#New Section]]',
+        '[exact](<note-a.md#New Section>)',
+        '[slug](note-a.md#new-section)',
+      ]);
+    });
+
+    it('should keep a wikilink written as a slug a slug', () => {
+      const ws = createTestWorkspace();
+      const noteA = createNoteFromMarkdown('/note-a.md', '## My Section\n');
+      const noteB = createNoteFromMarkdown(
+        '/note-b.md',
+        '[[note-a#my-section]]'
+      );
+      ws.set(noteA).set(noteB);
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const result = HeadingEdit.createRenameSectionEdits(
+        graph,
+        ws,
+        noteA.uri,
+        'My Section',
+        'New Section'
+      );
+
+      expect(result.edits.map(e => e.edit.newText)).toEqual([
+        '[[note-a#new-section]]',
+      ]);
+    });
+
+    it('should rewrite a definition url written as a slug', () => {
+      const ws = createTestWorkspace();
+      const noteA = createNoteFromMarkdown('/note-a.md', '## My Section\n');
+      const noteB = createNoteFromMarkdown(
+        '/note-b.md',
+        'See [the reference][ref1].\n\n[ref1]: note-a.md#my-section\n'
+      );
+      ws.set(noteA).set(noteB);
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const result = HeadingEdit.createRenameSectionEdits(
+        graph,
+        ws,
+        noteA.uri,
+        'My Section',
+        'New Section'
+      );
+
+      expect(result.edits.map(e => e.edit.newText)).toEqual([
+        '[ref1]: note-a.md#new-section',
+      ]);
+    });
+
+    it('should leave a link whose slug names a different heading', () => {
+      const ws = createTestWorkspace();
+      const noteA = createNoteFromMarkdown(
+        '/note-a.md',
+        '## My Section\n\n## Other Section\n'
+      );
+      const noteB = createNoteFromMarkdown(
+        '/note-b.md',
+        '[slug](note-a.md#other-section)'
+      );
+      ws.set(noteA).set(noteB);
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const result = HeadingEdit.createRenameSectionEdits(
+        graph,
+        ws,
+        noteA.uri,
+        'My Section',
+        'New Section'
+      );
+
+      expect(result.totalOccurrences).toBe(0);
+      expect(result.edits).toHaveLength(0);
+    });
   });
 
   describe('getSectionAtPosition', () => {

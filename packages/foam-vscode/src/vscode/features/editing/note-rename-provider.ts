@@ -103,13 +103,18 @@ export class NoteRenameProvider implements vscode.RenameProvider {
     // The box offers the link's own text to edit, so it can only stand for a
     // file that text names. A link reaching its note another way — a folder's
     // index, a reference definition — would rename a file called something
-    // else, under a name meant for this one.
-    if (document.getText(toVsCodeRange(range)) !== target.getName()) {
+    // else, under a name meant for this one. Folded, because an identifier
+    // names its note whatever case it is written in.
+    if (!sameName(document.getText(toVsCodeRange(range)), target.getName())) {
       return undefined;
     }
     return { uri: target, range };
   }
 }
+
+/** Whether two names are the same note's, as the workspace folds identifiers */
+const sameName = (one: string, other: string) =>
+  one.toLocaleLowerCase() === other.toLocaleLowerCase();
 
 /**
  * Narrows the target's range to the name of the file it resolves to, so that
@@ -123,7 +128,8 @@ function nameRange(
 ): Range {
   const text = document.getText(toVsCodeRange(target));
   const afterFolder = text.lastIndexOf('/') + 1;
-  const extension = text.endsWith(uri.getExtension())
+  const suffix = text.slice(text.length - uri.getExtension().length);
+  const extension = sameName(suffix, uri.getExtension())
     ? uri.getExtension().length
     : 0;
   return Range.create(

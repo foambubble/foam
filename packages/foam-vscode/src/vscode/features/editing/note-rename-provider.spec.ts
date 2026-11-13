@@ -143,6 +143,46 @@ describe('NoteRenameProvider', () => {
       ).rejects.toThrow('Cannot rename: cursor is not on a note');
     });
 
+    it('should rename a note a link names in a different case', async () => {
+      const fileA = await createFile('# Readme\n', ['readme.md']);
+      const fileB = await createFile('See [[Readme]].\n');
+
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content));
+      const provider = new NoteRenameProvider(buildFoamLike(ws) as any);
+
+      const { doc } = await showInEditor(fileB.uri);
+      const result = (await provider.prepareRename(
+        doc,
+        new vscode.Position(0, 'See [[Re'.length),
+        new vscode.CancellationTokenSource().token
+      )) as { range: vscode.Range; placeholder: string };
+
+      // Foam resolves an identifier whatever its case, so the link names the
+      // note even though it spells it differently
+      expect(result.placeholder).toBe('Readme');
+    });
+
+    it('should throw when a definition sends the link to a differently named note', async () => {
+      const other = await createFile('# Other\n', ['other.md']);
+      const fileB = await createFile('See [[note-a]].\n\n[note-a]: other.md\n');
+
+      const ws = createTestWorkspace()
+        .set(parser.parse(other.uri, other.content))
+        .set(parser.parse(fileB.uri, fileB.content));
+      const provider = new NoteRenameProvider(buildFoamLike(ws) as any);
+
+      const { doc } = await showInEditor(fileB.uri);
+      await expect(
+        provider.prepareRename(
+          doc,
+          new vscode.Position(0, 'See [[no'.length),
+          new vscode.CancellationTokenSource().token
+        )
+      ).rejects.toThrow('Cannot rename: cursor is not on a note');
+    });
+
     it('should throw when the link reaches its note through a folder index', async () => {
       const index = await createFile('# Projects\n', ['projects', 'index.md']);
       const fileB = await createFile('See [[projects]].\n');

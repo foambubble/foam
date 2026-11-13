@@ -91,6 +91,11 @@ functional caller besides `cutTitle`.
 - AC-9 → `packages/foam-graph/src/foam-graph.test.ts` (filters restored via
   `applyViewState`, then `graphData` arrival does not clobber them) and the
   AC-5 test exercising the same round-trip at the feature layer
+- AC-10 → `packages/foam-graph/src/foam-graph.test.ts` (reset re-layers
+  defaults → declared style), `packages/foam-graph/src/host-bridge.test.ts`
+  (pending save dropped, reset message carries the view name) and
+  `packages/foam-vscode/.../graph-webview.test.ts` (only that bucket is
+  deleted)
 
 ## Decisions
 
@@ -134,8 +139,12 @@ The spec has no open questions left; these are the calls made while planning:
   applied after `didUpdateStyle`. This is the spec's "preferences record the
   user's last interactive choices", and it means a later edit to a view's
   `show`/`groups` in settings.json is masked for buckets that already have
-  saved state. Accepted; the escape hatch is the spec's loss-is-acceptable
-  stance (and a future reset control, not in v1).
+  saved state. The escape hatch is the panel's reset button (AC-10): the
+  webview re-layers defaults → declared style and tells the extension to
+  delete that view's bucket. It is a separate message rather than a save of
+  the reset state, since a full snapshot would freeze the declared config
+  into the bucket again. A save still pending in the debounce is dropped, or
+  it would recreate the bucket.
 - **Debounce in the webview (`main.ts`), not the extension** → keeps the
   store write path trivial and the message volume low at the source.
 
@@ -154,8 +163,7 @@ The spec has no open questions left; these are the calls made while planning:
   asserting the panel opens clean with a pre-seeded `workspaceState` is the
   cheapest wiring check.
 - **Stale buckets.** Renamed/deleted views leave orphaned state; harmless by
-  AC-7's own semantics, but worth remembering if a "reset view" control is
-  added later.
+  AC-7's own semantics. Reset only clears the open view's bucket.
 - **Groups double-up.** A view that declares groups and has saved state will
   show the saved copy (which includes those groups as last seen). Consistent
   with saved-state-wins, but a possible surprise for users.

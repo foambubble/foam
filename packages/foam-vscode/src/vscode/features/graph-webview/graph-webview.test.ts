@@ -500,6 +500,27 @@ describe('graph view state persistence', () => {
     expect(all.Default.labelMaxLength).toBe(5);
   });
 
+  // AC-10: reset forgets only the named view's saved state
+  it('deletes only the reset view from the store', async () => {
+    const memento = new MapBasedMemento();
+    await memento.update(VIEW_STATE_KEY, {
+      Journal: { labelMaxLength: 10 },
+      Default: { labelMaxLength: 12 },
+      Future: { someNewThing: true },
+    });
+    const panel = makeStatePanel('Foam Graph');
+
+    await createWebviewMessageHandler(panel, makeFoam(), memento, undefined)({
+      type: 'webviewDidResetViewState',
+      payload: { viewName: 'Journal' },
+    });
+
+    expect(memento.get<any>(VIEW_STATE_KEY)).toEqual({
+      Default: { labelMaxLength: 12 },
+      Future: { someNewThing: true },
+    });
+  });
+
   it('merges type filters key-wise on save instead of overwriting them', async () => {
     const memento = new MapBasedMemento();
     await saveViewState(memento, 'Default', {

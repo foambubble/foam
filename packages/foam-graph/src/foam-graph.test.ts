@@ -382,6 +382,40 @@ describe('foam-graph', () => {
     expect(element.getViewState().showNodesOfType?.tag).toBe(false);
   });
 
+  // AC-10: reset brings the view back to its configured settings and asks
+  // the host to forget its saved state, rather than saving the reset
+  it('resets to the declared style and announces a reset, not a change', () => {
+    const element = new FoamGraph();
+    element.graphStyle = { showNodesOfType: { tag: false } };
+    element.applyViewState({
+      showNodesOfType: { tag: true },
+      labelMaxLength: 7,
+    });
+    const events: string[] = [];
+    element.addEventListener('view-state-change', () => events.push('change'));
+    element.addEventListener('view-state-reset', () => events.push('reset'));
+
+    (element as any)._onResetView();
+
+    const state = element.getViewState();
+    expect(state.showNodesOfType?.tag).toBe(false);
+    expect(state.labelMaxLength).toBe(24);
+    expect(events).toEqual(['reset']);
+  });
+
+  it('follows a re-sent style after a reset', () => {
+    const element = new FoamGraph();
+    element.applyViewState({ showNodesOfType: { tag: false } });
+    (element as any)._onResetView();
+
+    element.graphStyle = { showNodesOfType: { tag: false } };
+    (element as any).updated(new Map([['graphStyle', null]]));
+    element.graphStyle = { showNodesOfType: { tag: true } };
+    (element as any).updated(new Map([['graphStyle', null]]));
+
+    expect(element.getViewState().showNodesOfType?.tag).toBe(true);
+  });
+
   it('keeps the declared style layer when restoring a view state', () => {
     const element = new FoamGraph();
     element.graphStyle = { showNodesOfType: { tag: false } };

@@ -153,6 +153,9 @@ export type WebviewMessage =
       type: 'webviewDidChangeViewState';
       payload: { viewName?: string; state: GraphViewState };
     }
+  // the user reset the view: forget its saved state, so it follows its
+  // configuration again
+  | { type: 'webviewDidResetViewState'; payload: { viewName?: string } }
   | {
       type: 'error';
       payload: {

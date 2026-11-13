@@ -286,6 +286,7 @@ export class FoamGraph extends LitElement {
               (this.groupDraft = { ...this.groupDraft, active: false })}
             @draft-change=${(e: CustomEvent) => (this.groupDraft = e.detail)}
             @add-group=${() => this._onAddGroup()}
+            @reset-view=${() => this._onResetView()}
             @text-fade-change=${(e: CustomEvent) => {
               this.labels = { fade: e.detail };
               this._emitViewStateChange();
@@ -461,6 +462,19 @@ export class FoamGraph extends LitElement {
     this.selectedNodeIds = next;
     this._recomputeGraphStates();
     this._recomputeVisibleGraphIfSelectionAffectsScope();
+  }
+
+  /**
+   * Back to the view's configured settings: defaults → declared style, with
+   * an empty user layer, so later style changes apply again. Announced as a
+   * reset rather than a change: saving this state would freeze the declared
+   * config into the view's saved state.
+   */
+  private _onResetView() {
+    this.applyViewState({});
+    this.dispatchEvent(
+      new CustomEvent('view-state-reset', { bubbles: true, composed: true })
+    );
   }
 
   private _onLabelMaxLengthChange(value: number) {

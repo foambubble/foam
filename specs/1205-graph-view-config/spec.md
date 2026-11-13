@@ -135,6 +135,11 @@ The mechanism, at the level a reviewer of this spec should weigh in on:
   graph is reopened with the same view, then the filters are restored (the
   #1574 scenario).
   _verify: unit_
+- **AC-10**: Given a view with saved preferences, when the user presses the
+  control panel's reset button, then the view shows its configured
+  settings again, its saved preferences are discarded so later edits to its
+  `foam.graph.views` entry take effect, and other views keep theirs.
+  _verify: unit_
 
 ## Out of scope
 

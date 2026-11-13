@@ -42,6 +42,10 @@ element.addEventListener('view-state-change', () => {
   bridge.scheduleViewStateSave();
 });
 
+element.addEventListener('view-state-reset', () => {
+  bridge.resetViewState();
+});
+
 // Best effort: don't lose a change made just before the panel is closed.
 window.addEventListener('pagehide', () => bridge.flushPendingViewState());
 

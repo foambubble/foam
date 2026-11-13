@@ -13,7 +13,11 @@ import type {
   ShowGraphArgs,
   WebviewMessage,
 } from '@foam/graph-view/protocol' with { 'resolution-mode': 'import' };
-import { getViewState, saveViewState } from './view-state-store';
+import {
+  clearViewState,
+  getViewState,
+  saveViewState,
+} from './view-state-store';
 
 const GRAPH_PANEL_TITLE = 'Foam Graph';
 const GRAPH_PANEL_TITLE_PREFIX = `${GRAPH_PANEL_TITLE}: `;
@@ -235,6 +239,13 @@ export function createWebviewMessageHandler(
           memento,
           message.payload.viewName ?? viewNameFromPanelTitle(panel.title),
           message.payload.state
+        );
+        break;
+      }
+      case 'webviewDidResetViewState': {
+        await clearViewState(
+          memento,
+          message.payload.viewName ?? viewNameFromPanelTitle(panel.title)
         );
         break;
       }

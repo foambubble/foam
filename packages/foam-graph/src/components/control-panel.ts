@@ -222,6 +222,12 @@ export class ControlPanel extends LitElement {
       opacity: 1;
     }
 
+    .panel-footer {
+      display: flex;
+      justify-content: flex-end;
+      padding: 3px 6px;
+    }
+
     .add-group-btn {
       background: none;
       border: 1px dashed var(--vscode-panel-border, #454545);
@@ -811,6 +817,16 @@ export class ControlPanel extends LitElement {
             : null}
         </div>
       </details>
+
+      <div class="panel-footer">
+        <button
+          class="icon-btn"
+          title="Discard your changes to this view and use its configured settings"
+          @click=${() => this._emit('reset-view', null)}
+        >
+          ↺ Reset view
+        </button>
+      </div>
     `;
   }
 

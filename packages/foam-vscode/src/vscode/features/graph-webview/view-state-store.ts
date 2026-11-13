@@ -17,6 +17,17 @@ export function getViewState(
   return all[viewName] as GraphViewState | undefined;
 }
 
+export async function clearViewState(
+  memento: Memento,
+  viewName: string
+): Promise<void> {
+  const { [viewName]: _cleared, ...rest } = memento.get<StoredViewStates>(
+    VIEW_STATE_KEY,
+    {}
+  );
+  await memento.update(VIEW_STATE_KEY, rest);
+}
+
 export async function saveViewState(
   memento: Memento,
   viewName: string,

@@ -71,6 +71,18 @@ export function createHostBridge(
         postViewState();
       }, VIEW_STATE_DEBOUNCE_MS);
     },
+    /**
+     * Called on the element's view-state-reset event. A save still pending
+     * is dropped, not flushed: it would write the bucket the reset clears.
+     */
+    resetViewState() {
+      clearTimeout(timer);
+      timer = undefined;
+      post({
+        type: 'webviewDidResetViewState',
+        payload: { viewName: currentViewName },
+      });
+    },
     /** Best effort on pagehide: don't lose a change made just before closing. */
     flushPendingViewState,
   };

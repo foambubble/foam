@@ -112,6 +112,25 @@ describe('createHostBridge', () => {
     expect(state.showNodesOfType?.tag).toBeUndefined();
   });
 
+  // AC-10: a reset drops the pending save (which would recreate the
+  // bucket) and tells the host which view to forget
+  it('drops a pending save and posts a reset for the current view', () => {
+    const post = vi.fn();
+    const bridge = createHostBridge(makeElement(), post);
+    bridge.handleMessage({
+      type: 'didRestoreViewState',
+      payload: { viewName: 'Journal', state: {} },
+    });
+
+    bridge.scheduleViewStateSave();
+    bridge.resetViewState();
+    vi.advanceTimersByTime(VIEW_STATE_DEBOUNCE_MS);
+
+    expect(post.mock.calls.map(call => call[0])).toEqual([
+      { type: 'webviewDidResetViewState', payload: { viewName: 'Journal' } },
+    ]);
+  });
+
   it('flushes a pending save on demand (pagehide)', () => {
     const post = vi.fn();
     const bridge = createHostBridge(makeElement(), post);

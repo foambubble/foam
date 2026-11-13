@@ -16,6 +16,28 @@ import { isWithinPath } from '../utils/path';
 export const DEFAULT_NEW_NOTE_TEXT = '# ${FOAM_TITLE}\n\n${FOAM_SELECTED_TEXT}';
 
 /**
+ * The `filepath` of the built-in template: named after the title, in the
+ * location new notes go to.
+ */
+const DEFAULT_NEW_NOTE_FILEPATH = '${FOAM_TITLE_SAFE}.md';
+
+/**
+ * The template used when none is loaded. Like any template with a
+ * `filepath`, it creates a file — but a target the caller supplies
+ * (placeholder link, `notePath`) wins, since the user did not write it.
+ */
+function builtInTemplate(hasTarget: boolean): Template {
+  const frontmatter = hasTarget
+    ? ''
+    : `---\nfoam_template:\n  filepath: '${DEFAULT_NEW_NOTE_FILEPATH}'\n---\n`;
+  return {
+    type: 'markdown',
+    content: frontmatter + DEFAULT_NEW_NOTE_TEXT,
+    metadata: new Map(),
+  };
+}
+
+/**
  * Client-specific behavior injected into {@link createNote}.
  */
 export interface NoteCreationHooks {
@@ -45,13 +67,14 @@ export interface NoteCreationHooks {
   onDidCreate?: (uri: URI) => Promise<void>;
   /**
    * Opens the note as an unsaved editor instead of writing a file. Providing
-   * it declares the capability: a loaded markdown template with no
-   * `filepath` and no `fallbackFilepath` then opens unsaved (#1243). `uri`
+   * it declares the capability: a markdown template with no `filepath` and
+   * no `fallbackFilepath` then opens unsaved (#1243). `uri`
    * is where saving it should go — named after the title when one is known,
    * and already resolved and checked like a file target — or `undefined`
    * when the user names it on save. Without the hook, a filename is derived
-   * from the title as before. The built-in default text always creates a
-   * file. `onDidCreate` does not run: nothing exists until the user saves.
+   * from the title as before. The built-in template declares a `filepath`,
+   * so it always creates a file. `onDidCreate` does not run: nothing exists
+   * until the user saves.
    */
   openUnsaved?: (content: string, uri: URI | undefined) => Promise<void>;
 }
@@ -129,12 +152,9 @@ export async function createNote(
   const isTrusted = request.isTrusted ?? false;
   const roots = foam.workspace.roots;
 
-  const loaded = await hooks.loadTemplate();
-  const template: Template = loaded ?? {
-    type: 'markdown',
-    content: DEFAULT_NEW_NOTE_TEXT,
-    metadata: new Map(),
-  };
+  const template: Template =
+    (await hooks.loadTemplate()) ??
+    builtInTemplate(fallbackFilepath !== undefined);
 
   const result = await new NoteCreationEngine(foam).processTemplate(
     trigger,
@@ -142,9 +162,7 @@ export async function createNote(
     resolver,
     {
       defaultFilepath: fallbackFilepath,
-      // The built-in default text is not a template the user wrote, so it
-      // keeps creating a file named after the title.
-      canOpenUnsaved: hooks.openUnsaved !== undefined && loaded !== undefined,
+      canOpenUnsaved: hooks.openUnsaved !== undefined,
     }
   );
 

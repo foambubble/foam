@@ -46,7 +46,7 @@ The default template is used by the `Foam: Create New Note` command. Foam will l
 1. `.foam/templates/new-note.js` (JavaScript template)
 2. `.foam/templates/new-note.md` (Markdown template)
 
-Customize this template to contain content that you want included every time you create a note.
+Customize this template to contain content that you want included every time you create a note. Without one, Foam uses a built-in template with `filepath: '$FOAM_TITLE_SAFE.md'`; give yours a `filepath` too if you want new notes saved right away (see [`filepath`](#filepath-attribute)).
 
 ### Default daily note template
 
@@ -347,15 +347,20 @@ When creating notes in any other scenario, the `FOAM_DATE_` values are computed 
 
 **Markdown templates** can also contain metadata about the templates themselves. The metadata is defined in YAML "Frontmatter" blocks within the templates.
 
-| Name          | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `filepath`    | The filepath to use when creating the new note. If the filepath is a relative filepath, it is relative to the current workspace. Without a `filepath`, the new note opens as an unsaved editor and nothing is written until you save it. If the template uses a title variable (`FOAM_TITLE`, `FOAM_TITLE_SAFE`, `FOAM_SLUG`), the note is named after the title and saving puts it where new notes go; otherwise you choose the name and location when you save. |
-| `name`        | A human readable name to show in the template picker.                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `description` | A human readable description to show in the template picker.                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Name          | Description                                                                                                                          |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `filepath`    | Where the new note is created. A relative path is relative to the current workspace. Without it, the note opens unsaved (see below). |
+| `name`        | A human readable name to show in the template picker.                                                                                |
+| `description` | A human readable description to show in the template picker.                                                                         |
 
 Foam-specific variables (e.g. `$FOAM_TITLE`) can be used within template metadata. However, VS Code snippet variables are ([currently](https://github.com/foambubble/foam/pull/655)) not supported.
 
 #### `filepath` attribute
+
+`filepath` decides whether creating a note writes a file:
+
+- **With `filepath`**, Foam creates the note at that path.
+- **Without it**, the note opens in an unsaved editor and nothing is written until you save. If the template uses a title variable, the editor is already named after the title and saving puts it where new notes go; otherwise you pick the name when you save.
 
 > In a [restricted workspace](https://code.visualstudio.com/docs/editor/workspace-trust), notes must be created inside the workspace: a `filepath` that points outside it is refused. Trust the workspace to allow it.
 

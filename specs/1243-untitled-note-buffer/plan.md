@@ -17,8 +17,12 @@ name. JS templates are untouched: `CreateNoteFunction` requires a
 `filepath`.
 
 `createNote` (`packages/foam-core/src/services/note-creation-flow.ts`) opts
-in only when the client provides the `openUnsaved` hook **and** a template
-was loaded — the built-in default text always creates a file (AC-6). The
+in when the client provides the `openUnsaved` hook. The built-in template
+declares `filepath: '${FOAM_TITLE_SAFE}.md'` in `foam_template` frontmatter,
+so it creates a file by the same rule as any template (AC-6); it omits the
+frontmatter when the caller supplies a target, which keeps placeholder links
+and `notePath` winning over it, since template `filepath` otherwise takes
+precedence over `fallbackFilepath`. The
 target loop (relative resolution, workspace containment, collision handling
 via `onFileExists`) is extracted into `resolveTarget` and runs for both file
 targets and suggested unsaved paths. The probe of 2026-11-13 showed why the

@@ -54,6 +54,76 @@ describe('NoteRenameProvider', () => {
       );
     });
 
+    it('should read the links of the document as it stands, not as last saved', async () => {
+      const fileA = await createFile('# Note A\n', ['note-a.md']);
+      const fileB = await createFile(`See [[${fileA.name}]].\n`);
+
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content));
+      const provider = new NoteRenameProvider(buildFoamLike(ws) as any);
+
+      const { doc, editor } = await showInEditor(fileB.uri);
+      await editor.edit(builder =>
+        builder.replace(new vscode.Range(0, 0, 0, 0), 'Added line\n')
+      );
+
+      const result = (await provider.prepareRename(
+        doc,
+        new vscode.Position(1, 'See [[no'.length),
+        new vscode.CancellationTokenSource().token
+      )) as { range: vscode.Range; placeholder: string };
+
+      expect(result.placeholder).toBe(fileA.name);
+      expect(result.range.start.line).toBe(1);
+    });
+
+    it('should offer only the name to rename when the link carries a folder', async () => {
+      const fileA = await createFile('# Note A\n', ['sub', 'note-a.md']);
+      const fileB = await createFile(`See [[sub/${fileA.name}]].\n`);
+
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content));
+      const provider = new NoteRenameProvider(buildFoamLike(ws) as any);
+
+      const { doc } = await showInEditor(fileB.uri);
+      const result = (await provider.prepareRename(
+        doc,
+        new vscode.Position(0, 'See [[sub/no'.length),
+        new vscode.CancellationTokenSource().token
+      )) as { range: vscode.Range; placeholder: string };
+
+      const start = 'See [[sub/'.length;
+      expect(result.placeholder).toBe(fileA.name);
+      expect(result.range).toEqual(
+        new vscode.Range(0, start, 0, start + fileA.name.length)
+      );
+    });
+
+    it('should offer only the name to rename when the link carries an extension', async () => {
+      const fileA = await createFile('# Note A\n', ['note-a.md']);
+      const fileB = await createFile(`See [[${fileA.base}]].\n`);
+
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content));
+      const provider = new NoteRenameProvider(buildFoamLike(ws) as any);
+
+      const { doc } = await showInEditor(fileB.uri);
+      const result = (await provider.prepareRename(
+        doc,
+        new vscode.Position(0, 'See [[no'.length),
+        new vscode.CancellationTokenSource().token
+      )) as { range: vscode.Range; placeholder: string };
+
+      const start = 'See [['.length;
+      expect(result.placeholder).toBe(fileA.name);
+      expect(result.range).toEqual(
+        new vscode.Range(0, start, 0, start + fileA.name.length)
+      );
+    });
+
     it('should throw when the cursor is on the section of a wikilink', async () => {
       const fileA = await createFile('# Note A\n\n## Goals\n', ['note-a.md']);
       const fileB = await createFile(`See [[${fileA.name}#Goals]].\n`);

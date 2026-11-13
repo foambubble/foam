@@ -67,17 +67,22 @@ export class NoteRenameProvider implements vscode.RenameProvider {
 
   /**
    * The note a wikilink under the cursor points at, with the range of the
-   * target text naming it. A link to a note that does not exist has no file
-   * to rename, so it reports nothing.
+   * name that is this note's to change — the target text less any folder or
+   * extension, which belong to the file and not to the new name. A link to a
+   * note that does not exist has no file to rename, so it reports nothing.
    */
   private getNoteAtPosition(
     document: vscode.TextDocument,
     position: vscode.Position
   ): { uri: URI; range: Range } | undefined {
-    const resource = this.foam.workspace.find(fromVsCodeUri(document.uri));
-    if (!resource) {
+    const uri = fromVsCodeUri(document.uri);
+    const known = this.foam.workspace.find(uri);
+    if (known?.type !== 'note' || !known.uri.isEqual(uri)) {
       return undefined;
     }
+    // Parsed here rather than taken from the workspace, which holds the note
+    // as it was last saved and so reports stale ranges while it is edited
+    const resource = this.foam.services.parser.parse(uri, document.getText());
     const foamPosition = Position.create(position.line, position.character);
     const link = resource.links.find(l =>
       Range.containsPosition(l.range, foamPosition)
@@ -86,7 +91,33 @@ export class NoteRenameProvider implements vscode.RenameProvider {
     if (!range || !Range.containsPosition(range, foamPosition)) {
       return undefined;
     }
-    const uri = this.foam.workspace.resolveLink(resource, link);
-    return uri.isPlaceholder() ? undefined : { uri, range };
+    const target = this.foam.workspace.resolveLink(resource, link);
+    if (target.isPlaceholder()) {
+      return undefined;
+    }
+    return { uri: target, range: nameRange(document, range, target) };
   }
+}
+
+/**
+ * Narrows the target's range to the name of the file it resolves to, so that
+ * a folder or an extension the link spells out stays outside the rename box
+ * and out of the typed value.
+ */
+function nameRange(
+  document: vscode.TextDocument,
+  target: Range,
+  uri: URI
+): Range {
+  const text = document.getText(toVsCodeRange(target));
+  const afterFolder = text.lastIndexOf('/') + 1;
+  const extension = text.endsWith(uri.getExtension())
+    ? uri.getExtension().length
+    : 0;
+  return Range.create(
+    target.start.line,
+    target.start.character + afterFolder,
+    target.end.line,
+    target.end.character - extension
+  );
 }

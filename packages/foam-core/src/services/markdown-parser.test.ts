@@ -858,6 +858,26 @@ This is the content of section with url`);
       expect(note.sections[0].headingRange).toEqual(Range.create(0, 0, 0, 13));
       expect(note.sections[1].headingRange).toEqual(Range.create(4, 0, 5, 14));
     });
+
+    it('records the range of the heading text, markup included and markers excluded', () => {
+      const note = createNoteFromMarkdown(
+        '## **Bold** heading ##\n\nSetext heading\n==============\n'
+      );
+      expect(note.sections[0].label).toEqual('Bold heading');
+      expect(note.sections[0].labelRange).toEqual(Range.create(0, 3, 0, 19));
+      expect(note.sections[1].labelRange).toEqual(Range.create(2, 0, 2, 14));
+    });
+
+    it('records the heading text range of indented and quoted headings, without a trailing block anchor', () => {
+      const note = createNoteFromMarkdown(
+        '   ## Indented\n\n> ## Quoted\n\n## Anchored ^anchor\n'
+      );
+      expect(note.sections.map(s => s.labelRange)).toEqual([
+        Range.create(0, 6, 0, 14),
+        Range.create(2, 5, 2, 11),
+        Range.create(4, 3, 4, 11),
+      ]);
+    });
   });
 
   describe('Parser plugins', () => {

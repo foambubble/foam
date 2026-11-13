@@ -1,7 +1,14 @@
 import { FoamGraph } from '../model/graph';
 import { FoamWorkspace } from '../model/workspace';
 import { URI } from '../model/uri';
-import { ResourceLink, NoteLinkDefinition } from '../model/note';
+import {
+  Resource,
+  ResourceLink,
+  NoteLinkDefinition,
+  Section,
+} from '../model/note';
+import { Position } from '../model/position';
+import { Range } from '../model/range';
 import { MarkdownLink } from './markdown-link';
 import { WorkspaceTextEdit } from './text-edit';
 
@@ -11,6 +18,45 @@ export interface HeadingEditResult {
 }
 
 export abstract class HeadingEdit {
+  /**
+   * The section a rename at `position` in `resource` applies to: the one a
+   * wikilink's `#section` there points to, otherwise the heading there.
+   * `target` holds the section; `range` is the text in `resource` naming it.
+   *
+   * A note in `current` is used instead of the workspace's copy of it.
+   */
+  static getSectionAtPosition(
+    workspace: FoamWorkspace,
+    resource: Resource,
+    position: Position,
+    current: Resource[] = []
+  ): { target: Resource; section: Section; range: Range } | undefined {
+    const link = resource.links.find(l =>
+      Range.containsPosition(l.range, position)
+    );
+    const linkSectionRange = link && MarkdownLink.getSectionRange(link);
+    if (
+      linkSectionRange &&
+      Range.containsPosition(linkSectionRange, position)
+    ) {
+      const targetUri = workspace.resolveLink(resource, link);
+      const target =
+        current.find(r => r.uri.path === targetUri.path) ??
+        workspace.find(targetUri);
+      const section =
+        target &&
+        Resource.findSection(target, MarkdownLink.analyzeLink(link).section);
+      return section ? { target, section, range: linkSectionRange } : undefined;
+    }
+
+    const section = resource.sections.find(s =>
+      Range.containsPosition(s.headingRange, position)
+    );
+    return section
+      ? { target: resource, section, range: section.labelRange }
+      : undefined;
+  }
+
   /**
    * Generate edits to update all links referencing block `^oldId` in the
    * resource at `resourceUri`, renaming it to `^newId`.
@@ -148,15 +194,29 @@ export abstract class HeadingEdit {
    * - Self-referencing wikilinks: `[[#OldLabel]]` → `[[#NewLabel]]`
    * - Direct markdown links: `[text](note.md#OldLabel)` → `[text](note.md#NewLabel)`
    * - Reference-style markdown links: updates the definition URL line, not the inline text
+   *
+   * The links of a note in `current` are used instead of the graph's for it,
+   * including links the graph doesn't have yet.
    */
   static createRenameSectionEdits(
     graph: FoamGraph,
     workspace: FoamWorkspace,
     resourceUri: URI,
     oldLabel: string,
-    newLabel: string
+    newLabel: string,
+    current: Resource[] = []
   ): HeadingEditResult {
-    const backlinks = graph.getBacklinks(resourceUri);
+    const currentPaths = new Set(current.map(r => r.uri.path));
+    const backlinks = [
+      ...graph
+        .getBacklinks(resourceUri)
+        .filter(c => !currentPaths.has(c.source.path)),
+      ...current.flatMap(r =>
+        FoamGraph.resolveLinks(workspace, r).filter(
+          c => c.target.path === resourceUri.path
+        )
+      ),
+    ];
     const edits: WorkspaceTextEdit[] = [];
     let totalOccurrences = 0;
 

@@ -203,29 +203,10 @@ export async function renameSection(
     );
   }
 
-  // Build a TextEdit for the heading line itself; HeadingEdit only emits
-  // edits for inbound link rewrites, not the heading text.
-  const content = await dataStore.read(resource.uri);
-  if (content === null) {
-    throw new FoamError(
-      'io_error',
-      `Cannot rename section: failed to read ${resource.uri.toFsPath()}`,
-      { uri: resource.uri.toFsPath() }
-    );
-  }
-  const lines = content.split('\n');
-  const headingLine = lines[section.range.start.line];
-  const match = headingLine.match(/^(#{1,6}\s+)/);
-  const prefix = match ? match[1] : '';
+  // HeadingEdit only emits edits for inbound link rewrites, not the heading text.
   const headingEdit: WorkspaceTextEdit = {
     uri: resource.uri,
-    edit: {
-      range: {
-        start: { line: section.range.start.line, character: prefix.length },
-        end: { line: section.range.start.line, character: headingLine.length },
-      },
-      newText: newLabel,
-    },
+    edit: { range: section.labelRange, newText: newLabel },
   };
 
   const result = HeadingEdit.createRenameSectionEdits(

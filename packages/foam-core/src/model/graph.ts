@@ -283,15 +283,22 @@ export class FoamGraph implements IDisposable {
     }
   }
 
-  /** Resolves and connects all of a resource's (non-external) links. */
-  private connectResource(resource: Resource) {
+  /**
+   * The connections of a resource's (non-external) links. A link that fails
+   * to resolve is logged and left out.
+   */
+  public static resolveLinks(
+    workspace: FoamWorkspace,
+    resource: Resource
+  ): Connection[] {
+    const connections: Connection[] = [];
     for (const link of resource.links) {
       try {
         if (link.type === 'external') {
           continue;
         }
-        const targetUri = this.workspace.resolveLink(resource, link);
-        this.connect(resource.uri, targetUri, link);
+        const target = workspace.resolveLink(resource, link);
+        connections.push({ source: resource.uri, target, link });
       } catch (e) {
         Logger.error(
           `Error while resolving link ${
@@ -301,6 +308,13 @@ export class FoamGraph implements IDisposable {
           e
         );
       }
+    }
+    return connections;
+  }
+
+  private connectResource(resource: Resource) {
+    for (const connection of FoamGraph.resolveLinks(this.workspace, resource)) {
+      this.connect(connection);
     }
   }
 
@@ -332,8 +346,8 @@ export class FoamGraph implements IDisposable {
     this.links.delete(source.path);
   }
 
-  private connect(source: URI, target: URI, link: ResourceLink) {
-    const connection = { source, target, link };
+  private connect(connection: Connection) {
+    const { source, target } = connection;
 
     if (!this.links.has(source.path)) {
       this.links.set(source.path, []);

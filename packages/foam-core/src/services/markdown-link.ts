@@ -6,7 +6,7 @@ import { TextEdit } from './text-edit';
 /**
  * Splits `[[target#section|alias]]`. The wikilink runs from the first `[[` to
  * the last `]]`; the target stops at the first `#` or `|`, the section at the
- * first `|`.
+ * first `|`. A pipe escaped as `\|`, as inside a table, splits the same way.
  */
 function parseWikilink(text: string) {
   const open = text.indexOf('[[');
@@ -16,7 +16,9 @@ function parseWikilink(text: string) {
   }
   const inner = text.slice(open + 2, close);
   const pipe = inner.indexOf('|');
-  const reference = pipe < 0 ? inner : inner.slice(0, pipe);
+  const escapedPipe = pipe > 0 && inner[pipe - 1] === '\\';
+  const reference =
+    pipe < 0 ? inner : inner.slice(0, escapedPipe ? pipe - 1 : pipe);
   const hash = reference.indexOf('#');
   return {
     target: hash < 0 ? reference : reference.slice(0, hash),
@@ -24,6 +26,7 @@ function parseWikilink(text: string) {
     /** Offset of `section` in `text`, -1 without a `#` */
     sectionOffset: hash < 0 ? -1 : open + 2 + hash + 1,
     alias: pipe < 0 ? '' : inner.slice(pipe + 1),
+    escapedPipe,
   };
 }
 
@@ -148,7 +151,11 @@ export abstract class MarkdownLink {
     const newSection = delta.section ?? existingFragment ?? '';
     const newAlias = delta.alias ?? alias ?? '';
     const sectionDivider = newSection ? '#' : '';
-    const aliasDivider = newAlias ? '|' : '';
+    const pipe =
+      link.type === 'wikilink' && parseWikilink(link.rawText)?.escapedPipe
+        ? '\\|'
+        : '|';
+    const aliasDivider = newAlias ? pipe : '';
     const embed = delta.isEmbed ?? link.isEmbed ? '!' : '';
     const type = delta.type ?? link.type;
     if (type === 'wikilink') {

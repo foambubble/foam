@@ -172,6 +172,24 @@ describe('renameSection', () => {
         expect(result.updated_links).toBe(1);
       }
     ));
+
+  it('replaces only the heading text, keeping its block anchor', () =>
+    withTmpWorkspace(
+      {
+        'note.md': '# Note\n\n## **Goals** for now ^goals\n\nsome text\n',
+        'ref.md': '[[note#Goals for now]]',
+      },
+      async ({ rootDir, workspace, dataStore }) => {
+        const graph = FoamGraph.fromWorkspace(workspace);
+        const resource = resolveNote(workspace, { identifier: 'note' });
+        await renameSection(workspace, graph, dataStore, resource, 'Goals for now', 'Objectives');
+
+        expect(fs.readFileSync(path.join(rootDir, 'note.md'), 'utf8')).toBe(
+          '# Note\n\n## Objectives ^goals\n\nsome text\n'
+        );
+        expect(fs.readFileSync(path.join(rootDir, 'ref.md'), 'utf8')).toBe('[[note#Objectives]]');
+      }
+    ));
 });
 
 // ─── renameBlock ──────────────────────────────────────────────────────────────

@@ -205,6 +205,13 @@ describe('MarkdownLink', () => {
         Range.create(0, 3, 0, 3 + 'My Section'.length)
       );
     });
+    it('should cover a block anchor, caret included', () => {
+      const link = parser.parse(getRandomURI(), `see [[note#^blk]]`).links[0];
+      const start = 'see [[note#'.length;
+      expect(MarkdownLink.getSectionRange(link)).toEqual(
+        Range.create(0, start, 0, start + '^blk'.length)
+      );
+    });
     it('should return undefined for a wikilink without a section', () => {
       const link = parser.parse(getRandomURI(), `see [[note]]`).links[0];
       expect(MarkdownLink.getSectionRange(link)).toBeUndefined();
@@ -213,6 +220,26 @@ describe('MarkdownLink', () => {
       const link = parser.parse(getRandomURI(), `see [text](note.md#section)`)
         .links[0];
       expect(MarkdownLink.getSectionRange(link)).toBeUndefined();
+    });
+  });
+
+  describe('wikilink with an escaped pipe', () => {
+    const text = `| [[note#My Heading\\|alias]] |`;
+    it('should not include the escape in the section', () => {
+      const link = parser.parse(getRandomURI(), text).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.section).toEqual('My Heading');
+      expect(parsed.alias).toEqual('alias');
+      const start = '| [[note#'.length;
+      expect(MarkdownLink.getSectionRange(link)).toEqual(
+        Range.create(0, start, 0, start + 'My Heading'.length)
+      );
+    });
+    it('should keep the escape when the link is updated', () => {
+      const link = parser.parse(getRandomURI(), text).links[0];
+      expect(
+        MarkdownLink.createUpdateLinkEdit(link, { section: 'New' }).newText
+      ).toEqual(`[[note#New\\|alias]]`);
     });
   });
 

@@ -527,6 +527,7 @@ let sectionStack: Array<{
   label: string;
   level: number;
   headingRange: Range;
+  labelRange: Range;
 }> = [];
 const sectionsPlugin: ParserPlugin = {
   name: 'section',
@@ -544,6 +545,18 @@ const sectionsPlugin: ParserPlugin = {
       }
       const headingRange = astPositionToFoamRange(node.position!);
       const start = headingRange.start;
+      // The heading's inline content, less the anchor stripped from its end
+      const children = (node as any).children;
+      const labelStart = astPointToFoamPosition(children[0].position.start);
+      const labelEnd = astPointToFoamPosition(
+        children[children.length - 1].position.end
+      );
+      const labelRange = Range.create(
+        labelStart.line,
+        labelStart.character,
+        labelEnd.line,
+        labelEnd.character - (rawLabel.length - label.length)
+      );
 
       // Close all the sections that are not parents of the current section
       while (
@@ -556,11 +569,12 @@ const sectionsPlugin: ParserPlugin = {
           level: section.level,
           range: Range.createFromPosition(section.headingRange.start, start),
           headingRange: section.headingRange,
+          labelRange: section.labelRange,
         });
       }
 
       // Add the new section to the stack
-      sectionStack.push({ label, level, headingRange });
+      sectionStack.push({ label, level, headingRange, labelRange });
     }
   },
   onDidVisitTree: (tree, note) => {
@@ -576,6 +590,7 @@ const sectionsPlugin: ParserPlugin = {
         level: section.level,
         range: { start: section.headingRange.start, end },
         headingRange: section.headingRange,
+        labelRange: section.labelRange,
       });
     }
     note.sections.sort((a, b) =>

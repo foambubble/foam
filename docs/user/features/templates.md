@@ -46,7 +46,7 @@ The default template is used by the `Foam: Create New Note` command. Foam will l
 1. `.foam/templates/new-note.js` (JavaScript template)
 2. `.foam/templates/new-note.md` (Markdown template)
 
-Customize this template to contain content that you want included every time you create a note. Without one, Foam uses a built-in template with `filepath: '$FOAM_TITLE_SAFE.md'`; give yours a `filepath` too if you want new notes saved right away (see [`filepath`](#filepath-attribute)).
+Customize this template to contain content that you want included every time you create a note. 
 
 ### Default daily note template
 

@@ -91,10 +91,14 @@ export class NoteRenameProvider implements vscode.RenameProvider {
     if (!range || !Range.containsPosition(range, foamPosition)) {
       return undefined;
     }
-    const target = this.foam.workspace.resolveLink(resource, link);
-    if (target.isPlaceholder()) {
+    const resolved = this.foam.workspace.resolveLink(resource, link);
+    if (resolved.isPlaceholder()) {
       return undefined;
     }
+    // A section or block the link names belongs to the note, not to the file
+    // being renamed, and would otherwise end up in the new path and in every
+    // link rewritten to it
+    const target = resolved.with({ fragment: '' });
     return { uri: target, range: nameRange(document, range, target) };
   }
 }

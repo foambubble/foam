@@ -208,6 +208,45 @@ describe('NoteRenameProvider', () => {
       await deleteFile(noteB.uri);
     });
 
+    it('should not carry a section of the link it started from into the rename', async () => {
+      const noteA = await createFile('# Note A\n\n## Goals\n', [
+        'note-rename',
+        'sectioned.md',
+      ]);
+      const noteB = await createFile(
+        `Section [[sectioned#Goals]] and plain [[sectioned]].`,
+        ['note-rename', 'sectioned-links.md']
+      );
+      await Promise.all(
+        [noteA, noteB].map(n => waitForNoteInFoamWorkspace(n.uri))
+      );
+      const foam = await getFoamFromVSCode();
+      foam.graph.update();
+
+      const { doc } = await showInEditor(noteB.uri);
+      const provider = new NoteRenameProvider(foam);
+      const edits = await provider.provideRenameEdits(
+        doc,
+        new vscode.Position(0, 'Section [[sec'.length),
+        'renamed-section',
+        new vscode.CancellationTokenSource().token
+      );
+      await vscode.workspace.applyEdit(edits);
+
+      await waitForExpect(async () => {
+        expect(await readFile(noteA.uri.withName('renamed-section'))).toContain(
+          '# Note A'
+        );
+        // Each link keeps its own section, and the plain one gains none
+        expect((await readFile(noteB.uri)).trim()).toEqual(
+          'Section [[renamed-section#Goals]] and plain [[renamed-section]].'
+        );
+      }, 2000);
+
+      await deleteFile(noteA.uri.withName('renamed-section'));
+      await deleteFile(noteB.uri);
+    });
+
     /** What a note linked both ways reads once `old` has been renamed to `new` */
     const linksAfterRename = (oldName: string, newName: string) =>
       `Wiki [[${newName}]] and md [text](./${oldName}.md).`;

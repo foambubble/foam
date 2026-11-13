@@ -632,30 +632,33 @@ Content.
       ]);
     });
 
-    it('should leave a link whose slug names two headings at once', () => {
-      const ws = createTestWorkspace();
-      const noteA = createNoteFromMarkdown(
-        '/note-a.md',
-        '## My Section\n\n## MY SECTION\n'
-      );
-      const noteB = createNoteFromMarkdown(
-        '/note-b.md',
-        '[x](note-a.md#my-section)'
-      );
-      ws.set(noteA).set(noteB);
-      const graph = FoamGraph.fromWorkspace(ws);
+    it.each(['My Section', 'MY SECTION'])(
+      'should leave a link whose slug names two headings at once, renaming %s',
+      oldLabel => {
+        const ws = createTestWorkspace();
+        const noteA = createNoteFromMarkdown(
+          '/note-a.md',
+          '## My Section\n\n## MY SECTION\n'
+        );
+        const noteB = createNoteFromMarkdown(
+          '/note-b.md',
+          '[x](note-a.md#my-section)'
+        );
+        ws.set(noteA).set(noteB);
+        const graph = FoamGraph.fromWorkspace(ws);
 
-      const result = HeadingEdit.createRenameSectionEdits(
-        graph,
-        ws,
-        noteA.uri,
-        'My Section',
-        'New Section'
-      );
+        const result = HeadingEdit.createRenameSectionEdits(
+          graph,
+          ws,
+          noteA.uri,
+          oldLabel,
+          'New Section'
+        );
 
-      expect(result.totalOccurrences).toBe(0);
-      expect(result.edits).toHaveLength(0);
-    });
+        expect(result.totalOccurrences).toBe(0);
+        expect(result.edits).toHaveLength(0);
+      }
+    );
 
     it('should leave a link that names another heading exactly', () => {
       const ws = createTestWorkspace();

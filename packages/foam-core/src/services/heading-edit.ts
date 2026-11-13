@@ -209,15 +209,28 @@ export abstract class HeadingEdit {
     newLabel: string,
     current: Resource[] = []
   ): HeadingEditResult {
+    const currentPaths = new Set(current.map(r => r.uri.path));
+    const target = currentPaths.has(resourceUri.path)
+      ? current.find(r => r.uri.path === resourceUri.path)
+      : workspace.find(resourceUri);
+
     /** What a reference to the old heading becomes, or null if it names another */
     const renamed = (reference: string): string | null => {
       const kind = Section.match(oldLabel, reference);
       if (!kind) {
         return null;
       }
+      // Matching the old heading's text or slug is not enough: a reference
+      // that resolves to another heading, or to none because two share a
+      // slug, points somewhere this rename does not touch.
+      if (
+        target &&
+        Resource.findSection(target, reference)?.label !== oldLabel
+      ) {
+        return null;
+      }
       return kind === 'slug' ? toSlug(newLabel) : newLabel;
     };
-    const currentPaths = new Set(current.map(r => r.uri.path));
     const backlinks = [
       ...graph
         .getBacklinks(resourceUri)

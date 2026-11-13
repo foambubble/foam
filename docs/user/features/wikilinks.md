@@ -21,12 +21,12 @@ View placeholders in the graph with `Foam: Show Graph` command or in the `Placeh
 
 Link to specific sections using `[[note-name#Section Title]]` syntax. Foam provides autocomplete for section titles.
 
-To rename a section, press `F2` on its heading or on `Section Title` in a link to it. Foam updates the heading and every wikilink pointing to it.
-
-Examples:
+Markdown links reach the same sections, by the heading's slug — its text in lowercase with spaces as hyphens:
 
 - External file: `[link text](other-file.md#section-name)`
 - Same document: `[link text](#section-name)`
+
+To rename a section, press `F2` on its heading, or on the section part of any link to it, in either syntax. Foam renames the heading and updates every link, each keeping the way it was written: a link spelling the heading out gets the new title, one using the slug gets the new slug.
 
 ## Block Links
 
@@ -49,6 +49,8 @@ To disable this behavior, set `foam.links.directory.mode` to `disabled` in your 
 ## Link Syncing on Rename
 
 When you rename or move a note or folder, Foam automatically updates all wikilinks pointing to it. This is enabled by default and can be turned off via the `foam.links.sync.enable` setting.
+
+You can start the rename from the file explorer, or by pressing `F2` on the note's name inside a link to it — `note-name` in `[[note-name]]`. Both rename the file itself and leave the links pointing at it.
 
 For standard markdown links (e.g. `[text](path/to/note.md)`), VS Code has a built-in feature that handles this. Enable it in VS Code settings: set `markdown.updateLinksOnFileMove.enabled` to `always` or `prompt`.
 

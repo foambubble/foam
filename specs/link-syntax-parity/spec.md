@@ -83,13 +83,13 @@ in return.
 ### Renaming a note
 
 - **AC-8**: Given the cursor on `[[note-a]]`, when rename is invoked, then the
-  file is renamed and both the wikilinks and the markdown links pointing at it
-  are updated.
+  file is renamed and the wikilinks pointing at it are updated, as they are
+  when the rename starts in the explorer.
   _verify: e2e_
 
 - **AC-9**: Given a note linked by both syntaxes, when it is renamed from the
-  explorer, from a wikilink's target, or from a markdown link's path, then the
-  file and every link to it end in the same state.
+  explorer and when it is renamed from a wikilink's target, then the file and
+  every link to it end in the same state.
   _verify: e2e_
 
 ## Out of scope
@@ -106,6 +106,13 @@ in return.
   has no fragment under the cursor, and a rename started on the definition
   line still falls to VS Code. Those definitions are rewritten when a rename
   runs from anywhere else.
+- **Rewriting markdown links when a note is renamed.** Foam leaves those to
+  VS Code's `markdown.updateLinksOnFileMove`, which is off by default and which
+  Foam already prompts people to turn on. Rewriting them in Foam as well would
+  make a rename started from a wikilink behave differently from one started in
+  the explorer — the very inconsistency this spec removes for sections — so the
+  markdown-link path needs no criterion of its own either: VS Code renames the
+  file through the same event, and the rest follows.
 - **The form Foam writes when converting a link.** Turning a wikilink into a
   markdown link still produces `[text](<note.md#My Section>)`, which resolves
   in Foam but not on GitHub. Whether Foam should write a slug there is a

@@ -8,6 +8,7 @@ import {
   deleteFile,
   getFoamFromVSCode,
   readFile,
+  renameFile,
   showInEditor,
   waitForNoteInFoamWorkspace,
 } from '../../../test/test-utils-vscode';
@@ -135,6 +136,62 @@ describe('NoteRenameProvider', () => {
 
       await deleteFile(renamedUri);
       await deleteFile(noteB.uri);
+    });
+
+    /** What a note linked both ways reads once `old` has been renamed to `new` */
+    const linksAfterRename = (oldName: string, newName: string) =>
+      `Wiki [[${newName}]] and md [text](./${oldName}.md).`;
+
+    const fixture = async (name: string) => {
+      const target = await createFile('# The note\n', [
+        'note-rename',
+        `${name}.md`,
+      ]);
+      const linking = await createFile(linksAfterRename(name, name), [
+        'note-rename',
+        `${name}-links.md`,
+      ]);
+      await Promise.all(
+        [target, linking].map(n => waitForNoteInFoamWorkspace(n.uri))
+      );
+      (await getFoamFromVSCode()).graph.update();
+      return { target, linking };
+    };
+
+    it('should leave the same state as renaming the file in the explorer', async () => {
+      const viaExplorer = await fixture('one-old');
+      await renameFile(
+        viaExplorer.target.uri,
+        viaExplorer.target.uri.withName('one-new')
+      );
+
+      const viaWikilink = await fixture('two-old');
+      const { doc } = await showInEditor(viaWikilink.linking.uri);
+      const provider = new NoteRenameProvider(await getFoamFromVSCode());
+      const edits = await provider.provideRenameEdits(
+        doc,
+        new vscode.Position(0, 'Wiki [[two'.length),
+        'two-new',
+        new vscode.CancellationTokenSource().token
+      );
+      await vscode.workspace.applyEdit(edits);
+
+      await waitForExpect(async () => {
+        // Both renames move the file and carry the wikilink with it, and both
+        // leave the markdown link to VS Code
+        expect((await readFile(viaExplorer.linking.uri)).trim()).toEqual(
+          linksAfterRename('one-old', 'one-new')
+        );
+        expect((await readFile(viaWikilink.linking.uri)).trim()).toEqual(
+          linksAfterRename('two-old', 'two-new')
+        );
+        expect(
+          await readFile(viaExplorer.target.uri.withName('one-new'))
+        ).toContain('# The note');
+        expect(
+          await readFile(viaWikilink.target.uri.withName('two-new'))
+        ).toContain('# The note');
+      }, 2000);
     });
   });
 });

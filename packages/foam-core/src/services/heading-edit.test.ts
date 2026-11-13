@@ -778,4 +778,86 @@ Content.
       expect(sectionAt('Body text.\n', Position.create(0, 3))).toBeUndefined();
     });
   });
+
+  describe('renaming a section', () => {
+    // Every syntax a link can name `## My Section` by, and what renaming the
+    // section to "New Section" must leave behind. Add a row for a new syntax.
+    const LINKS = [
+      {
+        name: 'a wikilink',
+        text: '[[note-a#My Section]]',
+        renamed: '[[note-a#New Section]]',
+      },
+      {
+        name: 'a wikilink naming it by slug',
+        text: '[[note-a#my-section]]',
+        renamed: '[[note-a#new-section]]',
+      },
+      {
+        name: 'a markdown link',
+        text: '[x](<note-a.md#My Section>)',
+        renamed: '[x](<note-a.md#New Section>)',
+      },
+      {
+        name: 'a markdown link naming it by slug',
+        text: '[x](note-a.md#my-section)',
+        renamed: '[x](note-a.md#new-section)',
+      },
+    ];
+
+    it('should reach the same section and the same edits from every starting point', () => {
+      const noteA = createNoteFromMarkdown(
+        '/note-a.md',
+        '## My Section\n\nBody.\n'
+      );
+      const noteB = createNoteFromMarkdown(
+        '/note-b.md',
+        LINKS.map(l => l.text).join('\n\n')
+      );
+      const ws = createTestWorkspace().set(noteA).set(noteB);
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const startingPoints = [
+        // Inside the heading's own text
+        {
+          name: 'the heading',
+          resource: noteA,
+          position: Position.create(0, 5),
+        },
+        // Inside each link's fragment, one blank line apart
+        ...LINKS.map((link, i) => ({
+          name: link.name,
+          resource: noteB,
+          position: Position.create(i * 2, link.text.indexOf('#') + 2),
+        })),
+      ];
+
+      for (const start of startingPoints) {
+        const found = HeadingEdit.getSectionAtPosition(
+          ws,
+          start.resource,
+          start.position
+        );
+        expect(found, `starting from ${start.name}`).toBeDefined();
+        expect(found.target.uri.path, `starting from ${start.name}`).toEqual(
+          '/note-a.md'
+        );
+        expect(found.section.label, `starting from ${start.name}`).toEqual(
+          'My Section'
+        );
+
+        const result = HeadingEdit.createRenameSectionEdits(
+          graph,
+          ws,
+          found.target.uri,
+          found.section.label,
+          'New Section'
+        );
+        expect(
+          result.edits.map(e => e.edit.newText),
+          `starting from ${start.name}`
+        ).toEqual(LINKS.map(l => l.renamed));
+      }
+    });
+  });
 });

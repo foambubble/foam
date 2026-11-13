@@ -216,9 +216,56 @@ describe('MarkdownLink', () => {
       const link = parser.parse(getRandomURI(), `see [[note]]`).links[0];
       expect(MarkdownLink.getSectionRange(link)).toBeUndefined();
     });
-    it('should return undefined for a direct link', () => {
-      const link = parser.parse(getRandomURI(), `see [text](note.md#section)`)
+  });
+
+  describe('markdown link section range', () => {
+    it('should cover the fragment of a markdown link', () => {
+      const prefix = 'see [text](note.md#';
+      const link = parser.parse(getRandomURI(), `${prefix}my-section)`)
         .links[0];
+      expect(MarkdownLink.getSectionRange(link)).toEqual(
+        Range.create(0, prefix.length, 0, prefix.length + 'my-section'.length)
+      );
+    });
+
+    it('should cover the fragment when the url is in angle brackets', () => {
+      const prefix = 'see [text](<note.md#';
+      const link = parser.parse(getRandomURI(), `${prefix}My Section>)`)
+        .links[0];
+      expect(MarkdownLink.getSectionRange(link)).toEqual(
+        Range.create(0, prefix.length, 0, prefix.length + 'My Section'.length)
+      );
+    });
+
+    it('should cover a block anchor, caret included', () => {
+      const prefix = 'see [text](note.md#';
+      const link = parser.parse(getRandomURI(), `${prefix}^blk)`).links[0];
+      expect(MarkdownLink.getSectionRange(link)).toEqual(
+        Range.create(0, prefix.length, 0, prefix.length + '^blk'.length)
+      );
+    });
+
+    it('should follow the fragment onto its own line when the link text wraps', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        'see [a very long\nlink text](note.md#my-section)'
+      ).links[0];
+      const start = 'link text](note.md#'.length;
+      expect(MarkdownLink.getSectionRange(link)).toEqual(
+        Range.create(1, start, 1, start + 'my-section'.length)
+      );
+    });
+
+    it('should return undefined for a markdown link with no fragment', () => {
+      const link = parser.parse(getRandomURI(), 'see [text](note.md)').links[0];
+      expect(MarkdownLink.getSectionRange(link)).toBeUndefined();
+    });
+
+    it('should return undefined for a reference-style link, whose url is elsewhere', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        'see [text][ref]\n\n[ref]: note.md#my-section'
+      ).links[0];
       expect(MarkdownLink.getSectionRange(link)).toBeUndefined();
     });
   });
@@ -244,6 +291,16 @@ describe('MarkdownLink', () => {
   });
 
   describe('parse direct link', () => {
+    it('should parse a link whose text holds a line break', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        'see [a very long\nlink text](to/path.md#section)'
+      ).links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('to/path.md');
+      expect(parsed.section).toEqual('section');
+      expect(parsed.alias).toEqual('a very long\nlink text');
+    });
     it('should parse target', () => {
       const link = parser.parse(getRandomURI(), `this is a [link](to/path.md)`)
         .links[0];

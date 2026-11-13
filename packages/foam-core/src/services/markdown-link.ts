@@ -1,4 +1,5 @@
 import { ResourceLink } from '../model/note';
+import { Position } from '../model/position';
 import { Range } from '../model/range';
 import { URI } from '../model/uri';
 import { TextEdit } from './text-edit';
@@ -30,9 +31,25 @@ function parseWikilink(text: string) {
   };
 }
 
+/**
+ * Where `offset` characters into `text` lands, given that `text` starts at
+ * `start`. Link text may hold a line break, so the fragment of a link is not
+ * always on the line the link opens.
+ */
+function positionAt(text: string, start: Position, offset: number): Position {
+  const before = text.slice(0, offset);
+  const lastBreak = before.lastIndexOf('\n');
+  if (lastBreak < 0) {
+    return Position.create(start.line, start.character + offset);
+  }
+  const lineBreaks = before.split('\n').length - 1;
+  return Position.create(start.line + lineBreaks, offset - lastBreak - 1);
+}
+
 export abstract class MarkdownLink {
   private static directLinkRegex = new RegExp(
-    /\[(.*)\]\((?:<([^#>]*)(?:#([^>]*))?>\s*|([^#>]*?)(?:#([^)>"']*))?(?:\s+(?:"[^"]*"|'[^']*'))?)\)/
+    // `[\s\S]` rather than `.` for the link text: it may hold a line break
+    /\[([\s\S]*)\]\((?:<([^#>]*)(?:#([^>]*))?>\s*|([^#>]*?)(?:#([^)>"']*))?(?:\s+(?:"[^"]*"|'[^']*'))?)\)/d
   );
 
   public static analyzeLink(link: ResourceLink) {
@@ -119,16 +136,38 @@ export abstract class MarkdownLink {
    * Undefined for other link types and for wikilinks without a section.
    */
   public static getSectionRange(link: ResourceLink): Range | undefined {
-    if (link.type !== 'wikilink') {
+    const span = MarkdownLink.getSectionSpan(link);
+    if (!span) {
       return undefined;
     }
-    const wikilink = parseWikilink(link.rawText);
-    if (!wikilink?.section) {
+    const start = link.range.start;
+    return Range.createFromPosition(
+      positionAt(link.rawText, start, span[0]),
+      positionAt(link.rawText, start, span[1])
+    );
+  }
+
+  /** Where the fragment starts and ends within `link.rawText` */
+  private static getSectionSpan(
+    link: ResourceLink
+  ): [number, number] | undefined {
+    if (link.type === 'wikilink') {
+      const wikilink = parseWikilink(link.rawText);
+      return wikilink?.section
+        ? [
+            wikilink.sectionOffset,
+            wikilink.sectionOffset + wikilink.section.length,
+          ]
+        : undefined;
+    }
+    if (link.type !== 'link') {
       return undefined;
     }
-    const { line, character } = link.range.start;
-    const start = character + wikilink.sectionOffset;
-    return Range.create(line, start, line, start + wikilink.section.length);
+    // A reference-style link keeps its url in a definition elsewhere, so it
+    // has no fragment of its own to point at.
+    const match = MarkdownLink.directLinkRegex.exec(link.rawText);
+    const span = match?.indices?.[3] ?? match?.indices?.[5];
+    return span ? [span[0], span[1]] : undefined;
   }
 
   public static createUpdateLinkEdit(

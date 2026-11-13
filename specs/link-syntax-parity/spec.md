@@ -101,6 +101,11 @@ in return.
   text rather than the slug.
 - **Block anchors.** `#^blockid` is Foam's own syntax with no slug form, so
   nothing about it changes.
+- **Starting a rename on a link reference definition.** A `[text][ref]` link
+  keeps its fragment on its `[ref]: note.md#section` line, so the link itself
+  has no fragment under the cursor, and a rename started on the definition
+  line still falls to VS Code. Those definitions are rewritten when a rename
+  runs from anywhere else.
 - **The form Foam writes when converting a link.** Turning a wikilink into a
   markdown link still produces `[text](<note.md#My Section>)`, which resolves
   in Foam but not on GitHub. Whether Foam should write a slug there is a

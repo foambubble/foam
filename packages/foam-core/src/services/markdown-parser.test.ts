@@ -162,6 +162,17 @@ This is not an easy task.[^1]
       expect(note.links.length).toEqual(0);
     });
 
+    it('should leave an unclosed [[ as text, and read the wikilink after it', () => {
+      const note = createNoteFromMarkdown('see [[ syntax [[2026-10-09]]');
+      expect(note.links.map(l => l.rawText)).toEqual(['[[2026-10-09]]']);
+      expect(note.links[0].range).toEqual(Range.create(0, 14, 0, 28));
+    });
+
+    it('should not detect a wikilink that never closes', () => {
+      const note = createNoteFromMarkdown('see [[ syntax');
+      expect(note.links).toEqual([]);
+    });
+
     it('should detect reference-style links', () => {
       const note = createNoteFromMarkdown(`
 # Test Document

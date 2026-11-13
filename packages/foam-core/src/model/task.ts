@@ -74,20 +74,15 @@ export abstract class Task {
   /**
    * The links `task` has to a day, in the order written, each with its day
    * at local midnight: wikilinks, not embeds, whose target's last segment is
-   * a date that exists, as `YYYY-MM-DD`. A link the parser reads over an
-   * unclosed `[[` is none: removing it would remove that text too.
-   * `resource` is the note the task is in.
+   * a date that exists, as `YYYY-MM-DD`. `resource` is the note the task is
+   * in.
    */
   static getDayLinks(
     resource: Resource,
     task: Task
   ): { link: ResourceLink; day: Date }[] {
     return Task.getLinks(resource, task).flatMap(link => {
-      if (
-        link.type !== 'wikilink' ||
-        link.isEmbed ||
-        link.rawText.indexOf('[[', 2) !== -1
-      ) {
+      if (link.type !== 'wikilink' || link.isEmbed) {
         return [];
       }
       const { target } = MarkdownLink.analyzeLink(link);

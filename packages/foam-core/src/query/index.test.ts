@@ -1,7 +1,13 @@
 import { Logger } from '../utils/log';
 import { FoamGraph } from '../model/graph';
 import { createTestNote, createTestWorkspace } from '../../test/test-utils';
-import { executeQuery, parseFilter, QueryDescriptor, QueryResult } from '.';
+import {
+  executeQuery,
+  parseFilter,
+  QueryDescriptor,
+  QueryFilter,
+  QueryResult,
+} from '.';
 import { createMarkdownParser } from '../services/markdown-parser';
 import { URI } from '../model/uri';
 
@@ -401,39 +407,48 @@ describe('parseFilter — jexl', () => {
   });
 });
 
-describe('parseFilter — expression (deprecated)', () => {
-  it('expression is not evaluated and matches nothing', () => {
+describe('parseFilter — unknown fields', () => {
+  it('matches nothing and names the field it does not know', () => {
     const noteA = createTestNote({ uri: '/a.md', type: 'type-1' });
-    const noteB = createTestNote({ uri: '/b.md', type: 'type-2' });
-    const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB]);
+    const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
 
-    const { predicate: pred } = parseFilter(
-      { expression: 'resource.type === "type-1"' },
+    const { predicate, warnings } = parseFilter(
+      { colour: 'red' } as QueryFilter,
       workspace,
       graph,
       true
     );
-    expect(pred(noteA)).toBe(false);
-    expect(pred(noteB)).toBe(false);
+    expect(predicate(noteA)).toBe(false);
+    expect(warnings).toEqual(['unknown filter field `colour`']);
   });
 
-  it('when both expression and jexl are present, jexl takes effect and expression is ignored', () => {
+  it('points the removed expression field to jexl', () => {
     const noteA = createTestNote({ uri: '/a.md', type: 'type-1' });
-    const noteB = createTestNote({ uri: '/b.md', type: 'type-2' });
-    const { workspace, graph } = makeWorkspaceAndGraph([noteA, noteB]);
+    const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
 
-    const { predicate: pred } = parseFilter(
-      {
-        // would match nothing — proves it's ignored
-        expression: 'false',
-        jexl: 'resource.type == "type-1"',
-      },
+    const { predicate, warnings } = parseFilter(
+      { expression: 'resource.type === "type-1"' } as QueryFilter,
       workspace,
       graph,
       true
     );
-    expect(pred(noteA)).toBe(true);
-    expect(pred(noteB)).toBe(false);
+    expect(predicate(noteA)).toBe(false);
+    expect(warnings).toEqual([
+      'the `expression` filter field was removed; use `jexl` instead',
+    ]);
+  });
+
+  it('matches nothing even when the known fields would match', () => {
+    const noteA = createTestNote({ uri: '/a.md', type: 'type-1' });
+    const { workspace, graph } = makeWorkspaceAndGraph([noteA]);
+
+    const { predicate } = parseFilter(
+      { type: 'type-1', colour: 'red' } as QueryFilter,
+      workspace,
+      graph,
+      true
+    );
+    expect(predicate(noteA)).toBe(false);
   });
 });
 
@@ -507,21 +522,6 @@ describe('parseFilter — warnings', () => {
     );
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toContain('jexl');
-  });
-
-  it('reports a deprecation warning when the legacy expression field is used', () => {
-    const { workspace, graph } = makeWorkspaceAndGraph([
-      createTestNote({ uri: '/a.md' }),
-    ]);
-    const { warnings } = parseFilter(
-      { expression: 'resource.type === "x"' },
-      workspace,
-      graph,
-      false
-    );
-    expect(warnings).toHaveLength(1);
-    expect(warnings[0]).toContain('expression');
-    expect(warnings[0]).toContain('deprecated');
   });
 
   it('aggregates warnings from nested and/or/not branches', () => {

@@ -48,13 +48,6 @@ export type QueryFilter =
       links_to?: string | URI; // note identifier or URI — this resource has an outbound link to it
       links_from?: string | URI; // note identifier or URI — this resource is linked from it
       jexl?: string; // Jexl expression evaluated against `{ resource }`
-      /**
-       * @deprecated Replaced by `jexl`. The previous implementation used
-       * `eval()` and is no longer evaluated — this field is kept on the
-       * schema only so old query bodies fail loudly rather than being
-       * silently re-interpreted. Use `jexl` instead.
-       */
-      expression?: string;
       and?: QueryFilter[];
       or?: QueryFilter[];
       not?: QueryFilter;
@@ -133,7 +126,7 @@ type Predicate = (r: Resource) => boolean;
 
 /**
  * Result of parsing a filter. `warnings` collects user-facing strings
- * describing each parse-time problem (rejected regex, deprecated field,
+ * describing each parse-time problem (rejected regex, unknown field,
  * unresolved link target, Jexl compile error, ...). An empty array means
  * the filter parsed cleanly. Warnings are plain text — callers wrap them
  * for their output medium (HTML for the markdown preview, log line, etc.).
@@ -172,6 +165,21 @@ function makeExpressionContext(
  * The log channel keeps the full story for debugging; the returned string
  * lets callers render the same message in their output medium.
  */
+const FILTER_FIELDS: ReadonlySet<string> = new Set<
+  keyof Exclude<QueryFilter, string>
+>([
+  'tag',
+  'type',
+  'path',
+  'title',
+  'links_to',
+  'links_from',
+  'jexl',
+  'and',
+  'or',
+  'not',
+]);
+
 function warn(message: string): string {
   Logger.warn(`[Query] ${message}`);
   return message;
@@ -191,6 +199,20 @@ export function parseFilter(
 
   const predicates: Predicate[] = [];
   const warnings: string[] = [];
+
+  // A field Foam can't apply would otherwise widen the filter, so it matches nothing.
+  for (const key of Object.keys(filter)) {
+    if (!FILTER_FIELDS.has(key)) {
+      warnings.push(
+        warn(
+          key === 'expression'
+            ? 'the `expression` filter field was removed; use `jexl` instead'
+            : `unknown filter field \`${key}\``
+        )
+      );
+      predicates.push(() => false);
+    }
+  }
 
   if (filter.tag !== undefined) {
     const label = filter.tag.startsWith('#') ? filter.tag.slice(1) : filter.tag;
@@ -280,17 +302,6 @@ export function parseFilter(
         }
       });
     }
-  } else if (filter.expression !== undefined) {
-    // The `expression` field used to be evaluated with `eval()`, which is RCE
-    // in any trusted workspace. The field is preserved on the schema so legacy
-    // queries fail loudly — they match nothing rather than being silently
-    // re-evaluated by the jexl engine with different semantics.
-    warnings.push(
-      warn(
-        'the `expression` filter is deprecated and no longer evaluated; use `jexl` instead'
-      )
-    );
-    predicates.push(() => false);
   }
 
   if (filter.and !== undefined) {

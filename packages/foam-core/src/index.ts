@@ -98,7 +98,10 @@ export type {
   PatternPart,
   DateToken,
 } from './templates/daily-note-path-pattern';
-export { findPreviousDailyNote } from './templates/previous-daily-note';
+export {
+  dailyNoteDateMatcher,
+  findPreviousDailyNote,
+} from './templates/previous-daily-note';
 export {
   DEFAULT_DAILY_NOTE_TEMPLATE,
   dailyNoteName,

@@ -42,7 +42,7 @@
     "d3-scale": "^4.0.0",
     "esbuild": "^0.28.1",
     "force-graph": "^1.51.0",
-    "happy-dom": "^20.0.0",
+    "happy-dom": "^21.0.4",
     "lit": "^3.0.0",
     "oxlint": "^1.57.0",
     "rimraf": "^6.1.3",

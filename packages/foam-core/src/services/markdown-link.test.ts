@@ -319,6 +319,24 @@ describe('MarkdownLink', () => {
   });
 
   describe('parse direct link', () => {
+    // A line ending is allowed before a title and before the closing paren,
+    // so these reach the parser as one link whose text holds a `\n`
+    it('should parse a url followed by a line break and a title', () => {
+      const link = parser.parse(getRandomURI(), '[a](note.md\n"Title")')
+        .links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('note.md');
+      expect(parsed.alias).toEqual('a');
+    });
+
+    it('should parse an angle url followed by a line break', () => {
+      const link = parser.parse(getRandomURI(), '[a](<note.md#Sec>\n)')
+        .links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('note.md');
+      expect(parsed.section).toEqual('Sec');
+    });
+
     // Each of these made a pattern retry an alias, a url or a title over and
     // over, taking time in the square of the length. They close so that the
     // whole link is parsed rather than turned away at the first character.

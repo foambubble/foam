@@ -685,6 +685,32 @@ Content.
       expect(result.edits).toHaveLength(0);
     });
 
+    it('should give a url the new slug when the old heading was its own slug', () => {
+      const ws = createTestWorkspace();
+      const noteA = createNoteFromMarkdown('/note-a.md', '## setup\n');
+      const noteB = createNoteFromMarkdown(
+        '/note-b.md',
+        '[[note-a#setup]]\n\n[x](note-a.md#setup)'
+      );
+      ws.set(noteA).set(noteB);
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const result = HeadingEdit.createRenameSectionEdits(
+        graph,
+        ws,
+        noteA.uri,
+        'setup',
+        'Next Steps'
+      );
+
+      // `setup` is both the heading's text and its slug, so the link's own
+      // syntax decides which it was
+      expect(result.edits.map(e => e.edit.newText)).toEqual([
+        '[[note-a#Next Steps]]',
+        '[x](note-a.md#next-steps)',
+      ]);
+    });
+
     it('should leave a link whose slug names a different heading', () => {
       const ws = createTestWorkspace();
       const noteA = createNoteFromMarkdown(

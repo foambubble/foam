@@ -220,8 +220,13 @@ export abstract class HeadingEdit {
       ? current.find(r => r.uri.path === resourceUri.path)
       : workspace.find(resourceUri);
 
-    /** What a reference to the old heading becomes, or null if it names another */
-    const renamed = (reference: string): string | null => {
+    /**
+     * What a reference to the old heading becomes, or null if it names
+     * another. `inUrl` says the reference sits in a url, where the slug is
+     * the form that resolves outside Foam; it settles a heading that is
+     * already its own slug, which `Section.match` can only call exact.
+     */
+    const renamed = (reference: string, inUrl: boolean): string | null => {
       const kind = Section.match(oldLabel, reference);
       if (!kind) {
         return null;
@@ -235,7 +240,8 @@ export abstract class HeadingEdit {
       ) {
         return null;
       }
-      return kind === 'slug' ? toSlug(newLabel) : newLabel;
+      const slug = kind === 'slug' || (inUrl && reference === toSlug(oldLabel));
+      return slug ? toSlug(newLabel) : newLabel;
     };
     const backlinks = [
       ...graph
@@ -263,7 +269,7 @@ export abstract class HeadingEdit {
       // `[ref]: note.md#OldLabel`), update the definition line URL rather than
       // the inline text, which doesn't contain the URL.
       if (link.type === 'link' && ResourceLink.isResolvedReference(link)) {
-        const newSection = renamed(section);
+        const newSection = renamed(section, true);
         if (newSection === null) {
           continue;
         }
@@ -297,10 +303,10 @@ export abstract class HeadingEdit {
         // - If in both: update rawText and update definition URL + label
         //   (e.g. `[[note#OldLabel]]` + `[note#OldLabel]: note.md#OldLabel`)
         const def = link.definition as NoteLinkDefinition;
-        const newRawTextSection = renamed(section);
+        const newRawTextSection = renamed(section, false);
         const defHashIdx = def.url.lastIndexOf('#');
         const defSection = defHashIdx >= 0 ? def.url.slice(defHashIdx + 1) : '';
-        const newDefSection = renamed(defSection);
+        const newDefSection = renamed(defSection, true);
 
         if (newRawTextSection === null && newDefSection === null) {
           continue;
@@ -322,7 +328,7 @@ export abstract class HeadingEdit {
           const labelHashIdx = def.label.lastIndexOf('#');
           const labelSection =
             labelHashIdx >= 0 ? def.label.slice(labelHashIdx + 1) : '';
-          const newLabelSection = renamed(labelSection);
+          const newLabelSection = renamed(labelSection, false);
           const newDefLabel =
             newLabelSection !== null
               ? def.label.slice(0, labelHashIdx + 1) + newLabelSection
@@ -342,7 +348,7 @@ export abstract class HeadingEdit {
         }
       } else {
         // Wikilinks without resolved definitions and regular inline markdown links.
-        const newSection = renamed(section);
+        const newSection = renamed(section, link.type === 'link');
         if (newSection === null) {
           continue;
         }

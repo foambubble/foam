@@ -62,9 +62,7 @@ function withoutTitle(url: string): string {
  */
 function parseDirectLink(text: string) {
   const open = text.startsWith('![') ? 1 : 0;
-  // A link whose text wraps is left alone: every offset below is a column on
-  // the line the link starts at
-  if (text[open] !== '[' || !text.endsWith(')') || text.includes('\n')) {
+  if (text[open] !== '[' || !text.endsWith(')')) {
     return undefined;
   }
   const divider = text.lastIndexOf('](');
@@ -221,7 +219,13 @@ export abstract class MarkdownLink {
       return undefined;
     }
     // A reference-style link keeps its url in a definition elsewhere, so it
-    // has no fragment of its own to point at.
+    // has no fragment of its own to point at. A link holding a line break has
+    // one, but an offset into it is no longer a column on the line the link
+    // opens at, so it is left alone — only the ranges need that, not the
+    // parsing a link's target and section go through.
+    if (link.rawText.includes('\n')) {
+      return undefined;
+    }
     const parsed = parseDirectLink(link.rawText);
     return parsed && parsed.sectionOffset >= 0
       ? [parsed.sectionOffset, parsed.sectionOffset + parsed.section.length]

@@ -87,8 +87,8 @@ export class NoteRenameProvider implements vscode.RenameProvider {
     const link = resource.links.find(l =>
       Range.containsPosition(l.range, foamPosition)
     );
-    const range = link && MarkdownLink.getTargetRange(link);
-    if (!range || !Range.containsPosition(range, foamPosition)) {
+    const targetRange = link && MarkdownLink.getTargetRange(link);
+    if (!targetRange || !Range.containsPosition(targetRange, foamPosition)) {
       return undefined;
     }
     const resolved = this.foam.workspace.resolveLink(resource, link);
@@ -99,7 +99,15 @@ export class NoteRenameProvider implements vscode.RenameProvider {
     // being renamed, and would otherwise end up in the new path and in every
     // link rewritten to it
     const target = resolved.with({ fragment: '' });
-    return { uri: target, range: nameRange(document, range, target) };
+    const range = nameRange(document, targetRange, target);
+    // The box offers the link's own text to edit, so it can only stand for a
+    // file that text names. A link reaching its note another way — a folder's
+    // index, a reference definition — would rename a file called something
+    // else, under a name meant for this one.
+    if (document.getText(toVsCodeRange(range)) !== target.getName()) {
+      return undefined;
+    }
+    return { uri: target, range };
   }
 }
 

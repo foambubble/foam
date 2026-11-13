@@ -143,6 +143,27 @@ describe('NoteRenameProvider', () => {
       ).rejects.toThrow('Cannot rename: cursor is not on a note');
     });
 
+    it('should throw when the link reaches its note through a folder index', async () => {
+      const index = await createFile('# Projects\n', ['projects', 'index.md']);
+      const fileB = await createFile('See [[projects]].\n');
+
+      const ws = createTestWorkspace()
+        .set(parser.parse(index.uri, index.content))
+        .set(parser.parse(fileB.uri, fileB.content));
+      const provider = new NoteRenameProvider(buildFoamLike(ws) as any);
+
+      const { doc } = await showInEditor(fileB.uri);
+      // The box would offer "projects", which names the folder rather than
+      // `index.md`, the file that would be renamed
+      await expect(
+        provider.prepareRename(
+          doc,
+          new vscode.Position(0, 'See [[pro'.length),
+          new vscode.CancellationTokenSource().token
+        )
+      ).rejects.toThrow('Cannot rename: cursor is not on a note');
+    });
+
     it('should throw when the wikilink has no note behind it', async () => {
       const fileB = await createFile('See [[no-such-note]].\n');
 

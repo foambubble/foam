@@ -47,6 +47,8 @@ export type QueryFilter =
       title?: string; // regex
       links_to?: string | URI; // note identifier or URI — this resource has an outbound link to it
       links_from?: string | URI; // note identifier or URI — this resource is linked from it
+      relations_to?: { type: string; note: string | URI };
+      relations_from?: { type: string; note: string | URI };
       jexl?: string; // Jexl expression evaluated against `{ resource }`
       /**
        * @deprecated Replaced by `jexl`. The previous implementation used
@@ -254,6 +256,38 @@ export function parseFilter(
     }
   }
 
+  for (const direction of ['relations_to', 'relations_from'] as const) {
+    const relation = filter[direction];
+    if (relation === undefined) {
+      continue;
+    }
+    const other =
+      relation &&
+      (typeof relation.note === 'string' || relation.note instanceof URI)
+        ? workspace.find(relation.note)
+        : undefined;
+    if (!other || typeof relation.type !== 'string') {
+      warnings.push(
+        warn(direction + ': expected a relation type and an existing note')
+      );
+      predicates.push(() => false);
+      continue;
+    }
+    const connections =
+      direction === 'relations_to'
+        ? graph.getRelationsTo(other.uri)
+        : graph.getRelationsFrom(other.uri);
+    const paths = new Set(
+      connections
+        .filter(edge => edge.type === relation.type)
+        .map(
+          edge =>
+            (direction === 'relations_to' ? edge.source : edge.target).path
+        )
+    );
+    predicates.push(resource => paths.has(resource.uri.path));
+  }
+
   if (filter.jexl !== undefined) {
     let compiled: ReturnType<typeof queryJexl.compile> | undefined;
     try {
@@ -312,9 +346,7 @@ export function parseFilter(
   }
 
   const predicate: Predicate =
-    predicates.length === 0
-      ? () => true
-      : r => predicates.every(p => p(r));
+    predicates.length === 0 ? () => true : r => predicates.every(p => p(r));
   return { predicate, warnings };
 }
 
@@ -400,7 +432,11 @@ export function requiresSource(field: string): boolean {
   );
 }
 
-function getSectionContent(r: Resource, source: string, label: string): string | undefined {
+function getSectionContent(
+  r: Resource,
+  source: string,
+  label: string
+): string | undefined {
   // Case-sensitive: matches `Resource.findSection` so labels work the same way
   // in `section[Foo]` selects as in `![[note#Foo]]` embeds.
   const section = r.sections.find(s => s.label === label);

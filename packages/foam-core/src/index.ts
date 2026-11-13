@@ -9,7 +9,7 @@ export type { ResourceParser, ResourceJson, Tag, Section } from './model/note';
 export { Task, TaskStatus } from './model/task';
 export { FoamWorkspace } from './model/workspace';
 export { FoamGraph } from './model/graph';
-export type { Connection } from './model/graph';
+export type { Connection, TypedRelation } from './model/graph';
 export { FoamTags } from './model/tags';
 export type { ResourceProvider } from './model/provider';
 export type { Foam, Services } from './model/foam';

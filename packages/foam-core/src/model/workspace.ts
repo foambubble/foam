@@ -163,6 +163,21 @@ export class FoamWorkspace implements IDisposable {
     return rel === '' ? '/' : '/' + rel;
   }
 
+  /** Resolves a typed relation against the source note's own workspace root. */
+  public resolveRelationTarget(source: URI, path: unknown): URI | undefined {
+    if (
+      typeof path !== 'string' ||
+      /[\\:#?\x00-\x1f]/.test(path) ||
+      !path.toLowerCase().endsWith('.md') ||
+      path
+        .split('/')
+        .some(segment => !segment || segment === '.' || segment === '..')
+    ) {
+      return undefined;
+    }
+    return this.findContainingRoot(source.path)?.joinPath(path);
+  }
+
   set(resource: Resource) {
     const key = this.getTrieIdentifier(resource.uri.path);
     const bucket = this._resources.get(key) ?? [];

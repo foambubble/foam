@@ -5,6 +5,12 @@ import { IDisposable } from '../common/lifecycle';
 import { Logger } from '../utils/log';
 import { Emitter } from '../common/event';
 
+export type TypedRelation = {
+  source: URI;
+  target: URI;
+  type: string;
+};
+
 export type Connection = {
   source: URI;
   target: URI;
@@ -27,6 +33,17 @@ export class FoamGraph implements IDisposable {
    * Maps the connections arriving to a URI
    */
   public readonly backlinks: Map<string, Connection[]> = new Map();
+
+  private readonly outgoingRelations = new Map<string, TypedRelation[]>();
+  private readonly incomingRelations = new Map<string, Set<TypedRelation>>();
+
+  public getRelationsFrom(uri: URI): readonly TypedRelation[] {
+    return this.outgoingRelations.get(uri.path) ?? [];
+  }
+
+  public getRelationsTo(uri: URI): readonly TypedRelation[] {
+    return Array.from(this.incomingRelations.get(uri.path) ?? []);
+  }
 
   private onDidUpdateEmitter = new Emitter<void>();
   onDidUpdate = this.onDidUpdateEmitter.event;
@@ -145,6 +162,8 @@ export class FoamGraph implements IDisposable {
     this.backlinks.clear();
     this.links.clear();
     this.placeholders.clear();
+    this.outgoingRelations.clear();
+    this.incomingRelations.clear();
 
     for (const resource of this.workspace.resources()) {
       this.connectResource(resource);
@@ -285,6 +304,7 @@ export class FoamGraph implements IDisposable {
 
   /** Resolves and connects all of a resource's (non-external) links. */
   private connectResource(resource: Resource) {
+    this.connectRelations(resource);
     for (const link of resource.links) {
       try {
         if (link.type === 'external') {
@@ -310,6 +330,7 @@ export class FoamGraph implements IDisposable {
    * placeholder left with no remaining backlinks.
    */
   private disconnectResource(source: URI) {
+    this.disconnectRelations(source);
     const outgoing = this.links.get(source.path) ?? [];
     for (const connection of outgoing) {
       const targetPath = connection.target.path;
@@ -330,6 +351,51 @@ export class FoamGraph implements IDisposable {
       }
     }
     this.links.delete(source.path);
+  }
+
+  private connectRelations(resource: Resource) {
+    const relations: unknown = resource.properties.relations;
+    if (
+      !relations ||
+      typeof relations !== 'object' ||
+      Array.isArray(relations)
+    ) {
+      return;
+    }
+    const outgoing: TypedRelation[] = [];
+    for (const [type, paths] of Object.entries(relations)) {
+      if (!/^[a-z][a-z0-9_-]*$/.test(type) || !Array.isArray(paths)) {
+        continue;
+      }
+      for (const path of new Set<unknown>(paths)) {
+        const target = this.workspace.resolveRelationTarget(resource.uri, path);
+        if (!target) {
+          continue;
+        }
+        const relation = { source: resource.uri, target, type };
+        outgoing.push(relation);
+        let incoming = this.incomingRelations.get(target.path);
+        if (!incoming) {
+          incoming = new Set();
+          this.incomingRelations.set(target.path, incoming);
+        }
+        incoming.add(relation);
+      }
+    }
+    if (outgoing.length > 0) {
+      this.outgoingRelations.set(resource.uri.path, outgoing);
+    }
+  }
+
+  private disconnectRelations(source: URI) {
+    for (const relation of this.getRelationsFrom(source)) {
+      const incoming = this.incomingRelations.get(relation.target.path);
+      incoming?.delete(relation);
+      if (incoming?.size === 0) {
+        this.incomingRelations.delete(relation.target.path);
+      }
+    }
+    this.outgoingRelations.delete(source.path);
   }
 
   private connect(source: URI, target: URI, link: ResourceLink) {

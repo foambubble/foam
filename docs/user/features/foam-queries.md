@@ -294,3 +294,24 @@ Call `render(...)` to show output in the preview. You can pass a query builder o
 
 [embeds]: embeds.md 'Note Embeds'
 [smart-folders]: smart-folders.md 'Smart Folders'
+
+### Typed relations
+
+Declare named links in the source note's YAML frontmatter. Each target is a Markdown path relative to that note's workspace root.
+
+```yaml
+relations:
+  supersedes: [adr/001-old.md]
+```
+
+Use `relations_to` to find notes that point to a target and `relations_from` to find notes that a source points to. For example:
+
+```foam-query
+filter:
+  relations_to:
+    type: supersedes
+    note: 001-old
+select: [title]
+```
+
+Relations with a missing target do not match notes until that target exists. Ordinary wikilinks continue to use the existing link filters.

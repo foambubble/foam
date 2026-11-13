@@ -176,9 +176,10 @@ export const NoteFactory = {
           );
         }
       },
-      openUnsaved: async content =>
+      openUnsaved: async (content, uri) =>
         openUnsavedDocAndFocus(
           new SnippetString(content),
+          uri,
           selectedContent ? ViewColumn.Beside : ViewColumn.Active
         ),
     };

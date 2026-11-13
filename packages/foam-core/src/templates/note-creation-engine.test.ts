@@ -220,116 +220,46 @@ Content without filepath metadata.`,
       expect(titleRequests).toBe(0);
     });
 
-    it('still prompts and returns a filepath for a FOAM_TITLE template when unsaved notes are possible', async () => {
-      const { engine } = await setupFoamEngine();
-      let titleRequests = 0;
-      const resolver = new Resolver(
-        new Map(),
-        new Date(),
-        undefined,
-        'default',
-        {
-          resolveTitle: async () => {
-            titleRequests++;
-            return 'Prompted Title';
-          },
-          resolveSelectedText: () => '',
-          resolveCurrentDir: () => '/',
+    it.each([
+      ['FOAM_TITLE', '# ${FOAM_TITLE}', '# Prompted Title'],
+      ['FOAM_TITLE_SAFE', '# ${FOAM_TITLE_SAFE}', '# Prompted Title'],
+      ['FOAM_SLUG', '# ${FOAM_SLUG}', '# prompted-title'],
+    ])(
+      'prompts once and returns an unsaved note named after the title for a %s template with no target (#1243)',
+      async (_variable, content, expectedContent) => {
+        const { engine } = await setupFoamEngine();
+        let titleRequests = 0;
+        const resolver = new Resolver(
+          new Map(),
+          new Date(),
+          undefined,
+          'default',
+          {
+            resolveTitle: async () => {
+              titleRequests++;
+              return 'Prompted Title';
+            },
+            resolveSelectedText: () => '',
+            resolveCurrentDir: () => '/',
+          }
+        );
+        const result = await engine.processTemplate(
+          TriggerFactory.createCommandTrigger(
+            'foam-vscode.create-note-from-template'
+          ),
+          { type: 'markdown', content, metadata: new Map() },
+          resolver,
+          { canOpenUnsaved: true }
+        );
+        expect(titleRequests).toBe(1);
+        if (!('unsaved' in result)) {
+          throw new Error('expected an unsaved result');
         }
-      );
-      const result = await engine.processTemplate(
-        TriggerFactory.createCommandTrigger(
-          'foam-vscode.create-note-from-template'
-        ),
-        {
-          type: 'markdown',
-          content: '# ${FOAM_TITLE}',
-          metadata: new Map(),
-        },
-        resolver,
-        { canOpenUnsaved: true }
-      );
-      expect(titleRequests).toBe(1);
-      if ('unsaved' in result) {
-        throw new Error('expected a file result');
+        expect(result.content).toBe(expectedContent);
+        expect(result.suggestedFilepath?.isAbsolute()).toBe(false);
+        expect(result.suggestedFilepath?.path).toBe('Prompted Title.md');
       }
-      expect(result.filepath.path).toBe('Prompted Title.md');
-      expect(result.content).toBe('# Prompted Title');
-    });
-
-    it('still prompts and returns a filepath for a FOAM_TITLE_SAFE-only template when unsaved notes are possible', async () => {
-      const { engine } = await setupFoamEngine();
-      let titleRequests = 0;
-      const resolver = new Resolver(
-        new Map(),
-        new Date(),
-        undefined,
-        'default',
-        {
-          resolveTitle: async () => {
-            titleRequests++;
-            return 'Prompted Title';
-          },
-          resolveSelectedText: () => '',
-          resolveCurrentDir: () => '/',
-        }
-      );
-      const result = await engine.processTemplate(
-        TriggerFactory.createCommandTrigger(
-          'foam-vscode.create-note-from-template'
-        ),
-        {
-          type: 'markdown',
-          content: '# ${FOAM_TITLE_SAFE}',
-          metadata: new Map(),
-        },
-        resolver,
-        { canOpenUnsaved: true }
-      );
-      expect(titleRequests).toBe(1);
-      if ('unsaved' in result) {
-        throw new Error('expected a file result');
-      }
-      expect(result.filepath.path).toBe('Prompted Title.md');
-      expect(result.content).toBe('# Prompted Title');
-    });
-
-    it('still prompts and returns a filepath for a FOAM_SLUG-only template when unsaved notes are possible', async () => {
-      const { engine } = await setupFoamEngine();
-      let titleRequests = 0;
-      const resolver = new Resolver(
-        new Map(),
-        new Date(),
-        undefined,
-        'default',
-        {
-          resolveTitle: async () => {
-            titleRequests++;
-            return 'Prompted Title';
-          },
-          resolveSelectedText: () => '',
-          resolveCurrentDir: () => '/',
-        }
-      );
-      const result = await engine.processTemplate(
-        TriggerFactory.createCommandTrigger(
-          'foam-vscode.create-note-from-template'
-        ),
-        {
-          type: 'markdown',
-          content: '# ${FOAM_SLUG}',
-          metadata: new Map(),
-        },
-        resolver,
-        { canOpenUnsaved: true }
-      );
-      expect(titleRequests).toBe(1);
-      if ('unsaved' in result) {
-        throw new Error('expected a file result');
-      }
-      expect(result.filepath.path).toBe('Prompted Title.md');
-      expect(result.content).toBe('# prompted-title');
-    });
+    );
 
     it('prefers the given default filepath over an unsaved note', async () => {
       const { engine } = await setupFoamEngine();

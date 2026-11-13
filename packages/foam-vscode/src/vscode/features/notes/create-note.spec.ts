@@ -1,4 +1,5 @@
 /* @unit-ready */
+import { existsSync } from 'fs';
 import { Selection, commands, window, workspace } from 'vscode';
 import { URI } from '@foam/core';
 import {
@@ -319,6 +320,56 @@ describe('create-note command', () => {
         'Plain tabstop body'
       );
       await closeEditors();
+      await deleteFile(template.uri);
+    });
+
+    it('asks for the title once and opens an unsaved editor named after it when the template has no filepath (#1243)', async () => {
+      const template = await createFile('# ${FOAM_TITLE}\n\nbody', [
+        '.foam',
+        'templates',
+        'titled-no-target-template.md',
+      ]);
+      const spy = vi
+        .spyOn(window, 'showInputBox')
+        .mockImplementationOnce(() => Promise.resolve('Unsaved Title'));
+      await commands.executeCommand('foam-vscode.create-note', {
+        templatePath: template.uri.path,
+        onRelativeNotePath: 'resolve-from-root',
+      });
+      expect(spy).toHaveBeenCalledTimes(1);
+      const target = asAbsoluteWorkspaceUri(URI.file('Unsaved Title.md'));
+      const doc = window.activeTextEditor.document;
+      expect(doc.uri.scheme).toEqual('untitled');
+      expect(doc.uri.path).toEqual(target.path);
+      expect(doc.getText()).toEqual('# Unsaved Title\n\nbody');
+      expect(existsSync(target.toFsPath())).toBe(false);
+      await closeEditors();
+      await deleteFile(template.uri);
+    });
+
+    it('asks for another path before opening the unsaved editor when the title-derived file exists (#1243)', async () => {
+      const existing = await createFile('ORIGINAL', ['Taken Title.md']);
+      const template = await createFile('# ${FOAM_TITLE}', [
+        '.foam',
+        'templates',
+        'titled-existing-target-template.md',
+      ]);
+      const alternative = asAbsoluteWorkspaceUri(URI.file('Free Title.md'));
+      const spy = vi
+        .spyOn(window, 'showInputBox')
+        .mockImplementationOnce(() => Promise.resolve('Taken Title'))
+        .mockImplementationOnce(() => Promise.resolve(alternative.toFsPath()));
+      await commands.executeCommand('foam-vscode.create-note', {
+        templatePath: template.uri.path,
+        onRelativeNotePath: 'resolve-from-root',
+      });
+      expect(spy).toHaveBeenCalledTimes(2);
+      const doc = window.activeTextEditor.document;
+      expect(doc.uri.scheme).toEqual('untitled');
+      expect(doc.uri.path).toEqual(alternative.path);
+      expect(await readFile(existing.uri)).toEqual('ORIGINAL');
+      await closeEditors();
+      await deleteFile(existing.uri);
       await deleteFile(template.uri);
     });
 

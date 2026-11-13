@@ -45,12 +45,15 @@ export interface NoteCreationHooks {
   onDidCreate?: (uri: URI) => Promise<void>;
   /**
    * Opens the note as an unsaved editor instead of writing a file. Providing
-   * it declares the capability: a markdown template with no `filepath`, no
-   * `fallbackFilepath` and no title variable then opens unsaved, and the
-   * user names the note on save (#1243). Without it, a filename is derived
-   * from the title as before. `onDidCreate` does not run — there is no URI.
+   * it declares the capability: a loaded markdown template with no
+   * `filepath` and no `fallbackFilepath` then opens unsaved (#1243). `uri`
+   * is where saving it should go — named after the title when one is known,
+   * and already resolved and checked like a file target — or `undefined`
+   * when the user names it on save. Without the hook, a filename is derived
+   * from the title as before. The built-in default text always creates a
+   * file. `onDidCreate` does not run: nothing exists until the user saves.
    */
-  openUnsaved?: (content: string) => Promise<void>;
+  openUnsaved?: (content: string, uri: URI | undefined) => Promise<void>;
 }
 
 export interface NoteCreationRequest {
@@ -80,8 +83,11 @@ export type NoteCreationOutcome =
   | { status: 'exists'; uri: URI }
   /** `onRelativePath` chose to stop; nothing was written. */
   | { status: 'cancelled' }
-  /** The note opened as an unsaved editor via `openUnsaved`; no file exists. */
-  | { status: 'opened-unsaved' };
+  /**
+   * The note opened as an unsaved editor via `openUnsaved`; no file exists.
+   * `uri` is where saving it goes, when a title named it.
+   */
+  | { status: 'opened-unsaved'; uri: URI | undefined };
 
 /**
  * Whether a note may be created at `target`.
@@ -123,7 +129,8 @@ export async function createNote(
   const isTrusted = request.isTrusted ?? false;
   const roots = foam.workspace.roots;
 
-  const template: Template = (await hooks.loadTemplate()) ?? {
+  const loaded = await hooks.loadTemplate();
+  const template: Template = loaded ?? {
     type: 'markdown',
     content: DEFAULT_NEW_NOTE_TEXT,
     metadata: new Map(),
@@ -135,16 +142,11 @@ export async function createNote(
     resolver,
     {
       defaultFilepath: fallbackFilepath,
-      canOpenUnsaved: hooks.openUnsaved !== undefined,
+      // The built-in default text is not a template the user wrote, so it
+      // keeps creating a file named after the title.
+      canOpenUnsaved: hooks.openUnsaved !== undefined && loaded !== undefined,
     }
   );
-
-  if ('unsaved' in result) {
-    // No target to resolve, check or write; the editor owns the note until
-    // the user saves it, so onDidCreate (which needs a URI) does not run.
-    await hooks.openUnsaved(result.content);
-    return { status: 'opened-unsaved' };
-  }
 
   const onRelativePath =
     hooks.onRelativePath ?? (async (uri: URI) => asAbsoluteUri(uri, roots));
@@ -166,26 +168,51 @@ export async function createNote(
     return resolved;
   };
 
-  let candidate = result.filepath;
-  let target: URI;
-  for (;;) {
-    while (!candidate.isAbsolute()) {
-      const next = await onRelativePath(candidate);
+  // Resolves a candidate to a free, allowed, absolute target, or to the
+  // outcome that stopped the search.
+  const resolveTarget = async (
+    candidate: URI
+  ): Promise<{ target: URI } | { stopped: NoteCreationOutcome }> => {
+    for (;;) {
+      while (!candidate.isAbsolute()) {
+        const next = await onRelativePath(candidate);
+        if (next === undefined) {
+          return { stopped: { status: 'cancelled' } };
+        }
+        candidate = next;
+      }
+      const target = resolveInWorkspace(candidate);
+      if (!(await hooks.fileExists(target))) {
+        return { target };
+      }
+      const next = await hooks.onFileExists(target);
       if (next === undefined) {
-        return { status: 'cancelled' };
+        return { stopped: { status: 'exists', uri: target } };
       }
       candidate = next;
     }
-    target = resolveInWorkspace(candidate);
-    if (!(await hooks.fileExists(target))) {
-      break;
+  };
+
+  if ('unsaved' in result) {
+    // The suggested path goes through the same checks as a file target: the
+    // editor saves to it without asking, so it must be free and allowed.
+    let uri: URI | undefined;
+    if (result.suggestedFilepath) {
+      const resolved = await resolveTarget(result.suggestedFilepath);
+      if ('stopped' in resolved) {
+        return resolved.stopped;
+      }
+      uri = resolved.target;
     }
-    const next = await hooks.onFileExists(target);
-    if (next === undefined) {
-      return { status: 'exists', uri: target };
-    }
-    candidate = next;
+    await hooks.openUnsaved(result.content, uri);
+    return { status: 'opened-unsaved', uri };
   }
+
+  const resolved = await resolveTarget(result.filepath);
+  if ('stopped' in resolved) {
+    return resolved.stopped;
+  }
+  const { target } = resolved;
 
   await hooks.writeNote(target, result.content);
   await hooks.onDidCreate?.(target);

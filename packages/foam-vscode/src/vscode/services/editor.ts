@@ -282,13 +282,21 @@ export async function createDocAndFocus(
 
 /**
  * Opens an unsaved (untitled) markdown editor and inserts the given snippet,
- * so tabstops stay active. The user names and places the note on save.
+ * so tabstops stay active. With `filepath`, the editor is associated with it
+ * and saving writes there without a dialog; without, the user picks where to
+ * save. Nothing is written to disk either way. VS Code refuses an associated
+ * path that already exists, so callers check that first.
  */
 export async function openUnsavedDocAndFocus(
   text: SnippetString,
+  filepath: URI | undefined,
   viewColumn: ViewColumn = ViewColumn.Active
 ) {
-  const document = await workspace.openTextDocument({ language: 'markdown' });
+  const document = await (filepath
+    ? workspace.openTextDocument(
+        toVsCodeUri(filepath).with({ scheme: 'untitled' })
+      )
+    : workspace.openTextDocument({ language: 'markdown' }));
   const editor = await window.showTextDocument(document, viewColumn);
   await editor.insertSnippet(text);
 }

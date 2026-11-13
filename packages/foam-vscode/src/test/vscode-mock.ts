@@ -2208,6 +2208,13 @@ export const workspace = {
       uri = createVSCodeUri(URI.file(uriOrFileNameOrOptions));
     } else if ('scheme' in uriOrFileNameOrOptions) {
       uri = uriOrFileNameOrOptions;
+      // Like VS Code, refuse an untitled document whose associated path
+      // already exists on disk.
+      if (uri.scheme === 'untitled' && fs.existsSync(uri.fsPath)) {
+        throw new Error(
+          `cannot open ${uri.toString()}. Detail: file already exists`
+        );
+      }
     } else {
       // Create untitled document
       uri = createVSCodeUri(

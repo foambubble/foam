@@ -41,11 +41,11 @@ export interface ProcessTemplateOptions {
   defaultFilepath?: URI;
   /**
    * Whether the client can open the note as an unsaved editor. When set, a
-   * markdown template with no `filepath`, no `defaultFilepath` and no title
-   * available (see `Resolver.isTitleAvailable`) yields an
-   * `UnsavedNoteResult` instead of a title prompt, so the user names the
-   * note on save (#1243). Clients without the capability keep deriving a
-   * filename from the title.
+   * markdown template with no `filepath` and no `defaultFilepath` yields an
+   * `UnsavedNoteResult` (#1243), suggesting a name only when a title is
+   * already available (see `Resolver.isTitleAvailable`) — the title prompt
+   * belongs to the template's content, not to its target. Clients without
+   * the capability keep deriving a filename from the title.
    */
   canOpenUnsaved?: boolean;
 }
@@ -160,36 +160,42 @@ export class NoteCreationEngine {
       return { filepath: options.defaultFilepath, content: cleanContent };
     }
 
-    // No target anywhere and no title to derive one from: the title prompt
-    // belongs to the FOAM_TITLE family of variables, so a template that uses
-    // none of them must not trigger it (#1243). When the client can open an
-    // unsaved editor, the user names the note on save instead.
-    if (
-      !templateFilepath &&
-      options.canOpenUnsaved &&
-      !resolver.isTitleAvailable()
-    ) {
-      return { unsaved: true, content: cleanContent };
+    // The target is decided by `filepath` alone, the title prompt by the
+    // content alone (#1243): without a `filepath` the note opens unsaved,
+    // and a title, when the template uses one, only suggests its name.
+    if (!templateFilepath && options.canOpenUnsaved) {
+      return resolver.isTitleAvailable()
+        ? {
+            unsaved: true,
+            content: cleanContent,
+            suggestedFilepath: this.toTargetUri(
+              await this.generateDefaultFilepath(resolver)
+            ),
+          }
+        : { unsaved: true, content: cleanContent };
     }
 
-    // Determine filepath - get variables from resolver for default generation
-    let filepath =
-      templateFilepath ?? (await this.generateDefaultFilepath(resolver));
-
-    // Sanitize the filepath to remove invalid characters
-    filepath = sanitizeFilepath(filepath);
-
-    // Only resolve absolute paths via workspace (fixes #1537 path doubling).
-    // Relative paths are left as-is for NoteFactory to resolve downstream,
-    // but backslashes are normalized to forward slashes (mirrors fromFsPath).
-    const isAbsolutePath =
-      filepath.startsWith('/') || /^[a-zA-Z]:/.test(filepath);
     return {
-      filepath: isAbsolutePath
-        ? this.foam.workspace.resolveNoteUri(filepath)
-        : new URI({ scheme: 'file', path: filepath.replace(/\\/g, '/') }),
+      filepath: this.toTargetUri(
+        templateFilepath ?? (await this.generateDefaultFilepath(resolver))
+      ),
       content: cleanContent,
     };
+  }
+
+  /**
+   * Turns a template filepath into a target URI: sanitized, absolute paths
+   * resolved via the workspace (fixes #1537 path doubling), relative ones
+   * left relative for the caller to resolve, with backslashes normalized to
+   * forward slashes (mirrors fromFsPath).
+   */
+  private toTargetUri(rawFilepath: string): URI {
+    const filepath = sanitizeFilepath(rawFilepath);
+    const isAbsolutePath =
+      filepath.startsWith('/') || /^[a-zA-Z]:/.test(filepath);
+    return isAbsolutePath
+      ? this.foam.workspace.resolveNoteUri(filepath)
+      : new URI({ scheme: 'file', path: filepath.replace(/\\/g, '/') });
   }
 
   /**

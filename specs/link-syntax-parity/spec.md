@@ -106,6 +106,13 @@ in return.
   has no fragment under the cursor, and a rename started on the definition
   line still falls to VS Code. Those definitions are rewritten when a rename
   runs from anywhere else.
+- **A markdown link to a section of the note it sits in.** The parser drops a
+  markdown link whose target is its own note, so `[back](#my-section)` is not a
+  link Foam has: it cannot start a rename, and no rename rewrites it. Renaming
+  from a heading or a wikilink never did. Renaming from a markdown link's
+  fragment did, while VS Code owned that starting point, and no longer does now
+  that Foam answers there — the one thing given up for the wikilinks that
+  starting point used to leave stale.
 - **Rewriting markdown links when a note is renamed.** Foam leaves those to
   VS Code's `markdown.updateLinksOnFileMove`, which is off by default and which
   Foam already prompts people to turn on. Rewriting them in Foam as well would

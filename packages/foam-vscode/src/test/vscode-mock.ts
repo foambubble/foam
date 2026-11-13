@@ -2026,6 +2026,10 @@ async function fireWillEvent(
 }
 
 export const workspace = {
+  get textDocuments(): TextDocument[] {
+    return Array.from(mockState.openDocuments.values());
+  },
+
   get workspaceFolders(): WorkspaceFolder[] | undefined {
     return mockState.workspaceFolders.length > 0
       ? mockState.workspaceFolders

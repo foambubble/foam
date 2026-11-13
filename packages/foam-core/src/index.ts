@@ -4,13 +4,7 @@ export type { URIComponents } from './model/uri';
 export { Range } from './model/range';
 export { Position } from './model/position';
 export { Location } from './model/location';
-export {
-  Resource,
-  ResourceLink,
-  NoteLinkDefinition,
-  Block,
-  Footnote,
-} from './model/note';
+export { Resource, ResourceLink, NoteLinkDefinition, Block, Footnote } from './model/note';
 export type { ResourceParser, ResourceJson, Tag, Section } from './model/note';
 export { Task, TaskStatus } from './model/task';
 export { FoamWorkspace } from './model/workspace';
@@ -31,11 +25,7 @@ export {
 } from './services/datastore';
 export { GlobMatcher, PlaceholderMatcher } from './services/glob-matcher';
 export type { GlobMatcherRoot } from './services/glob-matcher';
-export {
-  createMarkdownParser,
-  getLinkDefinitions,
-  getBlockFor,
-} from './services/markdown-parser';
+export { createMarkdownParser, getLinkDefinitions, getBlockFor } from './services/markdown-parser';
 export type {
   ParserPlugin,
   ParserCache,
@@ -45,10 +35,7 @@ export type {
 export { LoadProfiler } from './services/load-profiler';
 export type { LoadProfileStats, ParseSample } from './services/load-profiler';
 export { EventLoopMonitor, formatMemoryUsage } from './services/host-metrics';
-export {
-  MarkdownResourceProvider,
-  createMarkdownReferences,
-} from './services/markdown-provider';
+export { MarkdownResourceProvider, createMarkdownReferences } from './services/markdown-provider';
 export {
   AttachmentResourceProvider,
   imageExtensions,
@@ -91,10 +78,7 @@ export type {
   ProcessedTemplate,
   UnsavedNoteResult,
 } from './templates/note-creation-types';
-export type {
-  Template,
-  TemplateContext,
-} from './templates/note-creation-types';
+export type { Template, TemplateContext } from './templates/note-creation-types';
 export { TriggerFactory } from './templates/note-creation-triggers';
 export {
   findFirstTemplate,
@@ -210,11 +194,7 @@ export { toSlug } from './utils/slug';
 export { convertDateformatToDayjs } from './utils/date-format';
 export { calendarDate, parseIsoDate, formatIsoDate } from './utils/date';
 export { isSubsequence } from './utils/string';
-export {
-  extractHashtags,
-  extractTagsFromProp,
-  HASHTAG_REGEX,
-} from './utils/hashtags';
+export { extractHashtags, extractTagsFromProp, HASHTAG_REGEX } from './utils/hashtags';
 export {
   getExcerpt,
   getFrontMatterRange,
@@ -225,15 +205,7 @@ export {
   isOnYAMLKeywordLine,
 } from './utils/md';
 export type { ICache } from './utils/cache';
-export {
-  isNotNull,
-  isSome,
-  isNone,
-  isNumeric,
-  hash,
-  firstFrom,
-  lazyExecutor,
-} from './utils/core';
+export { isNotNull, isSome, isNone, isNumeric, hash, firstFrom, lazyExecutor } from './utils/core';
 export { getHeadingFromFileName } from './utils/index';
 export {
   extractFoamTemplateFrontmatterMetadata,
@@ -293,7 +265,11 @@ export type {
 // Export pipeline (workspace → static-site artifact set)
 export { buildSite } from './export';
 export { exportAssets } from './export/asset-filters';
-export { selectAll, selectWhere, selectByUris } from './export/selectors';
+export {
+  selectAll,
+  selectWhere,
+  selectByUris,
+} from './export/selectors';
 export {
   getWorkspaceRelativePath,
   getContentRelativePath,
@@ -342,12 +318,7 @@ export {
   staleDefinitionsRule,
   WorkspaceLintResult,
 } from './lint/lint';
-export type {
-  LintRule,
-  LintIssue,
-  LintRelatedInfo,
-  WikilinkDefinitionSetting,
-} from './lint/lint';
+export type { LintRule, LintIssue, LintRelatedInfo, WikilinkDefinitionSetting } from './lint/lint';
 export { generateHeading } from './lint/generate-headings';
 export {
   generateLinkReferences,
@@ -366,11 +337,7 @@ export { FoamError } from './common/errors';
 export type { FoamErrorCode } from './common/errors';
 
 // Commands (high-level workspace operations, used by CLI / MCP / VS Code)
-export {
-  uriToWorkspacePath,
-  getRootUriFor,
-  resolveNote,
-} from './commands/workspace';
+export { uriToWorkspacePath, getRootUriFor, resolveNote } from './commands/workspace';
 export type { NoteRef } from './commands/workspace';
 export {
   listNotes,
@@ -416,12 +383,7 @@ export type {
   NoteMoveResult,
   NoteDeleteResult,
 } from './commands/note';
-export {
-  renameNote,
-  renameTag,
-  renameSection,
-  renameBlock,
-} from './commands/rename';
+export { renameNote, renameTag, renameSection, renameBlock } from './commands/rename';
 export type {
   RenameNoteResult,
   RenameTagResult,

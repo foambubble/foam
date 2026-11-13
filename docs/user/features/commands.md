@@ -10,7 +10,7 @@ This command creates a note.
 Although it works fine on its own, it can be customized to achieve various use cases.
 Here are the settings available for the command:
 
-- `notePath`: The path of the note to create. If relative it will be resolved against the workspace root.
+- `notePath`: The path of the note to create. If relative it will be resolved against the workspace root. Without it, a note from `text` or a template without `filepath` opens unsaved, and nothing is written until you save it.
 - `templatePath`: The path of the template to use. If relative it will be resolved against the workspace root.
 - `title`: The title of the note (that is, the `FOAM_TITLE` variable)
 - `text`: The text to use for the note. If also a template is provided, the template has precedence

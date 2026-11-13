@@ -373,6 +373,36 @@ describe('create-note command', () => {
       await deleteFile(template.uri);
     });
 
+    it('asks for another path when an unsaved note with the same title is already open (#1243)', async () => {
+      const template = await createFile('# ${FOAM_TITLE}', [
+        '.foam',
+        'templates',
+        'titled-twice-template.md',
+      ]);
+      const first = asAbsoluteWorkspaceUri(URI.file('Twice Title.md'));
+      const second = asAbsoluteWorkspaceUri(URI.file('Other Title.md'));
+      const spy = vi
+        .spyOn(window, 'showInputBox')
+        .mockImplementationOnce(() => Promise.resolve('Twice Title'))
+        .mockImplementationOnce(() => Promise.resolve('Twice Title'))
+        .mockImplementationOnce(() => Promise.resolve(second.toFsPath()));
+      const args = {
+        templatePath: template.uri.path,
+        onRelativeNotePath: 'resolve-from-root',
+      };
+      await commands.executeCommand('foam-vscode.create-note', args);
+      const firstDoc = window.activeTextEditor.document;
+      await commands.executeCommand('foam-vscode.create-note', args);
+      expect(spy).toHaveBeenCalledTimes(3);
+      expect(firstDoc.uri.path).toEqual(first.path);
+      expect(firstDoc.getText()).toEqual('# Twice Title');
+      const secondDoc = window.activeTextEditor.document;
+      expect(secondDoc.uri.scheme).toEqual('untitled');
+      expect(secondDoc.uri.path).toEqual(second.path);
+      await closeEditors();
+      await deleteFile(template.uri);
+    });
+
     it('fills FOAM_SELECTED_TEXT into the unsaved note and leaves the selection as it was (#1243)', async () => {
       const source = await createFile('This is my first file: World');
       const { editor } = await showInEditor(source.uri);

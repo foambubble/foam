@@ -17,6 +17,7 @@ import {
   deleteFile,
   fileExists,
   findSelectionContent,
+  findUnsavedDocAt,
   getCurrentEditorDirectory,
   openUnsavedDocAndFocus,
   replaceSelection,
@@ -80,9 +81,13 @@ const createFnForOnFileExistsStrategy =
       return onFileExists(existingFile);
     }
     switch (onFileExists) {
-      case 'open':
-        await commands.executeCommand('vscode.open', toVsCodeUri(existingFile));
+      case 'open': {
+        const unsaved = findUnsavedDocAt(existingFile);
+        await (unsaved
+          ? window.showTextDocument(unsaved)
+          : commands.executeCommand('vscode.open', toVsCodeUri(existingFile)));
         return;
+      }
       case 'overwrite':
         await deleteFile(existingFile);
         return existingFile;
@@ -153,7 +158,7 @@ export const NoteFactory = {
         if (!workspace.isTrusted) {
           await assertInsideWorkspace(uri, foam.workspace.roots);
         }
-        return fileExists(uri);
+        return (await fileExists(uri)) || findUnsavedDocAt(uri) !== undefined;
       },
       onFileExists: createFnForOnFileExistsStrategy(options.onFileExists),
       onRelativePath: createFnForOnRelativePathStrategy(options.onRelativePath),

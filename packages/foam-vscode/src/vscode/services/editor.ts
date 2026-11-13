@@ -301,6 +301,18 @@ export async function openUnsavedDocAndFocus(
   await editor.insertSnippet(text);
 }
 
+/**
+ * The unsaved (untitled) document associated with `uri`, if one is open.
+ * Such a document claims its path as a file on disk would: saving it writes
+ * there without asking.
+ */
+export function findUnsavedDocAt(uri: URI): TextDocument | undefined {
+  const path = toVsCodeUri(uri).path;
+  return workspace.textDocuments.find(
+    doc => doc.uri.scheme === 'untitled' && doc.uri.path === path
+  );
+}
+
 export async function replaceSelection(
   document: TextDocument,
   selection: Selection,

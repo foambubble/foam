@@ -62,10 +62,37 @@ export type ParseObserver = (sample: {
   cacheHit: boolean;
 }) => void;
 
+/**
+ * A wikilink, whose content closes at the first `[[` or `]]` after it, so that
+ * it cannot run over another wikilink's opening.
+ */
+const WIKILINK_REGEX = /^\[\[(?:(?!\[\[|\]\])[^\n])+\]\]/;
+
+/**
+ * Closes a wikilink at the `[[` nearest its `]]`.
+ *
+ * `remark-wiki-link` pairs a `]]` with the first `[[` it is offered, so an
+ * unclosed `[[` reads as a link over the wikilinks that follow it on the line.
+ * Rejecting such a candidate leaves the inner `[[` to be offered in turn, and
+ * the unclosed one to stay text.
+ */
+function innermostWikilink(this: unified.Processor) {
+  const tokenizers = (this.Parser as any).prototype.inlineTokenizers;
+  const wikiLink = tokenizers.wikiLink;
+  const tokenizer = function (this: any, eat: any, value: string, silent: any) {
+    return WIKILINK_REGEX.test(value)
+      ? wikiLink.call(this, eat, value, silent)
+      : undefined;
+  };
+  tokenizer.locator = wikiLink.locator;
+  tokenizers.wikiLink = tokenizer;
+}
+
 const parser = unified()
   .use(markdownParse, { gfm: true })
   .use(frontmatterPlugin, ['yaml'])
-  .use(wikiLinkPlugin, { aliasDivider: '|' });
+  .use(wikiLinkPlugin, { aliasDivider: '|' })
+  .use(innermostWikilink);
 
 export function getLinkDefinitions(markdown: string): NoteLinkDefinition[] {
   const definitions: NoteLinkDefinition[] = [];

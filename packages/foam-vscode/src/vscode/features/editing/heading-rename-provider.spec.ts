@@ -128,7 +128,7 @@ describe('HeadingRenameProvider', () => {
       await expect(
         provider.prepareRename(
           doc,
-          new vscode.Position(0, `See [[${fileA.name}#Mis`.length),
+          new vscode.Position(0, `See [[${fileA.name}#Miss`.length),
           new vscode.CancellationTokenSource().token
         )
       ).rejects.toThrow('Cannot rename: cursor is not on a heading');

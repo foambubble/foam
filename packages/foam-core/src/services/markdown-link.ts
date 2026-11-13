@@ -32,8 +32,23 @@ function parseWikilink(text: string) {
   };
 }
 
-/** A title after the url, as in `[a](path "Title")` */
-const TITLE_SUFFIX = /\s+(?:"[^"]*"|'[^']*')$/;
+/**
+ * Removes a title after the url, as in `[a](path "Title")`.
+ *
+ * By index rather than by `\s+(?:"[^"]*"|'[^']*')$`, which has to retry from
+ * every space and so is quadratic on a url that is a long run of them.
+ */
+function withoutTitle(url: string): string {
+  const quote = url.at(-1);
+  if (quote !== '"' && quote !== "'") {
+    return url;
+  }
+  const opening = url.lastIndexOf(quote, url.length - 2);
+  if (opening < 1 || !/\s/.test(url[opening - 1])) {
+    return url;
+  }
+  return url.slice(0, opening).trimEnd();
+}
 
 /**
  * Splits `[alias](target#section "title")`, the url optionally within angle
@@ -67,7 +82,7 @@ function parseDirectLink(text: string) {
     url = url.slice(1, close);
     urlOffset += 1;
   } else {
-    url = url.replace(TITLE_SUFFIX, '');
+    url = withoutTitle(url);
   }
   const hash = url.indexOf('#');
   return {

@@ -319,14 +319,15 @@ describe('MarkdownLink', () => {
   });
 
   describe('parse direct link', () => {
-    // Each of these made the pattern that used to parse direct links retry an
-    // alias or a url over and over, taking time in the square of the length
+    // Each of these made a pattern retry an alias, a url or a title over and
+    // over, taking time in the square of the length. They close so that the
+    // whole link is parsed rather than turned away at the first character.
     it.each([
-      ['unclosed brackets', '[' + '[a'.repeat(20000)],
-      ['openings of an angle url', '[](<' + '](<"'.repeat(20000)],
-      ['openings of an angle fragment', '[](<#' + '](<#='.repeat(20000)],
-      ['spaces where a title would go', '[](' + ' '.repeat(20000)],
-    ])('should reject a long run of %s quickly', (_what, rawText) => {
+      ['unclosed brackets', '[' + '[a'.repeat(20000) + '](x)'],
+      ['openings of an angle url', '[](<' + '](<"'.repeat(20000) + ')'],
+      ['openings of an angle fragment', '[](<#' + '](<#='.repeat(20000) + ')'],
+      ['spaces where a title would go', '[](' + ' '.repeat(20000) + ')'],
+    ])('should parse a long run of %s quickly', (_what, rawText) => {
       const link: ResourceLink = {
         type: 'link',
         rawText,

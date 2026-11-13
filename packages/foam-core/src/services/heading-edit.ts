@@ -35,11 +35,17 @@ export abstract class HeadingEdit {
     const link = resource.links.find(l =>
       Range.containsPosition(l.range, position)
     );
-    const linkSectionRange = link && MarkdownLink.getSectionRange(link);
-    if (
-      linkSectionRange &&
-      Range.containsPosition(linkSectionRange, position)
-    ) {
+    if (link) {
+      // A link inside a heading is the link's text, not the heading's, so the
+      // heading below is never reached from one — which is what keeps a
+      // position from being claimed by two rename providers at once
+      const linkSectionRange = MarkdownLink.getSectionRange(link);
+      if (
+        !linkSectionRange ||
+        !Range.containsPosition(linkSectionRange, position)
+      ) {
+        return undefined;
+      }
       const targetUri = workspace.resolveLink(resource, link);
       const target =
         current.find(r => r.uri.path === targetUri.path) ??

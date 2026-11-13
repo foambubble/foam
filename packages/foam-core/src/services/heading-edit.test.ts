@@ -780,6 +780,27 @@ Content.
       expect(result.section.label).toEqual('Old Heading');
     });
 
+    it('should leave the note part of a wikilink inside a heading to the note rename', () => {
+      const a = noteA();
+      const b = createNoteFromMarkdown('/note-b.md', '# See [[note-a]] here\n');
+      const ws = createTestWorkspace().set(a).set(b);
+
+      // On the link's target: the link owns the text, so no section is renamed
+      expect(
+        HeadingEdit.getSectionAtPosition(
+          ws,
+          b,
+          Position.create(0, '# See [[note'.length)
+        )
+      ).toBeUndefined();
+
+      // On the heading's own text, the heading is still the one renamed
+      expect(
+        HeadingEdit.getSectionAtPosition(ws, b, Position.create(0, 3))?.section
+          .label
+      ).toEqual('See note-a here');
+    });
+
     it('should return undefined on the note part of a wikilink', () => {
       expect(
         sectionAt('See [[note-a#Old Heading]].', Position.create(0, 7))

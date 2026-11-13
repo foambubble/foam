@@ -169,7 +169,7 @@ describe('NoteRenameProvider', () => {
     });
     afterAll(closeEditors);
 
-    it('should rename the note and leave every link pointing at it', async () => {
+    it('should rename the note and carry the wikilinks with it', async () => {
       const noteA = await createFile('# Note A\n', [
         'note-rename',
         'target-note.md',
@@ -267,7 +267,10 @@ describe('NoteRenameProvider', () => {
       return { target, linking };
     };
 
-    it('should leave the same state as renaming the file in the explorer', async () => {
+    // The first arm renames through a workspace edit, which is what the
+    // explorer issues and what the provider returns, so this holds the two to
+    // the same end state rather than proving the editor's own path
+    it('should leave the same state as renaming the file directly', async () => {
       const viaExplorer = await fixture('one-old');
       await renameFile(
         viaExplorer.target.uri,

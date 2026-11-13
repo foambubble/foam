@@ -593,7 +593,7 @@ export class ControlPanel extends LitElement {
             <span class="value">${this.textFade.toFixed(1)}</span>
           </label>
           <label class="slider-row">
-            <span>Label Length</span>
+            <span>Labels</span>
             <input
               type="range"
               min="0"

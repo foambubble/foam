@@ -33,10 +33,13 @@ function parseWikilink(text: string) {
 }
 
 export abstract class MarkdownLink {
-  // `.` for the link text keeps the match within one line, which bounds how
-  // far the engine can backtrack over a run of `[`
+  // Anchored because it only ever runs on one link's own text, which starts
+  // with its `[` or `![`. Unanchored, a failure made the engine retry from
+  // every later `[`, which is quadratic on a long run of them; the link text
+  // stays greedy so that the last `](` wins and an image whose alt text holds
+  // a link still reports the image.
   private static directLinkRegex = new RegExp(
-    /\[(.*)\]\((?:<([^#>]*)(?:#([^>]*))?>\s*|([^#>]*?)(?:#([^)>"']*))?(?:\s+(?:"[^"]*"|'[^']*'))?)\)/d
+    /^!?\[(.*)\]\((?:<([^#>]*)(?:#([^>]*))?>\s*|([^#>]*?)(?:#([^)>"']*))?(?:\s+(?:"[^"]*"|'[^']*'))?)\)/d
   );
 
   /** A link that matched the pattern lies on one line, so an offset is a column */

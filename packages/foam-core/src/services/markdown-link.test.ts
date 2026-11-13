@@ -322,13 +322,14 @@ describe('MarkdownLink', () => {
     it('should reject a long run of unclosed brackets quickly', () => {
       const link: ResourceLink = {
         type: 'link',
-        rawText: '[' + '[a'.repeat(2000),
+        rawText: '[' + '[a'.repeat(20000),
         range: Range.create(0, 0),
         isEmbed: false,
       };
       const start = performance.now();
       MarkdownLink.analyzeLink(link);
-      expect(performance.now() - start).toBeLessThan(1000);
+      // Retrying from each `[` instead of failing at the first takes seconds
+      expect(performance.now() - start).toBeLessThan(100);
     });
     it('should parse target', () => {
       const link = parser.parse(getRandomURI(), `this is a [link](to/path.md)`)

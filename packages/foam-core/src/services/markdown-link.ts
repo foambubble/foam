@@ -1,5 +1,4 @@
 import { ResourceLink } from '../model/note';
-import { Position } from '../model/position';
 import { Range } from '../model/range';
 import { URI } from '../model/uri';
 import { TextEdit } from './text-edit';
@@ -33,26 +32,18 @@ function parseWikilink(text: string) {
   };
 }
 
-/**
- * Where `offset` characters into `text` lands, given that `text` starts at
- * `start`. Link text may hold a line break, so the fragment of a link is not
- * always on the line the link opens.
- */
-function positionAt(text: string, start: Position, offset: number): Position {
-  const before = text.slice(0, offset);
-  const lastBreak = before.lastIndexOf('\n');
-  if (lastBreak < 0) {
-    return Position.create(start.line, start.character + offset);
-  }
-  const lineBreaks = before.split('\n').length - 1;
-  return Position.create(start.line + lineBreaks, offset - lastBreak - 1);
-}
-
 export abstract class MarkdownLink {
+  // `.` for the link text keeps the match within one line, which bounds how
+  // far the engine can backtrack over a run of `[`
   private static directLinkRegex = new RegExp(
-    // `[\s\S]` rather than `.` for the link text: it may hold a line break
-    /\[([\s\S]*)\]\((?:<([^#>]*)(?:#([^>]*))?>\s*|([^#>]*?)(?:#([^)>"']*))?(?:\s+(?:"[^"]*"|'[^']*'))?)\)/d
+    /\[(.*)\]\((?:<([^#>]*)(?:#([^>]*))?>\s*|([^#>]*?)(?:#([^)>"']*))?(?:\s+(?:"[^"]*"|'[^']*'))?)\)/d
   );
+
+  /** A link that matched the pattern lies on one line, so an offset is a column */
+  private static rangeOf(link: ResourceLink, span: [number, number]): Range {
+    const { line, character } = link.range.start;
+    return Range.create(line, character + span[0], line, character + span[1]);
+  }
 
   public static analyzeLink(link: ResourceLink) {
     try {
@@ -139,14 +130,7 @@ export abstract class MarkdownLink {
    */
   public static getSectionRange(link: ResourceLink): Range | undefined {
     const span = MarkdownLink.getSectionSpan(link);
-    if (!span) {
-      return undefined;
-    }
-    const start = link.range.start;
-    return Range.createFromPosition(
-      positionAt(link.rawText, start, span[0]),
-      positionAt(link.rawText, start, span[1])
-    );
+    return span ? MarkdownLink.rangeOf(link, span) : undefined;
   }
 
   /**
@@ -161,15 +145,10 @@ export abstract class MarkdownLink {
     if (!wikilink?.target) {
       return undefined;
     }
-    const start = link.range.start;
-    return Range.createFromPosition(
-      positionAt(link.rawText, start, wikilink.targetOffset),
-      positionAt(
-        link.rawText,
-        start,
-        wikilink.targetOffset + wikilink.target.length
-      )
-    );
+    return MarkdownLink.rangeOf(link, [
+      wikilink.targetOffset,
+      wikilink.targetOffset + wikilink.target.length,
+    ]);
   }
 
   /** Where the fragment starts and ends within `link.rawText` */

@@ -276,15 +276,12 @@ describe('MarkdownLink', () => {
       );
     });
 
-    it('should follow the fragment onto its own line when the link text wraps', () => {
+    it('should return undefined when the link text holds a line break', () => {
       const link = parser.parse(
         getRandomURI(),
         'see [a very long\nlink text](note.md#my-section)'
       ).links[0];
-      const start = 'link text](note.md#'.length;
-      expect(MarkdownLink.getSectionRange(link)).toEqual(
-        Range.create(1, start, 1, start + 'my-section'.length)
-      );
+      expect(MarkdownLink.getSectionRange(link)).toBeUndefined();
     });
 
     it('should return undefined for a markdown link with no fragment', () => {
@@ -322,15 +319,16 @@ describe('MarkdownLink', () => {
   });
 
   describe('parse direct link', () => {
-    it('should parse a link whose text holds a line break', () => {
-      const link = parser.parse(
-        getRandomURI(),
-        'see [a very long\nlink text](to/path.md#section)'
-      ).links[0];
-      const parsed = MarkdownLink.analyzeLink(link);
-      expect(parsed.target).toEqual('to/path.md');
-      expect(parsed.section).toEqual('section');
-      expect(parsed.alias).toEqual('a very long\nlink text');
+    it('should reject a long run of unclosed brackets quickly', () => {
+      const link: ResourceLink = {
+        type: 'link',
+        rawText: '[' + '[a'.repeat(2000),
+        range: Range.create(0, 0),
+        isEmbed: false,
+      };
+      const start = performance.now();
+      MarkdownLink.analyzeLink(link);
+      expect(performance.now() - start).toBeLessThan(1000);
     });
     it('should parse target', () => {
       const link = parser.parse(getRandomURI(), `this is a [link](to/path.md)`)

@@ -33,10 +33,6 @@ export interface GraphBuilderOptions {
    */
   resourceToId: (uri: URI) => string | undefined;
   /**
-   * Optional title transform applied before storing. Defaults to identity.
-   */
-  transformTitle?: (title: string, resource: Resource) => string;
-  /**
    * Optional transform for the frontmatter properties stored on each node.
    * Defaults to passing the resource's properties through unchanged (the
    * local graph view groups/colors nodes by arbitrary frontmatter keys).
@@ -68,7 +64,6 @@ export function buildGraphData(
 ): BuiltGraphData {
   const {
     resourceToId,
-    transformTitle,
     transformProperties,
     includePlaceholders = false,
   } = options;
@@ -80,9 +75,8 @@ export function buildGraphData(
     if (id === undefined) {
       continue;
     }
-    const rawTitle =
+    const title =
       resource.type === 'note' ? resource.title : resource.uri.getBasename();
-    const title = transformTitle ? transformTitle(rawTitle, resource) : rawTitle;
     nodeInfo[id] = {
       id,
       type:

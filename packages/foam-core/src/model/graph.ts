@@ -84,19 +84,55 @@ export class FoamGraph implements IDisposable {
     const graph = new FoamGraph(workspace);
     graph.update();
     if (keepMonitoring) {
-      // Incremental handlers, not a full rebuild — see onResource* below. Each
-      // touches only the affected connections, then fires onDidUpdate. They are
-      // NOT debounced: debouncing coalesces events, but incremental updates need
-      // every event (each carries a distinct diff to apply).
-      graph.disposables.push(
-        workspace.onDidAdd(resource => graph.onResourceAdded(resource)),
-        workspace.onDidUpdate(({ old, new: updated }) =>
-          graph.onResourceUpdated(old, updated)
-        ),
-        workspace.onDidDelete(resource => graph.onResourceDeleted(resource))
-      );
+      graph.monitor();
     }
     return graph;
+  }
+
+  /**
+   * Like {@link fromWorkspace}, but connects the resources `batchSize` at a
+   * time and awaits `pause` between batches, so a single-threaded host stays
+   * responsive while a large workspace is connected. The workspace must not
+   * change until the returned promise settles.
+   */
+  public static async fromWorkspaceInBatches(
+    workspace: FoamWorkspace,
+    options: {
+      batchSize: number;
+      pause: () => Promise<void>;
+      keepMonitoring?: boolean;
+    }
+  ): Promise<FoamGraph> {
+    const graph = new FoamGraph(workspace);
+    let connected = 0;
+    for (const resource of workspace.resources()) {
+      graph.connectResource(resource);
+      if (++connected % options.batchSize === 0) {
+        await options.pause();
+      }
+    }
+    graph.onDidUpdateEmitter.fire();
+    if (options.keepMonitoring) {
+      graph.monitor();
+    }
+    return graph;
+  }
+
+  /**
+   * Follows the workspace with incremental handlers, not a full rebuild — see
+   * onResource* below. Each touches only the affected connections, then fires
+   * onDidUpdate. They are NOT debounced: debouncing coalesces events, but
+   * incremental updates need every event (each carries a distinct diff to
+   * apply).
+   */
+  private monitor() {
+    this.disposables.push(
+      this.workspace.onDidAdd(resource => this.onResourceAdded(resource)),
+      this.workspace.onDidUpdate(({ old, new: updated }) =>
+        this.onResourceUpdated(old, updated)
+      ),
+      this.workspace.onDidDelete(resource => this.onResourceDeleted(resource))
+    );
   }
 
   /**
@@ -247,15 +283,22 @@ export class FoamGraph implements IDisposable {
     }
   }
 
-  /** Resolves and connects all of a resource's (non-external) links. */
-  private connectResource(resource: Resource) {
+  /**
+   * The connections of a resource's (non-external) links. A link that fails
+   * to resolve is logged and left out.
+   */
+  public static resolveLinks(
+    workspace: FoamWorkspace,
+    resource: Resource
+  ): Connection[] {
+    const connections: Connection[] = [];
     for (const link of resource.links) {
       try {
         if (link.type === 'external') {
           continue;
         }
-        const targetUri = this.workspace.resolveLink(resource, link);
-        this.connect(resource.uri, targetUri, link);
+        const target = workspace.resolveLink(resource, link);
+        connections.push({ source: resource.uri, target, link });
       } catch (e) {
         Logger.error(
           `Error while resolving link ${
@@ -265,6 +308,13 @@ export class FoamGraph implements IDisposable {
           e
         );
       }
+    }
+    return connections;
+  }
+
+  private connectResource(resource: Resource) {
+    for (const connection of FoamGraph.resolveLinks(this.workspace, resource)) {
+      this.connect(connection);
     }
   }
 
@@ -296,8 +346,8 @@ export class FoamGraph implements IDisposable {
     this.links.delete(source.path);
   }
 
-  private connect(source: URI, target: URI, link: ResourceLink) {
-    const connection = { source, target, link };
+  private connect(connection: Connection) {
+    const { source, target } = connection;
 
     if (!this.links.has(source.path)) {
       this.links.set(source.path, []);

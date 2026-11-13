@@ -2,7 +2,10 @@ import { URI } from '../model/uri';
 import { createTestNote, createTestWorkspace } from '../../test/test-utils';
 import { partsFromTemplateFilepath } from './daily-note-path-pattern';
 import { dailyNotePattern } from './daily-note-location';
-import { findPreviousDailyNote } from './previous-daily-note';
+import {
+  dailyNoteDateMatcher,
+  findPreviousDailyNote,
+} from './previous-daily-note';
 
 const pattern = partsFromTemplateFilepath(
   '/journal/${FOAM_DATE_YEAR}-${FOAM_DATE_MONTH}-${FOAM_DATE_DATE}.md'
@@ -193,5 +196,71 @@ describe('findPreviousDailyNote', () => {
     expect(
       findPreviousDailyNote(workspace, monthNamePattern, new Date(2026, 8, 16))
     ).toBeUndefined();
+  });
+});
+
+describe('dailyNoteDateMatcher', () => {
+  const inNotesRoot = partsFromTemplateFilepath(
+    '/notes/journal/${FOAM_DATE_YEAR}-${FOAM_DATE_MONTH}-${FOAM_DATE_DATE}.md'
+  );
+
+  it('gives the day of a daily note, and nothing for any other note', () => {
+    const workspace = workspaceWith([]);
+
+    const dateOf = dailyNoteDateMatcher(workspace, pattern);
+
+    expect(dateOf(URI.file('/workspace/journal/2026-09-14.md'))).toEqual(
+      new Date(2026, 8, 14)
+    );
+    expect(
+      dateOf(URI.file('/workspace/journal/2026-09-15-standup.md'))
+    ).toBeUndefined();
+    expect(dateOf(URI.file('/workspace/notes/2026-09-14.md'))).toBeUndefined();
+  });
+
+  it('reads back a note whose path pattern names the root it is in', () => {
+    const workspace = createTestWorkspace([URI.file('/home/me/notes')]);
+
+    const dateOf = dailyNoteDateMatcher(workspace, inNotesRoot);
+
+    expect(dateOf(URI.file('/home/me/notes/journal/2026-10-07.md'))).toEqual(
+      new Date(2026, 9, 7)
+    );
+  });
+
+  it('reads back a note at the pattern as written, when the single root is named like its first folder', () => {
+    const workspace = createTestWorkspace([URI.file('/home/me/journal')]);
+
+    const dateOf = dailyNoteDateMatcher(workspace, dailyNotePattern(undefined));
+
+    expect(dateOf(URI.file('/home/me/journal/journal/2026-09-14.md'))).toEqual(
+      new Date(2026, 8, 14)
+    );
+  });
+
+  it('counts only the root the path names, in a multi-root workspace', () => {
+    const workspace = createTestWorkspace([
+      URI.file('/work/my-project'),
+      URI.file('/home/me/notes'),
+    ]);
+
+    const dateOf = dailyNoteDateMatcher(workspace, inNotesRoot);
+
+    expect(dateOf(URI.file('/home/me/notes/journal/2026-09-14.md'))).toEqual(
+      new Date(2026, 8, 14)
+    );
+    expect(
+      dateOf(URI.file('/work/my-project/notes/journal/2026-09-20.md'))
+    ).toBeUndefined();
+  });
+
+  it('is unavailable when the daily note path cannot name a day', () => {
+    const workspace = workspaceWith([]);
+    const monthNamePattern = partsFromTemplateFilepath(
+      '/journal/${FOAM_DATE_YEAR}-${FOAM_DATE_MONTH_NAME}-${FOAM_DATE_DATE}.md'
+    );
+
+    expect(dailyNoteDateMatcher(workspace, monthNamePattern)).toBeUndefined();
+    expect(dailyNoteDateMatcher(workspace, undefined)).toBeUndefined();
   });
 });

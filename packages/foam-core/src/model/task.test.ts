@@ -112,10 +112,12 @@ describe('Task.getDayLinks', () => {
     ]);
   });
 
-  it('leaves out embeds and a link that runs over an unclosed [[', () => {
+  it('leaves out embeds, and reads the link after an unclosed [[', () => {
     const note = parse('- [ ] ![[2026-10-08]] see [[ syntax [[2026-10-09]]');
 
-    expect(Task.getDayLinks(note, note.tasks[0])).toEqual([]);
+    expect(
+      Task.getDayLinks(note, note.tasks[0]).map(({ link }) => link.rawText)
+    ).toEqual(['[[2026-10-09]]']);
   });
 });
 
@@ -152,10 +154,10 @@ describe('Task.getDays', () => {
     ]);
   });
 
-  it('does not take a link that runs over an unclosed [[ for a day', () => {
+  it('takes the day of the link after an unclosed [[', () => {
     const note = parse('- [ ] [[2026-10-09# [[2026-10-09]]');
 
-    expect(Task.getDays(note, note.tasks[0])).toEqual([]);
+    expect(Task.getDays(note, note.tasks[0])).toEqual([day('2026-10-09')]);
   });
 });
 
@@ -296,6 +298,14 @@ describe('Task.createScheduleEdits', () => {
     const moved = schedule(content, '2026-10-07', '2026-10-09');
 
     expect(schedule(moved, '2026-10-09', '2026-10-07')).toBe(content);
+  });
+
+  it('round-trips a day appended to a task that holds an unclosed [[', () => {
+    const content = '- [ ] see [[ syntax';
+    const scheduled = schedule(content, null, '2026-10-09');
+
+    expect(scheduled).toBe('- [ ] see [[ syntax [[2026-10-09]]');
+    expect(schedule(scheduled, '2026-10-09', null)).toBe(content);
   });
 });
 

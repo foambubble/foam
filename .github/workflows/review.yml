@@ -68,9 +68,6 @@ jobs:
             posted findings against the current head commit. This PR being
             agent-authored is the normal case here, not a reason to skip.
 
-            If you find nothing worth reporting, say so in one summary
-            comment. Silence is indistinguishable from not having run.
-
             Post every `gh pr comment` from a file: write the body with the
             Write tool to /tmp/review-comment.md, then run
             `gh pr comment <number> --repo <repo> --body-file /tmp/review-comment.md`.
@@ -101,6 +98,46 @@ jobs:
 
             Report findings only. Do not push commits, and do not approve or
             request changes — the maintainer decides.
+
+            When the review is finished, post exactly one summary comment,
+            whatever you found: silence is indistinguishable from not having
+            run. It is the report the maintainer reads first, so make it
+            quick to digest. Use short bullets, each naming a file and line
+            or a spec criterion. Write "None." under a heading with nothing
+            in it rather than dropping the heading. Use these headings, in
+            this order:
+
+            ## Code review
+
+            One line: the head commit you reviewed (short SHA) and the
+            verdict, either no issues or how many findings you posted inline.
+
+            ### Action items
+
+            What the maintainer has to do before merging: each finding you
+            posted inline, in a few words with its file and line, and
+            anything else that needs a decision from them. A list to work
+            through, not a repeat of the inline comments.
+
+            ### Review by hand
+
+            The parts of the diff that reading could not verify well enough
+            and that deserve the maintainer's own eyes, each with the reason:
+            code no test reaches (UI, webview wiring, timing and ordering
+            between processes), behaviour only visible when the feature runs,
+            criteria the spec marks `_verify: human_`, changes that are hard
+            to undo (removed settings, stored data, workflows), and anything
+            you are unsure about. Point at lines, not whole files. "None." is
+            the right answer for a small, well-tested change.
+
+            ### Trade-offs
+
+            Judgement calls the change makes that the maintainer may want to
+            weigh in on: a behaviour chosen over an alternative, something
+            deliberately left out, a cost accepted. Take them from the diff,
+            the spec, the commit messages and the PR description. Also list
+            the calls you made as reviewer, such as an issue you noticed and
+            judged not worth flagging, and why.
           settings: '{"permissions":{"deny":["Read(./specs/**/plan.md)","Bash(git push:*)","Bash(git remote:*)","Bash(gh api:*)","Bash(gh pr merge:*)","Bash(gh pr close:*)","Bash(gh workflow:*)","Bash(gh secret:*)","Bash(gh release:*)"]}}'
           claude_args: |
             --model claude-fable-5-1

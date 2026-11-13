@@ -8,7 +8,7 @@
     "type": "git"
   },
   "homepage": "https://github.com/foambubble/foam",
-  "version": "0.47.1",
+  "version": "0.48.0",
   "license": "MIT",
   "publisher": "foam",
   "engines": {
@@ -330,14 +330,6 @@
           "when": "config.foam.experimental"
         },
         {
-          "command": "foam-vscode.create-note-from-default-template",
-          "when": "false"
-        },
-        {
-          "command": "foam-vscode.update-graph",
-          "when": "false"
-        },
-        {
           "command": "foam-vscode.views.connections.show:all-links",
           "when": "false"
         },
@@ -449,14 +441,6 @@
         "title": "Foam: Export to HTML page"
       },
       {
-        "command": "foam-vscode.clear-cache",
-        "title": "Foam: Clear Cache"
-      },
-      {
-        "command": "foam-vscode.update-graph",
-        "title": "Foam: Update Graph"
-      },
-      {
         "command": "foam-vscode.set-log-level",
         "title": "Foam: Set Log Level"
       },
@@ -485,16 +469,8 @@
         "title": "Foam: Lint Workspace (Experimental)"
       },
       {
-        "command": "foam-vscode.copy-without-brackets",
-        "title": "Foam: Copy To Clipboard Without Brackets"
-      },
-      {
         "command": "foam-vscode.create-note-from-template",
         "title": "Foam: Create New Note From Template"
-      },
-      {
-        "command": "foam-vscode.create-note-from-default-template",
-        "title": "Foam: Create New Note"
       },
       {
         "command": "foam-vscode.open-resource",
@@ -746,14 +722,6 @@
             "Complete as markdown links (e.g., [Note Name](note-name.md))"
           ]
         },
-        "foam.files.ignore": {
-          "type": [
-            "array"
-          ],
-          "default": [],
-          "description": "Specifies the list of globs that will be ignored by Foam (e.g. they will not be considered when creating the graph). To ignore all the content of a given folder, use `<folderName>/**/*`",
-          "deprecationMessage": "Use 'foam.files.exclude' instead. This setting will be removed in a future version."
-        },
         "foam.files.exclude": {
           "type": [
             "array"
@@ -782,7 +750,7 @@
             "**/.cache/**/*",
             "**/__pycache__/**/*"
           ],
-          "description": "Specifies the list of globs that will be excluded by Foam (e.g. they will not be considered when creating the graph). To exclude all the content of a given folder, use `<folderName>/**/*`. This setting is combined with 'foam.files.ignore' (deprecated) and 'files.exclude'."
+          "description": "Specifies the list of globs that will be excluded by Foam (e.g. they will not be considered when creating the graph). To exclude all the content of a given folder, use `<folderName>/**/*`. This setting is combined with 'files.exclude'."
         },
         "foam.files.include": {
           "type": [
@@ -955,11 +923,6 @@
             "Include the section without title and style it within a container"
           ]
         },
-        "foam.graph.titleMaxLength": {
-          "type": "number",
-          "default": 24,
-          "description": "The maximum title length before being abbreviated. Set to 0 or less to disable."
-        },
         "foam.graph.style": {
           "type": "object",
           "description": "Custom graph styling settings. An example is present in the documentation.",
@@ -1053,9 +1016,9 @@
     "clean": "rimraf out",
     "watch": "nodemon --watch 'src/**/*.ts' --watch '../foam-core/src/**/*.ts' --watch '../foam-graph/src/**/*.ts' --exec 'yarn build' --ext ts",
     "tag-release": "node ../../scripts/tag-release.js vscode",
-    "package": "npx @vscode/vsce@3.6.0 package --yarn",
-    "publish:vscode": "npx vsce publish --packagePath foam-vscode-$npm_package_version.vsix",
-    "publish:openvsx": "npx ovsx publish foam-vscode-$npm_package_version.vsix -p $OPENVSX_TOKEN",
+    "package": "npx @vscode/vsce@4.1.0 package --yarn",
+    "publish:vscode": "npx @vscode/vsce@4.1.0 publish --oidc --skip-duplicate --packagePath foam-vscode-$npm_package_version.vsix",
+    "publish:openvsx": "npx ovsx@1.3.0 publish foam-vscode-$npm_package_version.vsix --skip-duplicate",
     "release": "node release.js",
     "open-in-browser": "vscode-test-web --quality=stable --browser=chromium --extensionDevelopmentPath=. ",
     "install-extension": "code --install-extension ./foam-vscode-$npm_package_version.vsix",

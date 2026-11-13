@@ -9,12 +9,10 @@ import {
   readFile,
   renameFile,
   showInEditor,
-  runCommand,
   deleteFile,
   getFoamFromVSCode,
   waitForNoteInFoamWorkspace,
 } from '../../../test/test-utils-vscode';
-import { UPDATE_GRAPH_COMMAND_NAME } from '../notes/update-graph';
 
 /**
  * A rename only syncs what Foam has indexed, and a file created on disk is
@@ -53,7 +51,7 @@ describe('Note rename sync', () => {
       const newUri = noteA.uri.resolve(newName);
 
       await waitForNotesIndexed(noteA, noteB, noteC);
-      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
+      (await getFoamFromVSCode()).graph.update();
       await renameFile(noteA.uri, newUri);
 
       await waitForExpect(async () => {
@@ -82,7 +80,7 @@ describe('Note rename sync', () => {
 
       const newUri = noteA.uri.resolve('../note-a.md');
       await waitForNotesIndexed(noteA, noteC);
-      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
+      (await getFoamFromVSCode()).graph.update();
 
       await renameFile(noteA.uri, newUri);
 
@@ -114,7 +112,7 @@ describe('Note rename sync', () => {
       ]);
 
       await waitForNotesIndexed(noteA, otherNote, outside);
-      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
+      (await getFoamFromVSCode()).graph.update();
 
       const folderAUri = noteA.uri.getDirectory();
       const folderBUri = folderAUri.getDirectory().joinPath('folderB');
@@ -144,7 +142,7 @@ describe('Note rename sync', () => {
       ]);
 
       await waitForNotesIndexed(noteA, outside);
-      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
+      (await getFoamFromVSCode()).graph.update();
 
       const folderAUri = noteA.uri.getDirectory();
       const folderBUri = folderAUri.getDirectory().joinPath('folderB');
@@ -168,7 +166,7 @@ describe('Note rename sync', () => {
       ]);
 
       await waitForNotesIndexed(noteA);
-      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
+      (await getFoamFromVSCode()).graph.update();
 
       const folderAUri = noteA.uri.getDirectory();
       const folderBUri = folderAUri.getDirectory().joinPath('idx-folderB');
@@ -207,7 +205,7 @@ describe('Note rename sync', () => {
       ]);
 
       await waitForNotesIndexed(noteA, noteB, conflict);
-      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
+      (await getFoamFromVSCode()).graph.update();
 
       const folderAUri = noteA.uri.getDirectory();
       const folderBUri = folderAUri.getDirectory().joinPath('int-folderB');
@@ -249,7 +247,7 @@ describe('Note rename sync', () => {
       ]);
 
       await waitForNotesIndexed(noteA, conflict, outside);
-      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
+      (await getFoamFromVSCode()).graph.update();
 
       const folderAUri = noteA.uri.getDirectory();
       const parentUri = folderAUri.getDirectory();
@@ -300,7 +298,7 @@ describe('Note rename sync', () => {
 
       const newUri = noteA.uri.resolve('../note-a.md');
       await waitForNotesIndexed(noteA, noteB);
-      await runCommand(UPDATE_GRAPH_COMMAND_NAME);
+      (await getFoamFromVSCode()).graph.update();
       await renameFile(noteA.uri, newUri);
 
       // Foam does not update markdown links; the link should remain unchanged

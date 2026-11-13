@@ -3,6 +3,8 @@ import {
   createTestWorkspace,
 } from '../../test/test-utils';
 import { FoamGraph } from '../model/graph';
+import { Position } from '../model/position';
+import { Range } from '../model/range';
 import { HeadingEdit } from './heading-edit';
 
 describe('HeadingEdit', () => {
@@ -519,6 +521,160 @@ Content.
 
       expect(result.totalOccurrences).toBe(0);
       expect(result.edits).toHaveLength(0);
+    });
+
+    it('should take the links of newer copies of notes over the graph', () => {
+      const ws = createTestWorkspace();
+      const noteA = createNoteFromMarkdown('/note-a.md', '# Old Section\n');
+      const noteB = createNoteFromMarkdown(
+        '/note-b.md',
+        'See [[note-a#Old Section]].'
+      );
+      ws.set(noteA).set(noteB);
+      const graph = FoamGraph.fromWorkspace(ws);
+      const newerB = createNoteFromMarkdown(
+        '/note-b.md',
+        'Also see [[note-a#Old Section]].'
+      );
+      const newerC = createNoteFromMarkdown(
+        '/note-c.md',
+        '[[note-a#Old Section]]'
+      );
+
+      const result = HeadingEdit.createRenameSectionEdits(
+        graph,
+        ws,
+        noteA.uri,
+        'Old Section',
+        'New Section',
+        [newerB, newerC]
+      );
+
+      expect(result.edits.map(e => [e.uri.path, e.edit.range])).toEqual([
+        ['/note-b.md', Range.create(0, 9, 0, 31)],
+        ['/note-c.md', Range.create(0, 0, 0, 22)],
+      ]);
+    });
+  });
+
+  describe('getSectionAtPosition', () => {
+    const noteA = () =>
+      createNoteFromMarkdown(
+        '/note-a.md',
+        '# Old Heading\n\nA paragraph ^blk\n\nJump to [[#Old Heading]].\n'
+      );
+    const sectionAt = (text: string, position: Position) => {
+      const a = noteA();
+      const b = createNoteFromMarkdown('/note-b.md', text);
+      const ws = createTestWorkspace().set(a).set(b);
+      return HeadingEdit.getSectionAtPosition(ws, b, position);
+    };
+
+    it('should return the heading at the position', () => {
+      const a = noteA();
+      const ws = createTestWorkspace().set(a);
+      const result = HeadingEdit.getSectionAtPosition(
+        ws,
+        a,
+        Position.create(0, 5)
+      );
+      expect(result.target.uri).toEqual(a.uri);
+      expect(result.section.label).toEqual('Old Heading');
+      expect(result.range).toEqual(Range.create(0, 2, 0, 13));
+    });
+
+    it('should return the section a wikilink section points to', () => {
+      const result = sectionAt(
+        'See [[note-a#Old Heading]].',
+        Position.create(0, 'See [[note-a#Old'.length)
+      );
+      const start = 'See [[note-a#'.length;
+      expect(result.target.uri.path).toEqual('/note-a.md');
+      expect(result.section.label).toEqual('Old Heading');
+      expect(result.range).toEqual(
+        Range.create(0, start, 0, start + 'Old Heading'.length)
+      );
+    });
+
+    it('should resolve a section link to the same note', () => {
+      const a = noteA();
+      const ws = createTestWorkspace().set(a);
+      const result = HeadingEdit.getSectionAtPosition(
+        ws,
+        a,
+        Position.create(4, 'Jump to [[#Old'.length)
+      );
+      expect(result.target.uri).toEqual(a.uri);
+      expect(result.section.label).toEqual('Old Heading');
+    });
+
+    it('should resolve an embedded, aliased wikilink', () => {
+      const result = sectionAt(
+        '![[note-a#Old Heading|alias]]',
+        Position.create(0, '![[note-a#Old'.length)
+      );
+      expect(result.section.label).toEqual('Old Heading');
+      expect(result.range.start.character).toEqual('![[note-a#'.length);
+    });
+
+    it('should prefer a wikilink over the heading it sits in', () => {
+      const result = sectionAt(
+        '# See [[note-a#Old Heading]]',
+        Position.create(0, '# See [[note-a#Old'.length)
+      );
+      expect(result.target.uri.path).toEqual('/note-a.md');
+      expect(result.section.label).toEqual('Old Heading');
+    });
+
+    it('should return undefined on the note part of a wikilink', () => {
+      expect(
+        sectionAt('See [[note-a#Old Heading]].', Position.create(0, 7))
+      ).toBeUndefined();
+    });
+
+    it('should return undefined on a block link', () => {
+      expect(
+        sectionAt('See [[note-a#^blk]].', Position.create(0, 15))
+      ).toBeUndefined();
+    });
+
+    it('should return undefined for a link to a missing note', () => {
+      expect(
+        sectionAt('See [[missing#Old Heading]].', Position.create(0, 16))
+      ).toBeUndefined();
+    });
+
+    it('should return undefined for a section the linked note does not have', () => {
+      expect(
+        sectionAt('See [[note-a#Missing]].', Position.create(0, 15))
+      ).toBeUndefined();
+    });
+
+    it('should find the section in a newer copy of the linked note', () => {
+      const a = noteA();
+      const b = createNoteFromMarkdown(
+        '/note-b.md',
+        'See [[note-a#Old Heading]].'
+      );
+      const ws = createTestWorkspace().set(a).set(b);
+      const newerA = createNoteFromMarkdown(
+        '/note-a.md',
+        'Intro.\n\n# Old Heading\n'
+      );
+
+      const result = HeadingEdit.getSectionAtPosition(
+        ws,
+        b,
+        Position.create(0, 'See [[note-a#Old'.length),
+        [newerA]
+      );
+
+      expect(result.target).toBe(newerA);
+      expect(result.section.labelRange).toEqual(Range.create(2, 2, 2, 13));
+    });
+
+    it('should return undefined away from headings and links', () => {
+      expect(sectionAt('Body text.\n', Position.create(0, 3))).toBeUndefined();
     });
   });
 });

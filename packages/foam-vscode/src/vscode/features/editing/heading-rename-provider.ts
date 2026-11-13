@@ -1,10 +1,8 @@
 import * as vscode from 'vscode';
-import { Foam } from '@foam/core';
-import { Resource, Section } from '@foam/core';
+import { Foam, Resource } from '@foam/core';
 import { HeadingEdit } from '@foam/core';
 import { Logger } from '@foam/core';
 import { Position } from '@foam/core';
-import { Range } from '@foam/core';
 import {
   fromVsCodeUri,
   toVsCodeRange,
@@ -31,16 +29,18 @@ export class HeadingRenameProvider implements vscode.RenameProvider {
     position: vscode.Position,
     _token: vscode.CancellationToken
   ): Promise<vscode.Range | { range: vscode.Range; placeholder: string }> {
-    const section = this.getSectionOnHeadingLine(document, position);
-    if (!section) {
+    const found = this.getSectionAtPosition(
+      document,
+      position,
+      this.parseOpenNotes(document)
+    );
+    if (!found) {
       throw new Error('Cannot rename: cursor is not on a heading');
     }
 
     return {
-      range: toVsCodeRange(
-        getHeadingLabelRange(document, section.range.start.line, section.label)
-      ),
-      placeholder: section.label,
+      range: toVsCodeRange(found.range),
+      placeholder: found.section.label,
     };
   }
 
@@ -50,84 +50,73 @@ export class HeadingRenameProvider implements vscode.RenameProvider {
     newName: string,
     _token: vscode.CancellationToken
   ): vscode.ProviderResult<vscode.WorkspaceEdit> {
-    const section = this.getSectionOnHeadingLine(document, position);
-    if (!section) {
+    const openNotes = this.parseOpenNotes(document);
+    const found = this.getSectionAtPosition(document, position, openNotes);
+    if (!found) {
       throw new Error('Cannot rename: cursor is not on a heading');
     }
+    const { target, section } = found;
 
-    const fileUri = fromVsCodeUri(document.uri);
-    const oldLabel = section.label;
-
-    // Edit 1: update the heading text in the current document
-    const headingLabelRange = getHeadingLabelRange(
-      document,
-      section.range.start.line,
-      oldLabel
-    );
+    // Edit 1: update the heading text in the note that holds it
     const headingEdit = {
-      uri: fileUri,
-      edit: {
-        range: Range.create(
-          headingLabelRange.start.line,
-          headingLabelRange.start.character,
-          headingLabelRange.end.line,
-          headingLabelRange.end.character
-        ),
-        newText: newName,
-      },
+      uri: target.uri,
+      edit: { range: section.labelRange, newText: newName },
     };
 
     // Edit 2+: update all links pointing to this section
     const linkEditResult = HeadingEdit.createRenameSectionEdits(
       this.foam.graph,
       this.foam.workspace,
-      fileUri,
-      oldLabel,
-      newName
+      target.uri,
+      section.label,
+      newName,
+      openNotes
     );
 
     const allEdits = [headingEdit, ...linkEditResult.edits];
 
     Logger.info(
-      `Renaming heading "${oldLabel}" to "${newName}" (${linkEditResult.totalOccurrences} link(s) updated)`
+      `Renaming heading "${section.label}" to "${newName}" (${linkEditResult.totalOccurrences} link(s) updated)`
     );
 
     return toVsCodeWorkspaceEdit(allEdits, this.foam.workspace);
   }
 
-  /**
-   * Returns the section at the given position only when the position is on the
-   * heading line itself (not in the section body). Uses Resource.getSectionAtPosition
-   * to find the enclosing section, then verifies the line matches the heading.
-   */
-  private getSectionOnHeadingLine(
+  private getSectionAtPosition(
     document: vscode.TextDocument,
-    position: vscode.Position
-  ): Section | undefined {
-    const resource = this.foam.workspace.find(fromVsCodeUri(document.uri));
-    if (!resource) {
-      return undefined;
-    }
-    const foamPosition = Position.create(position.line, position.character);
-    const section = Resource.getSectionAtPosition(resource, foamPosition);
-    if (!section || section.range.start.line !== position.line) {
-      return undefined;
-    }
-    return section;
+    position: vscode.Position,
+    openNotes: Resource[]
+  ) {
+    const uri = fromVsCodeUri(document.uri);
+    const resource = openNotes.find(r => r.uri.isEqual(uri));
+    return (
+      resource &&
+      HeadingEdit.getSectionAtPosition(
+        this.foam.workspace,
+        resource,
+        Position.create(position.line, position.character),
+        openNotes
+      )
+    );
   }
-}
 
-/**
- * Computes the VS Code range covering just the heading label text (excluding
- * the `#` marks and space prefix) on the given line.
- */
-function getHeadingLabelRange(
-  document: vscode.TextDocument,
-  line: number,
-  label: string
-): vscode.Range {
-  const lineText = document.lineAt(line).text;
-  const prefixMatch = /^#{1,6}\s+/.exec(lineText);
-  const prefixLen = prefixMatch ? prefixMatch[0].length : 0;
-  return new vscode.Range(line, prefixLen, line, prefixLen + label.length);
+  /**
+   * The workspace's notes that are open in the editor, parsed from their
+   * text there: the workspace only has what was last saved.
+   */
+  private parseOpenNotes(document: vscode.TextDocument): Resource[] {
+    const documents = [
+      document,
+      ...vscode.workspace.textDocuments.filter(
+        d => d.uri.toString() !== document.uri.toString()
+      ),
+    ];
+    return documents.flatMap(d => {
+      const uri = fromVsCodeUri(d.uri);
+      const note = this.foam.workspace.find(uri);
+      return note?.type === 'note' && note.uri.isEqual(uri)
+        ? [this.foam.services.parser.parse(uri, d.getText())]
+        : [];
+    });
+  }
 }

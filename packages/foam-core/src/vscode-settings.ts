@@ -26,7 +26,6 @@ interface FoamConfigData {
     | 'content-card';
   graphOnStartup: boolean;
   graphNavigateToPreview: boolean;
-  graphTitleMaxLength: number;
   graphStyle: object;
   supportedLanguages: string[];
 }
@@ -96,9 +95,6 @@ class StaticFoamConfig implements IFoamConfig {
   }
   getGraphNavigateToPreview() {
     return this.data.graphNavigateToPreview;
-  }
-  getGraphTitleMaxLength() {
-    return this.data.graphTitleMaxLength;
   }
   getGraphStyle() {
     return this.data.graphStyle;
@@ -185,7 +181,6 @@ export function foamConfigFromVsCodeSettings(settings: unknown): IFoamConfig {
   const filesExclude: string[] = [
     ...ALWAYS_EXCLUDED,
     ...getStringArray(raw, 'foam.files.exclude', DEFAULT_FILES_EXCLUDE),
-    ...getStringArray(raw, 'foam.files.ignore'),
     ...Object.keys(getObject(raw, 'files.exclude')),
   ];
 
@@ -249,7 +244,6 @@ export function foamConfigFromVsCodeSettings(settings: unknown): IFoamConfig {
       'foam.graph.navigateToPreview',
       false
     ),
-    graphTitleMaxLength: getNumber(raw, 'foam.graph.titleMaxLength', 24),
     graphStyle: getObject(raw, 'foam.graph.style'),
     supportedLanguages: getStringArray(raw, 'foam.supportedLanguages', [
       'markdown',
@@ -272,15 +266,6 @@ function getBoolean(
 ): boolean {
   const val = obj[key];
   return typeof val === 'boolean' ? val : defaultVal;
-}
-
-function getNumber(
-  obj: Record<string, unknown>,
-  key: string,
-  defaultVal: number
-): number {
-  const val = obj[key];
-  return typeof val === 'number' ? val : defaultVal;
 }
 
 function getStringArray(

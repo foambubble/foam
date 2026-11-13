@@ -2040,6 +2040,10 @@ export const workspace = {
     return mockState.fileSystem;
   },
 
+  get textDocuments(): TextDocument[] {
+    return Array.from(mockState.openDocuments.values());
+  },
+
   createFileSystemWatcher(
     globPattern: string | RelativePattern
   ): FileSystemWatcher {

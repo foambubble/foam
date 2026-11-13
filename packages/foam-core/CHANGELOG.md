@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.51.0
+
+### Minor Changes
+
+- `foam.files.ignore` is no longer read, in VS Code or the CLI. Move its globs to `foam.files.exclude`.
+
+  In `@foam/core`, `foamConfigFromVsCodeSettings` no longer reads `foam.files.ignore`.
+
 ## 0.50.0
 
 ### Minor Changes

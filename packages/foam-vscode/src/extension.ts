@@ -4,7 +4,6 @@ import {
   workspace,
   ExtensionContext,
   window,
-  commands,
   TextEditor,
   RelativePattern,
   FileType,
@@ -228,13 +227,9 @@ export async function activate(context: ExtensionContext) {
     telemetry.trackWorkspaceStats(noteCount, attachmentCount, featureTelemetry);
 
     context.subscriptions.push(
-      commands.registerCommand('foam-vscode.clear-cache', () =>
-        parserCache.clear()
-      ),
       workspace.onDidChangeConfiguration(e => {
         if (
           [
-            'foam.files.ignore',
             'foam.files.exclude',
             'foam.files.include',
             'foam.files.attachmentExtensions',

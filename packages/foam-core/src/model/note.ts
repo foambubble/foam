@@ -91,6 +91,8 @@ export interface Section {
   range: Range;
   /** The heading alone — one line for ATX, two or more for setext */
   headingRange: Range;
+  /** The heading's text as written, without markers, closing `#`s or a trailing `^anchor` */
+  labelRange: Range;
 }
 
 export type BlockType =

@@ -5,20 +5,15 @@ import { isPathWithin } from '../utils/path';
 import { PatternPart, dailyNotePathMatcher } from './daily-note-path-pattern';
 
 /**
- * Returns the most recent daily note strictly before `before`, or `undefined`
- * when there is none — or when `pattern` cannot name a day, which is how a
- * workspace whose daily note path is not invertible reports the feature as
- * unavailable.
- *
- * The workspace is scanned once and the search is bounded by the daily notes
- * that exist, not by a number of days walked backwards, so a note years older
- * than the one being created is still found.
+ * Reads a daily note's date back from where it lies: the inverse of the rule
+ * that writes one, over the URIs of a workspace. Returns `undefined` when
+ * `pattern` cannot name a day, which is how a workspace whose daily note path
+ * is not invertible reports reading them back as unavailable.
  */
-export function findPreviousDailyNote(
+export function dailyNoteDateMatcher(
   workspace: FoamWorkspace,
-  pattern: PatternPart[] | undefined,
-  before: Date
-): URI | undefined {
+  pattern: PatternPart[] | undefined
+): ((uri: URI) => Date | undefined) | undefined {
   const target = pattern && namedRoot(pattern, workspace.roots);
   const match = pattern && dailyNotePathMatcher(target?.pattern ?? pattern);
   if (!match) {
@@ -33,6 +28,34 @@ export function findPreviousDailyNote(
       ? dailyNotePathMatcher(pattern)
       : undefined;
 
+  return uri => {
+    if (target && !isPathWithin(uri.path, target.root.path)) {
+      return undefined;
+    }
+    const path = workspace.relativePath(uri);
+    return match(path) ?? matchUnnamed?.(path);
+  };
+}
+
+/**
+ * Returns the most recent daily note strictly before `before`, or `undefined`
+ * when there is none — or when the workspace's daily notes cannot be read back
+ * from their paths ({@link dailyNoteDateMatcher}).
+ *
+ * The workspace is scanned once and the search is bounded by the daily notes
+ * that exist, not by a number of days walked backwards, so a note years older
+ * than the one being created is still found.
+ */
+export function findPreviousDailyNote(
+  workspace: FoamWorkspace,
+  pattern: PatternPart[] | undefined,
+  before: Date
+): URI | undefined {
+  const dateOf = dailyNoteDateMatcher(workspace, pattern);
+  if (!dateOf) {
+    return undefined;
+  }
+
   // `before` carries a wall-clock time, so the comparison is by day: a note
   // for the same date is not a previous note.
   const cutoff = new Date(
@@ -44,11 +67,7 @@ export function findPreviousDailyNote(
   let found: { time: number; uri: URI } | undefined;
   // Sorted so that two notes claiming the same date resolve deterministically
   for (const resource of workspace.list().sort(Resource.sortByPath)) {
-    if (target && !isPathWithin(resource.uri.path, target.root.path)) {
-      continue;
-    }
-    const path = workspace.relativePath(resource.uri);
-    const date = match(path) ?? matchUnnamed?.(path);
+    const date = dateOf(resource.uri);
     if (!date) {
       continue;
     }

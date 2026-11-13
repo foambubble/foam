@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { FoamGraph, FoamTags } from '@foam/core';
+import { ConsoleLogger, FoamGraph, FoamTags, Logger } from '@foam/core';
 import { setColorsEnabled } from '../support/colors';
 
 setColorsEnabled(false);
@@ -195,6 +195,25 @@ describe('listTemplates', () => {
         expect(names).toContain('default');
         const meeting = result.find(t => t.name === 'meeting')!;
         expect(meeting.description).toBe('Template for meeting notes');
+      }
+    ));
+
+  it('parses templates containing Markdown links without warnings (#1770)', () =>
+    withTmpWorkspace(
+      {
+        '.foam/templates/t.md':
+          '# Template\n\nSee [example](https://example.com) and [note](note.md).\n',
+      },
+      async ({ rootUri }) => {
+        const logger = new TestLogger();
+        Logger.setDefaultLogger(logger);
+        try {
+          const result = await listTemplates(rootUri);
+          expect(result.map(t => t.name)).toEqual(['t']);
+        } finally {
+          Logger.setDefaultLogger(new ConsoleLogger());
+        }
+        expect(logger.warnings).toEqual([]);
       }
     ));
 });

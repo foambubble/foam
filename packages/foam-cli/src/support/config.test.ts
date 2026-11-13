@@ -113,12 +113,6 @@ describe('readFoamConfig', () => {
     });
   });
 
-  it('merges foam.files.ignore (deprecated) into filesExclude', () => {
-    withTmpConfig({ 'foam.files.ignore': ['old/**'] }, dir => {
-      expect(readFoamConfig(dir).getFilesExclude()).toContain('old/**');
-    });
-  });
-
   it('merges keys of files.exclude into filesExclude', () => {
     withTmpConfig(
       { 'files.exclude': { 'build/**': true, '.DS_Store': false } },

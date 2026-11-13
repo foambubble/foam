@@ -18,7 +18,6 @@ export class VsCodeFoamConfig implements IFoamConfig {
     return [
       ...ALWAYS_EXCLUDED,
       ...workspace.getConfiguration().get('foam.files.exclude', []),
-      ...workspace.getConfiguration().get('foam.files.ignore', []),
       ...Object.keys(workspace.getConfiguration().get('files.exclude', {})),
     ].flatMap(expandAlternateGroups);
   }
@@ -177,10 +176,6 @@ export class VsCodeFoamConfig implements IFoamConfig {
     return workspace
       .getConfiguration('foam')
       .get('graph.navigateToPreview', false);
-  }
-
-  getGraphTitleMaxLength(): number {
-    return workspace.getConfiguration('foam').get('graph.titleMaxLength', 24);
   }
 
   getGraphStyle(): object {

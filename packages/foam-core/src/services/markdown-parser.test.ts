@@ -162,6 +162,17 @@ This is not an easy task.[^1]
       expect(note.links.length).toEqual(0);
     });
 
+    it('should leave an unclosed [[ as text, and read the wikilink after it', () => {
+      const note = createNoteFromMarkdown('see [[ syntax [[2026-10-09]]');
+      expect(note.links.map(l => l.rawText)).toEqual(['[[2026-10-09]]']);
+      expect(note.links[0].range).toEqual(Range.create(0, 14, 0, 28));
+    });
+
+    it('should not detect a wikilink that never closes', () => {
+      const note = createNoteFromMarkdown('see [[ syntax');
+      expect(note.links).toEqual([]);
+    });
+
     it('should detect reference-style links', () => {
       const note = createNoteFromMarkdown(`
 # Test Document
@@ -846,6 +857,26 @@ This is the content of section with url`);
       );
       expect(note.sections[0].headingRange).toEqual(Range.create(0, 0, 0, 13));
       expect(note.sections[1].headingRange).toEqual(Range.create(4, 0, 5, 14));
+    });
+
+    it('records the range of the heading text, markup included and markers excluded', () => {
+      const note = createNoteFromMarkdown(
+        '## **Bold** heading ##\n\nSetext heading\n==============\n'
+      );
+      expect(note.sections[0].label).toEqual('Bold heading');
+      expect(note.sections[0].labelRange).toEqual(Range.create(0, 3, 0, 19));
+      expect(note.sections[1].labelRange).toEqual(Range.create(2, 0, 2, 14));
+    });
+
+    it('records the heading text range of indented and quoted headings, without a trailing block anchor', () => {
+      const note = createNoteFromMarkdown(
+        '   ## Indented\n\n> ## Quoted\n\n## Anchored ^anchor\n'
+      );
+      expect(note.sections.map(s => s.labelRange)).toEqual([
+        Range.create(0, 6, 0, 14),
+        Range.create(2, 5, 2, 11),
+        Range.create(4, 3, 4, 11),
+      ]);
     });
   });
 

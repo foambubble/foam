@@ -1,3 +1,4 @@
+/* @unit-ready */
 import * as vscode from 'vscode';
 import { createMarkdownParser } from '@foam/core';
 import { FoamGraph } from '@foam/core';
@@ -16,6 +17,7 @@ const parser = createMarkdownParser([]);
 const buildFoamLike = (ws: ReturnType<typeof createTestWorkspace>) => ({
   workspace: ws,
   graph: FoamGraph.fromWorkspace(ws),
+  services: { parser },
   dispose: () => {},
 });
 
@@ -23,6 +25,61 @@ describe('HeadingRenameProvider', () => {
   beforeEach(async () => {
     await cleanWorkspace();
     await closeEditors();
+  });
+
+  describe('with unsaved edits', () => {
+    it('should rename from a wikilink typed since the note was last saved (#1772)', async () => {
+      const fileA = await createFile('# Old Heading\n');
+      const fileB = await createFile('Nothing yet.\n');
+
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content));
+      const provider = new HeadingRenameProvider(buildFoamLike(ws) as any);
+
+      const { doc, editor } = await showInEditor(fileB.uri);
+      await editor.edit(builder =>
+        builder.replace(
+          new vscode.Range(0, 0, 0, 'Nothing yet.'.length),
+          `See [[${fileA.name}#Old Heading]].`
+        )
+      );
+      const result = (await provider.prepareRename(
+        doc,
+        new vscode.Position(0, `See [[${fileA.name}#Old`.length),
+        new vscode.CancellationTokenSource().token
+      )) as { range: vscode.Range; placeholder: string };
+
+      expect(result.placeholder).toBe('Old Heading');
+    });
+
+    it('should place link edits in the open text of a note, not its saved text', async () => {
+      const fileA = await createFile('# Old Heading\n');
+      const fileB = await createFile(`See [[${fileA.name}#Old Heading]].\n`);
+
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content));
+      const provider = new HeadingRenameProvider(buildFoamLike(ws) as any);
+
+      const { doc, editor } = await showInEditor(fileB.uri);
+      await editor.edit(builder =>
+        builder.replace(new vscode.Range(0, 0, 0, 0), 'Also ')
+      );
+      const edits = await provider.provideRenameEdits(
+        doc,
+        new vscode.Position(0, `Also See [[${fileA.name}#Old`.length),
+        'New Heading',
+        new vscode.CancellationTokenSource().token
+      );
+
+      const fileBEdits = edits.get(toVsCodeUri(fileB.uri));
+      expect(fileBEdits).toHaveLength(1);
+      expect(fileBEdits[0].range.start).toEqual(
+        new vscode.Position(0, 'Also See '.length)
+      );
+      expect(fileBEdits[0].newText).toBe(`[[${fileA.name}#New Heading]]`);
+    });
   });
 
   describe('prepareRename', () => {
@@ -67,9 +124,87 @@ describe('HeadingRenameProvider', () => {
         )
       ).rejects.toThrow('Cannot rename: cursor is not on a heading');
     });
+
+    it('should return the section range of a wikilink and the linked heading as placeholder (#1772)', async () => {
+      const fileA = await createFile('# Old Heading\n\nContent.\n');
+      const fileB = await createFile(`See [[${fileA.name}#Old Heading]].\n`);
+
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content));
+      const foam = buildFoamLike(ws);
+      const provider = new HeadingRenameProvider(foam as any);
+
+      const { doc } = await showInEditor(fileB.uri);
+      const sectionStart = `See [[${fileA.name}#`.length;
+      const result = (await provider.prepareRename(
+        doc,
+        new vscode.Position(0, sectionStart + 3),
+        new vscode.CancellationTokenSource().token
+      )) as { range: vscode.Range; placeholder: string };
+
+      expect(result.placeholder).toBe('Old Heading');
+      expect(result.range.start).toEqual(new vscode.Position(0, sectionStart));
+      expect(result.range.end).toEqual(
+        new vscode.Position(0, sectionStart + 'Old Heading'.length)
+      );
+    });
   });
 
   describe('provideRenameEdits', () => {
+    it('should rename the linked heading and the links to it when triggered from a wikilink (#1772)', async () => {
+      const fileA = await createFile('# Old Heading\n\nContent.\n');
+      const fileB = await createFile(`See [[${fileA.name}#Old Heading]].\n`);
+
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content));
+      const foam = buildFoamLike(ws);
+      const provider = new HeadingRenameProvider(foam as any);
+
+      const { doc } = await showInEditor(fileB.uri);
+      const edits = await provider.provideRenameEdits(
+        doc,
+        new vscode.Position(0, `See [[${fileA.name}#Old`.length),
+        'New Heading',
+        new vscode.CancellationTokenSource().token
+      );
+
+      const fileAEdits = edits.get(toVsCodeUri(fileA.uri));
+      expect(fileAEdits).toHaveLength(1);
+      expect(fileAEdits[0].newText).toBe('New Heading');
+      expect(fileAEdits[0].range).toEqual(new vscode.Range(0, 2, 0, 13));
+
+      const fileBEdits = edits.get(toVsCodeUri(fileB.uri));
+      expect(fileBEdits).toHaveLength(1);
+      expect(fileBEdits[0].newText).toBe(`[[${fileA.name}#New Heading]]`);
+    });
+
+    it('should replace the whole heading text when the heading has inline markup', async () => {
+      const fileA = await createFile('## **Old** heading\n\nContent.\n');
+      const fileB = await createFile(`See [[${fileA.name}#Old heading]].\n`);
+
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content));
+      const foam = buildFoamLike(ws);
+      const provider = new HeadingRenameProvider(foam as any);
+
+      const { doc } = await showInEditor(fileB.uri);
+      const edits = await provider.provideRenameEdits(
+        doc,
+        new vscode.Position(0, `See [[${fileA.name}#Old`.length),
+        'New heading',
+        new vscode.CancellationTokenSource().token
+      );
+
+      const fileAEdits = edits.get(toVsCodeUri(fileA.uri));
+      expect(fileAEdits).toHaveLength(1);
+      expect(fileAEdits[0].range).toEqual(
+        new vscode.Range(0, 3, 0, '## **Old** heading'.length)
+      );
+    });
+
     it('should update the heading text and all wikilinks referencing it', async () => {
       const fileA = await createFile('# Old Heading\n\nContent.\n');
       const fileB = await createFile(

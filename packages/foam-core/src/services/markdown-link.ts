@@ -32,17 +32,55 @@ function parseWikilink(text: string) {
   };
 }
 
-export abstract class MarkdownLink {
-  // Anchored because it only ever runs on one link's own text, which starts
-  // with its `[` or `![`. Unanchored, a failure made the engine retry from
-  // every later `[`, which is quadratic on a long run of them; the link text
-  // stays greedy so that the last `](` wins and an image whose alt text holds
-  // a link still reports the image.
-  private static directLinkRegex = new RegExp(
-    /^!?\[(.*)\]\((?:<([^#>]*)(?:#([^>]*))?>\s*|([^#>]*?)(?:#([^)>"']*))?(?:\s+(?:"[^"]*"|'[^']*'))?)\)/d
-  );
+/** A title after the url, as in `[a](path "Title")` */
+const TITLE_SUFFIX = /\s+(?:"[^"]*"|'[^']*')$/;
 
-  /** A link that matched the pattern lies on one line, so an offset is a column */
+/**
+ * Splits `[alias](target#section "title")`, the url optionally within angle
+ * brackets and the whole optionally an embed. The alias runs to the LAST
+ * `](`, so an image whose alt text holds a link reports the image rather
+ * than the link inside it.
+ *
+ * Done by hand rather than by one pattern: matching alias and url together
+ * means retrying the url at every `](` the alias could end at, which is
+ * quadratic on text holding a long run of them.
+ */
+function parseDirectLink(text: string) {
+  const open = text.startsWith('![') ? 1 : 0;
+  // A link whose text wraps is left alone: every offset below is a column on
+  // the line the link starts at
+  if (text[open] !== '[' || !text.endsWith(')') || text.includes('\n')) {
+    return undefined;
+  }
+  const divider = text.lastIndexOf('](');
+  if (divider < open) {
+    return undefined;
+  }
+  let url = text.slice(divider + 2, text.length - 1);
+  /** Offset of `url` in `text` */
+  let urlOffset = divider + 2;
+  if (url.startsWith('<')) {
+    const close = url.indexOf('>');
+    if (close < 0) {
+      return undefined;
+    }
+    url = url.slice(1, close);
+    urlOffset += 1;
+  } else {
+    url = url.replace(TITLE_SUFFIX, '');
+  }
+  const hash = url.indexOf('#');
+  return {
+    alias: text.slice(open + 1, divider),
+    target: hash < 0 ? url : url.slice(0, hash),
+    section: hash < 0 ? '' : url.slice(hash + 1),
+    /** Offset of `section` in `text`, -1 without a `#` */
+    sectionOffset: hash < 0 ? -1 : urlOffset + hash + 1,
+  };
+}
+
+export abstract class MarkdownLink {
+  /** A link Foam parses lies on one line, so an offset into it is a column */
   private static rangeOf(link: ResourceLink, span: [number, number]): Range {
     const { line, character } = link.range.start;
     return Range.create(line, character + span[0], line, character + span[1]);
@@ -96,8 +134,8 @@ export abstract class MarkdownLink {
           };
         }
 
-        const match = this.directLinkRegex.exec(link.rawText);
-        if (!match) {
+        const parsed = parseDirectLink(link.rawText);
+        if (!parsed) {
           // This might be a reference-style link that wasn't resolved
           // Try to extract just the alias text for reference-style links
           const referenceMatch = /^\[([^\]]*)\]/.exec(link.rawText);
@@ -109,10 +147,7 @@ export abstract class MarkdownLink {
             alias: alias,
           };
         }
-        const [, alias, angleTarget, angleSection, plainTarget, plainSection] =
-          match;
-        const target = angleTarget ?? plainTarget ?? '';
-        const section = angleSection ?? plainSection ?? '';
+        const { alias, target, section } = parsed;
         const blockMatch = section?.match(/^\^([a-zA-Z0-9-]+)$/);
         return {
           target,
@@ -172,9 +207,10 @@ export abstract class MarkdownLink {
     }
     // A reference-style link keeps its url in a definition elsewhere, so it
     // has no fragment of its own to point at.
-    const match = MarkdownLink.directLinkRegex.exec(link.rawText);
-    const span = match?.indices?.[3] ?? match?.indices?.[5];
-    return span ? [span[0], span[1]] : undefined;
+    const parsed = parseDirectLink(link.rawText);
+    return parsed && parsed.sectionOffset >= 0
+      ? [parsed.sectionOffset, parsed.sectionOffset + parsed.section.length]
+      : undefined;
   }
 
   public static createUpdateLinkEdit(

@@ -319,16 +319,22 @@ describe('MarkdownLink', () => {
   });
 
   describe('parse direct link', () => {
-    it('should reject a long run of unclosed brackets quickly', () => {
+    // Each of these made the pattern that used to parse direct links retry an
+    // alias or a url over and over, taking time in the square of the length
+    it.each([
+      ['unclosed brackets', '[' + '[a'.repeat(20000)],
+      ['openings of an angle url', '[](<' + '](<"'.repeat(20000)],
+      ['openings of an angle fragment', '[](<#' + '](<#='.repeat(20000)],
+      ['spaces where a title would go', '[](' + ' '.repeat(20000)],
+    ])('should reject a long run of %s quickly', (_what, rawText) => {
       const link: ResourceLink = {
         type: 'link',
-        rawText: '[' + '[a'.repeat(20000),
+        rawText,
         range: Range.create(0, 0),
         isEmbed: false,
       };
       const start = performance.now();
       MarkdownLink.analyzeLink(link);
-      // Retrying from each `[` instead of failing at the first takes seconds
       expect(performance.now() - start).toBeLessThan(100);
     });
     it('should parse target', () => {

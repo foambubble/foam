@@ -383,17 +383,23 @@ describe('create-note command', () => {
       vi.spyOn(window, 'showInputBox').mockImplementationOnce(() =>
         Promise.resolve('Kept Title')
       );
-      const deleteSpy = vi.spyOn(workspace.fs, 'delete');
       await commands.executeCommand('foam-vscode.create-note', {
         templatePath: template.uri.path,
         onRelativeNotePath: 'resolve-from-root',
         onFileExists: 'overwrite',
       });
-      expect(deleteSpy).not.toHaveBeenCalled();
       const doc = window.activeTextEditor.document;
       expect(doc.uri.scheme).toEqual('file');
       expect(doc.uri.path).toEqual(existing.uri.path);
       expect(doc.getText()).toEqual('# Kept Title');
+      expect(existsSync(existing.uri.toFsPath())).toBe(true);
+      // The mock writes edits through to disk and never marks a document
+      // dirty; in VS Code the original stays on disk until the save.
+      expect(await readFile(existing.uri)).toEqual(
+        doc.isDirty ? 'ORIGINAL' : '# Kept Title'
+      );
+      await doc.save();
+      expect(await readFile(existing.uri)).toEqual('# Kept Title');
       await closeEditors();
       await deleteFile(existing.uri);
       await deleteFile(template.uri);

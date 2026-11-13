@@ -24,6 +24,8 @@ function parseWikilink(text: string) {
   return {
     target: hash < 0 ? reference : reference.slice(0, hash),
     section: hash < 0 ? '' : reference.slice(hash + 1),
+    /** Offset of `target` in `text` */
+    targetOffset: open + 2,
     /** Offset of `section` in `text`, -1 without a `#` */
     sectionOffset: hash < 0 ? -1 : open + 2 + hash + 1,
     alias: pipe < 0 ? '' : inner.slice(pipe + 1),
@@ -144,6 +146,29 @@ export abstract class MarkdownLink {
     return Range.createFromPosition(
       positionAt(link.rawText, start, span[0]),
       positionAt(link.rawText, start, span[1])
+    );
+  }
+
+  /**
+   * Range of `target` in `[[target#section|alias]]`. Undefined for other link
+   * types and for a wikilink naming a section of the note it sits in.
+   */
+  public static getTargetRange(link: ResourceLink): Range | undefined {
+    if (link.type !== 'wikilink') {
+      return undefined;
+    }
+    const wikilink = parseWikilink(link.rawText);
+    if (!wikilink?.target) {
+      return undefined;
+    }
+    const start = link.range.start;
+    return Range.createFromPosition(
+      positionAt(link.rawText, start, wikilink.targetOffset),
+      positionAt(
+        link.rawText,
+        start,
+        wikilink.targetOffset + wikilink.target.length
+      )
     );
   }
 

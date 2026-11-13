@@ -218,6 +218,37 @@ describe('MarkdownLink', () => {
     });
   });
 
+  describe('wikilink target range', () => {
+    it('should cover the target of a wikilink', () => {
+      const link = parser.parse(getRandomURI(), `see [[note-a]]`).links[0];
+      const start = 'see [['.length;
+      expect(MarkdownLink.getTargetRange(link)).toEqual(
+        Range.create(0, start, 0, start + 'note-a'.length)
+      );
+    });
+
+    it('should stop at the section and the alias', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `see ![[note-a#My Section|alias]]`
+      ).links[0];
+      const start = 'see ![['.length;
+      expect(MarkdownLink.getTargetRange(link)).toEqual(
+        Range.create(0, start, 0, start + 'note-a'.length)
+      );
+    });
+
+    it('should return undefined for a link to a section of the same note', () => {
+      const link = parser.parse(getRandomURI(), `[[#My Section]]`).links[0];
+      expect(MarkdownLink.getTargetRange(link)).toBeUndefined();
+    });
+
+    it('should return undefined for a markdown link', () => {
+      const link = parser.parse(getRandomURI(), `[x](note-a.md)`).links[0];
+      expect(MarkdownLink.getTargetRange(link)).toBeUndefined();
+    });
+  });
+
   describe('markdown link section range', () => {
     it('should cover the fragment of a markdown link', () => {
       const prefix = 'see [text](note.md#';

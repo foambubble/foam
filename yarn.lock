@@ -8243,9 +8243,9 @@ vite-tsconfig-paths@^6.1.1:
     tsconfck "^3.0.3"
 
 "vite@^5.0.0 || ^6.0.0 || ^7.0.0-0":
-  version "7.3.6"
-  resolved "https://registry.yarnpkg.com/vite/-/vite-7.3.6.tgz#0547a395e68d3746e9a505f1fd4469fe09b49cc4"
-  integrity sha512-4XP60spRGjSZFf1qYH+dJIkK2znL3zQfl9KkOV9MkkRR/3Dls0dxaBsQPTloEc5BLXWPL9vsOxopxyKoMmDueg==
+  version "7.3.8"
+  resolved "https://registry.yarnpkg.com/vite/-/vite-7.3.8.tgz#3ca056297e2bf004fe5a7e40b03c18a7aa133ada"
+  integrity sha512-3tTi78MAKhVk9h+YZVXMQ8POmneJuE97QUPAWtJghHzhH7BAyiqQOC2KZh1DWOsu/USB2cRXhznPByaabvYXfw==
   dependencies:
     esbuild "^0.27.0 || ^0.28.0"
     fdir "^6.5.0"

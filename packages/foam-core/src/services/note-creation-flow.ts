@@ -51,10 +51,17 @@ export interface NoteCreationHooks {
   /**
    * Called when a file already exists at the target. Return a new target
    * to retry with (it goes through the same checks), or `undefined` to stop
-   * with an `exists` outcome. Deleting the file for an overwrite belongs
-   * here.
+   * with an `exists` outcome. `intent` says what the target is for:
+   * - `'write'`: the note is written there next. Deleting the file for an
+   *   overwrite belongs here.
+   * - `'open-unsaved'`: the note opens unsaved and nothing is written until
+   *   the user saves, so the file must not be deleted. Returning `uri`
+   *   itself keeps it as the target, to be replaced on save.
    */
-  onFileExists: (uri: URI) => Promise<URI | undefined>;
+  onFileExists: (
+    uri: URI,
+    intent: NoteTargetIntent
+  ) => Promise<URI | undefined>;
   /**
    * Called when the target is relative. Return an absolute target, or
    * `undefined` to stop with a `cancelled` outcome. Defaults to resolving
@@ -70,7 +77,8 @@ export interface NoteCreationHooks {
    * it declares the capability: a markdown template with no `filepath` and
    * no `fallbackFilepath` then opens unsaved (#1243). `uri`
    * is where saving it should go — named after the title when one is known,
-   * and already resolved and checked like a file target — or `undefined`
+   * and already resolved and checked like a file target (a file may exist
+   * there when `onFileExists` kept it) — or `undefined`
    * when the user names it on save. Without the hook, a filename is derived
    * from the title as before. The built-in template declares a `filepath`,
    * so it always creates a file. `onDidCreate` does not run: nothing exists
@@ -78,6 +86,9 @@ export interface NoteCreationHooks {
    */
   openUnsaved?: (content: string, uri: URI | undefined) => Promise<void>;
 }
+
+/** What a resolved target is for; see `NoteCreationHooks.onFileExists`. */
+export type NoteTargetIntent = 'write' | 'open-unsaved';
 
 export interface NoteCreationRequest {
   foam: Foam;
@@ -189,7 +200,8 @@ export async function createNote(
   // Resolves a candidate to a free, allowed, absolute target, or to the
   // outcome that stopped the search.
   const resolveTarget = async (
-    candidate: URI
+    candidate: URI,
+    intent: NoteTargetIntent
   ): Promise<{ target: URI } | { stopped: NoteCreationOutcome }> => {
     for (;;) {
       while (!candidate.isAbsolute()) {
@@ -203,9 +215,14 @@ export async function createNote(
       if (!(await hooks.fileExists(target))) {
         return { target };
       }
-      const next = await hooks.onFileExists(target);
+      const next = await hooks.onFileExists(target, intent);
       if (next === undefined) {
         return { stopped: { status: 'exists', uri: target } };
+      }
+      // An unsaved note may open over the existing file, which is only
+      // replaced when the user saves.
+      if (intent === 'open-unsaved' && next.isEqual(target)) {
+        return { target };
       }
       candidate = next;
     }
@@ -216,7 +233,10 @@ export async function createNote(
     // editor saves to it without asking, so it must be free and allowed.
     let uri: URI | undefined;
     if (result.suggestedFilepath) {
-      const resolved = await resolveTarget(result.suggestedFilepath);
+      const resolved = await resolveTarget(
+        result.suggestedFilepath,
+        'open-unsaved'
+      );
       if ('stopped' in resolved) {
         return resolved.stopped;
       }
@@ -226,7 +246,7 @@ export async function createNote(
     return { status: 'opened-unsaved', uri };
   }
 
-  const resolved = await resolveTarget(result.filepath);
+  const resolved = await resolveTarget(result.filepath, 'write');
   if ('stopped' in resolved) {
     return resolved.stopped;
   }

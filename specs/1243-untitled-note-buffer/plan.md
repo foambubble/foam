@@ -77,8 +77,12 @@ documents in memory. The `Create New Template` scaffold declares
   the file the old flow created (probe, spec Context).
 - `foam-vscode.create-note` with `text` and no `notePath` follows the
   template rule and opens unsaved (spec Open questions).
-- `onFileExists: 'overwrite'` keeps its meaning for suggested paths: the
-  caller asked for it explicitly. The default (`ask`) never deletes.
+- `onFileExists` receives the target's intent (`'write'` or
+  `'open-unsaved'`). For an unsaved note, `'overwrite'` keeps the existing
+  file instead of deleting it, and the flow accepts the kept target; the
+  adapter then opens that file's editor with the content replaced, since VS
+  Code refuses an untitled editor over an existing file. Nothing is lost
+  until the user saves.
 
 ## Risks
 

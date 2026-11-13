@@ -5,6 +5,7 @@ import {
   NoteCreationHooks,
   NoteCreationOutcome,
   NoteCreationTrigger,
+  NoteTargetIntent,
   Resolver,
   Template,
   URI,
@@ -31,7 +32,7 @@ export type OnFileExistStrategy =
   | 'overwrite'
   | 'cancel'
   | 'ask'
-  | ((filePath: URI) => Promise<URI | undefined>);
+  | ((filePath: URI, intent: NoteTargetIntent) => Promise<URI | undefined>);
 
 export type OnRelativePathStrategy =
   | 'resolve-from-root'
@@ -76,9 +77,10 @@ const createFnForOnRelativePathStrategy =
   };
 
 const createFnForOnFileExistsStrategy =
-  (onFileExists: OnFileExistStrategy) => async (existingFile: URI) => {
+  (onFileExists: OnFileExistStrategy) =>
+  async (existingFile: URI, intent: NoteTargetIntent) => {
     if (typeof onFileExists === 'function') {
-      return onFileExists(existingFile);
+      return onFileExists(existingFile, intent);
     }
     switch (onFileExists) {
       case 'open': {
@@ -89,7 +91,10 @@ const createFnForOnFileExistsStrategy =
         return;
       }
       case 'overwrite':
-        await deleteFile(existingFile);
+        // An unsaved note replaces the file only when the user saves it.
+        if (intent === 'write') {
+          await deleteFile(existingFile);
+        }
         return existingFile;
       case 'cancel':
         return undefined;

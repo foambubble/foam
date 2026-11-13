@@ -373,6 +373,32 @@ describe('create-note command', () => {
       await deleteFile(template.uri);
     });
 
+    it('with overwrite, opens the existing title-derived file with the new content and deletes nothing before saving (#1243)', async () => {
+      const existing = await createFile('ORIGINAL', ['Kept Title.md']);
+      const template = await createFile('# ${FOAM_TITLE}', [
+        '.foam',
+        'templates',
+        'titled-overwrite-template.md',
+      ]);
+      vi.spyOn(window, 'showInputBox').mockImplementationOnce(() =>
+        Promise.resolve('Kept Title')
+      );
+      const deleteSpy = vi.spyOn(workspace.fs, 'delete');
+      await commands.executeCommand('foam-vscode.create-note', {
+        templatePath: template.uri.path,
+        onRelativeNotePath: 'resolve-from-root',
+        onFileExists: 'overwrite',
+      });
+      expect(deleteSpy).not.toHaveBeenCalled();
+      const doc = window.activeTextEditor.document;
+      expect(doc.uri.scheme).toEqual('file');
+      expect(doc.uri.path).toEqual(existing.uri.path);
+      expect(doc.getText()).toEqual('# Kept Title');
+      await closeEditors();
+      await deleteFile(existing.uri);
+      await deleteFile(template.uri);
+    });
+
     it('asks for another path when an unsaved note with the same title is already open (#1243)', async () => {
       const template = await createFile('# ${FOAM_TITLE}', [
         '.foam',

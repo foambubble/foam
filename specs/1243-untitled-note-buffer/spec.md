@@ -68,7 +68,9 @@ freshly created templates keep creating files.
 - **AC-4**: Given the associated path of AC-3 already exists, when the note
   is created, then Foam handles it as it handles an existing target today
   (asks for another path by default) before opening the editor, and the
-  existing file is left untouched.
+  existing file is left untouched. With `onFileExists: 'overwrite'`, the
+  existing file opens with the new content, unsaved, and is replaced only
+  when the user saves.
   _verify: unit_
 - **AC-5**: Given a target path is known — the template declares `filepath`,
   or the flow supplies one (placeholder links, `foam-vscode.create-note`

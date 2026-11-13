@@ -202,6 +202,47 @@ describe('createNote', () => {
       expect(writes).toEqual([]);
     });
 
+    it('lets onFileExists keep an existing title-derived path for the unsaved note, which it must not delete (#1243)', async () => {
+      const opened: [string, URI | undefined][] = [];
+      const intents: string[] = [];
+      const target = root.joinPath('My Note.md');
+      const { hooks, writes } = makeHooks(
+        markdown('# ${FOAM_TITLE}'),
+        {
+          // Stop after two calls so a regression fails instead of looping.
+          onFileExists: async (uri, intent) => {
+            intents.push(intent);
+            return intents.length > 1 ? undefined : uri;
+          },
+          openUnsaved: async (content, uri) => {
+            opened.push([content, uri]);
+          },
+        },
+        ['/ws/My Note.md']
+      );
+      const outcome = await createNote(request('My Note'), hooks);
+      expect(intents).toEqual(['open-unsaved']);
+      expect(outcome).toEqual({ status: 'opened-unsaved', uri: target });
+      expect(opened).toEqual([['# My Note', target]]);
+      expect(writes).toEqual([]);
+    });
+
+    it('tells onFileExists that an existing file target is about to be written', async () => {
+      const intents: string[] = [];
+      const { hooks } = makeHooks(
+        markdown('x', '/own.md'),
+        {
+          onFileExists: async (_uri, intent) => {
+            intents.push(intent);
+            return undefined;
+          },
+        },
+        ['/ws/own.md']
+      );
+      await createNote(request(), hooks);
+      expect(intents).toEqual(['write']);
+    });
+
     it('opens nothing when onFileExists stops on an existing title-derived path', async () => {
       const opened: string[] = [];
       const { hooks } = makeHooks(

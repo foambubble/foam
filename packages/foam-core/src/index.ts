@@ -71,6 +71,7 @@ export type {
   NoteCreationHooks,
   NoteCreationRequest,
   NoteCreationOutcome,
+  NoteTargetIntent,
 } from './services/note-creation-flow';
 export type {
   NoteCreationResult,

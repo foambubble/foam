@@ -16,7 +16,7 @@ Here are the settings available for the command:
 - `text`: The text to use for the note. If also a template is provided, the template has precedence
 - `variables`: Variables to use in the text or template
 - `date`: The date used to resolve the FOAM*DATE*\* variables. in `YYYY-MM-DD` format
-- `onFileExists?: 'overwrite' | 'open' | 'ask' | 'cancel'`: What to do in case the target file already exists
+- `onFileExists?: 'overwrite' | 'open' | 'ask' | 'cancel'`: What to do in case the target file already exists. For a note that opens unsaved, `overwrite` replaces the file only when you save
 
 To customize a command and associate a key binding to it, open the key binding settings and add the appropriate configuration, here are some examples:
 

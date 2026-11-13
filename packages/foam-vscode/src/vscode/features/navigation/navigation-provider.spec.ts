@@ -230,6 +230,31 @@ describe('Document navigation', () => {
 
       expect(definitions).toBeUndefined();
     });
+    it('should point a markdown link at the heading its slug names', async () => {
+      const fileA = await createFile('# File A\n\n## My Section\n\nBody.\n', [
+        'file-a.md',
+      ]);
+      const prefix = `see [text](./${fileA.base}#`;
+      const fileB = await createFile(`${prefix}my-section).`);
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content));
+      const graph = FoamGraph.fromWorkspace(ws);
+      const tags = FoamTags.fromWorkspace(ws);
+
+      const { doc } = await showInEditor(fileB.uri);
+      const provider = new NavigationProvider(ws, graph, parser, tags);
+      const definitions = await provider.provideDefinition(
+        doc,
+        new vscode.Position(0, prefix.length + 2)
+      );
+
+      expect(definitions.length).toEqual(1);
+      expect(definitions[0].targetUri).toEqual(toVsCodeUri(fileA.uri));
+      // The heading, rather than the top of the file
+      expect(definitions[0].targetSelectionRange.start.line).toEqual(2);
+    });
+
     it('should create a definition for a wikilink', async () => {
       const fileA = await createFile('# File A');
       const fileB = await createFile(`this is a link to [[${fileA.name}]].`);

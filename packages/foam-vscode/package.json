@@ -1045,14 +1045,14 @@
     "cross-env": "^10.1.0",
     "esbuild": "^0.28.1",
     "esbuild-plugin-polyfill-node": "^0.3.0",
-    "markdown-it": "^14.3.0",
+    "markdown-it": "^15.0.3",
     "micromatch": "^4.0.8",
     "nodemon": "^3.1.14",
     "oxlint": "^1.57.0",
     "rimraf": "^3.0.2",
     "tslib": "^2.8.1",
     "typescript": "^5.8.0",
-    "vitest": "^3.2.6",
+    "vitest": "^5.1.0",
     "wait-for-expect": "^3.0.2"
   },
   "dependencies": {

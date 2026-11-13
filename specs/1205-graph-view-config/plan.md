@@ -25,8 +25,9 @@ new types still appear.
 
 Truncation moves to paint time. `generateGraphData` stops passing
 `transformTitle` (`packages/foam-vscode/src/vscode/features/graph-webview/index.ts:102`),
-so full titles cross the wire (`transformTitle` itself stays in
-`@foam/core` — the CLI and site export still use `buildGraphData`). A pure
+so full titles cross the wire. With no caller left — the CLI and site
+export never passed it — `transformTitle` is removed from `@foam/core`'s
+`buildGraphData` options. A pure
 `truncateLabel(title, maxLen)` helper goes in a new
 `packages/foam-graph/src/lib/labels.ts` and is applied where the canvas
 draws the label (`packages/foam-graph/src/components/graph-canvas.ts:272`),

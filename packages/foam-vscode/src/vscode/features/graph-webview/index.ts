@@ -39,16 +39,13 @@ export default async function activate(
   foamPromise: Promise<Foam>
 ) {
   let panel: vscode.WebviewPanel | undefined = undefined;
+  // The show-graph arguments the open panel's style was resolved from, so a
+  // settings edit can re-resolve the same view instead of the bare base style.
+  let panelArgs: ShowGraphArgs | undefined = undefined;
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration(event => {
-      if (panel) {
-        if (event.affectsConfiguration('foam.graph.style')) {
-          const style = getGraphStyle();
-          panel.webview.postMessage({
-            type: 'didUpdateStyle',
-            payload: style,
-          });
-        }
+      if (panel && event.affectsConfiguration('foam.graph.style')) {
+        postRestyledView(panel, panelArgs);
       }
     })
   );
@@ -75,6 +72,7 @@ export default async function activate(
         _state: unknown
       ) {
         panel = webviewPanel;
+        panelArgs = { view: viewNameFromPanelTitle(webviewPanel.title) };
         const foam = await foamPromise;
         await setupGraphPanel(webviewPanel, foam, context, undefined);
         attachPanelListeners(webviewPanel, foam);
@@ -88,6 +86,7 @@ export default async function activate(
       async (args?: ShowGraphArgs) => {
         getTelemetry()?.trackCommand('foam-vscode.show-graph');
         const { style, view } = resolveViewStyle(args);
+        panelArgs = args;
         if (panel) {
           retargetGraphPanel(panel, context.workspaceState, style, view);
           panel.reveal();
@@ -106,6 +105,17 @@ export default async function activate(
   if (shouldOpenGraphOnStartup) {
     vscode.commands.executeCommand('foam-vscode.show-graph');
   }
+}
+
+/** Re-sends the open view's style after a settings edit. */
+export function postRestyledView(
+  panel: vscode.WebviewPanel,
+  args: ShowGraphArgs | undefined
+) {
+  panel.webview.postMessage({
+    type: 'didUpdateStyle',
+    payload: resolveViewStyle(args).style,
+  });
 }
 
 /**

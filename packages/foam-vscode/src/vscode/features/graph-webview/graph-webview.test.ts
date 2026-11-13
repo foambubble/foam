@@ -11,6 +11,7 @@ import {
   getNodeNavigationCommand,
   handleActiveResourceChange,
   mergeStyles,
+  postRestyledView,
   retargetGraphPanel,
   updateGraph,
   viewConfigToStyle,
@@ -514,6 +515,41 @@ describe('graph view state persistence', () => {
     const all = memento.get<any>(VIEW_STATE_KEY);
     expect(all.Default.showNodesOfType['daily-note']).toBe(false);
     expect(all.Default.showNodesOfType.note).toBe(true);
+  });
+});
+
+// a foam.graph.style edit must re-send the open view's style, not the bare
+// base style: the webview treats a re-sent style as the view's declared layer
+describe('postRestyledView', () => {
+  const group = {
+    id: 'g',
+    label: 'G',
+    color: '#111111',
+    enabled: true,
+    match: { property: 'type', value: 'project' },
+  };
+
+  it("keeps the open view's declared groups and filters", () => {
+    vi.spyOn(vscode.workspace, 'getConfiguration').mockReturnValue({
+      get: (key: string) => {
+        if (key === 'style') return { background: '#000000' };
+        if (key === 'views')
+          return [
+            { name: 'Clean', show: { tag: { enabled: false } }, groups: [group] },
+          ];
+        return undefined;
+      },
+    } as any);
+    const panel = {
+      webview: { postMessage: vi.fn() },
+    } as unknown as vscode.WebviewPanel;
+
+    postRestyledView(panel, { view: 'Clean' });
+
+    const { payload } = (panel.webview.postMessage as any).mock.calls[0][0];
+    expect(payload.style.background).toBe('#000000');
+    expect(payload.showNodesOfType.tag).toBe(false);
+    expect(payload.groups).toEqual([group]);
   });
 });
 

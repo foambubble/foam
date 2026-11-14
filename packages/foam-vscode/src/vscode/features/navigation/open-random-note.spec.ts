@@ -1,5 +1,6 @@
 /* @unit-ready */
 import { commands, window } from 'vscode';
+import waitForExpect from 'wait-for-expect';
 import {
   cleanWorkspace,
   closeEditors,
@@ -32,7 +33,9 @@ describe('open-random-note command', () => {
     await withMarkdownEditorAssociation(async () => {
       await commands.executeCommand('foam-vscode.open-random-note');
 
-      expect(getActiveTabViewType()).toEqual(MARKDOWN_EDITOR_VIEW_TYPE);
+      await waitForExpect(() => {
+        expect(getActiveTabViewType()).toEqual(MARKDOWN_EDITOR_VIEW_TYPE);
+      });
     });
 
     await closeEditors();
@@ -45,8 +48,10 @@ describe('open-random-note command', () => {
 
     await commands.executeCommand('foam-vscode.open-random-note');
 
-    expect(getActiveTabViewType()).toBeUndefined();
-    expect(window.activeTextEditor.document.uri.path).toMatch(/\.md$/);
+    await waitForExpect(() => {
+      expect(getActiveTabViewType()).toBeUndefined();
+      expect(window.activeTextEditor?.document.uri.path).toMatch(/\.md$/);
+    });
 
     await closeEditors();
     await Promise.all(notes.map(deleteFile));

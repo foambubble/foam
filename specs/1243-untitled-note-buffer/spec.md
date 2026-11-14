@@ -70,7 +70,8 @@ freshly created templates keep creating files.
   (asks for another path by default) before opening the editor, and the
   existing file is left untouched. With `onFileExists: 'overwrite'`, the
   existing file opens with the new content, unsaved, and is replaced only
-  when the user saves.
+  when the user saves. Overwrite never discards an open unsaved note: when
+  one holds the path, Foam asks for another path instead.
   _verify: unit_
 - **AC-5**: Given a target path is known — the template declares `filepath`,
   or the flow supplies one (placeholder links, `foam-vscode.create-note`

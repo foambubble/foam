@@ -91,6 +91,11 @@ const createFnForOnFileExistsStrategy =
         return;
       }
       case 'overwrite':
+        // Overwrite never discards unsaved work: an open unsaved note
+        // holding the path has nothing on disk to replace, so ask instead.
+        if (findUnsavedDocAt(existingFile)) {
+          return askForAnotherPath(existingFile);
+        }
         // An unsaved note replaces the file only when the user saves it.
         if (intent === 'write') {
           await deleteFile(existingFile);
@@ -99,14 +104,15 @@ const createFnForOnFileExistsStrategy =
       case 'cancel':
         return undefined;
       case 'ask':
-      default: {
-        const newProposedPath = await askUserForFilepathConfirmation(
-          existingFile
-        );
-        return newProposedPath && existingFile.forPath(newProposedPath);
-      }
+      default:
+        return askForAnotherPath(existingFile);
     }
   };
+
+async function askForAnotherPath(existingFile: URI): Promise<URI | undefined> {
+  const newProposedPath = await askUserForFilepathConfirmation(existingFile);
+  return newProposedPath && existingFile.forPath(newProposedPath);
+}
 
 async function askUserForFilepathConfirmation(
   defaultFilepath: URI

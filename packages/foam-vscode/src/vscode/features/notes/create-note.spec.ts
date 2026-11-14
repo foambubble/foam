@@ -405,6 +405,37 @@ describe('create-note command', () => {
       await deleteFile(template.uri);
     });
 
+    it('with overwrite, asks for another path instead of writing over an open unsaved note (#1243)', async () => {
+      const template = await createFile('# ${FOAM_TITLE}', [
+        '.foam',
+        'templates',
+        'titled-held-template.md',
+      ]);
+      const held = asAbsoluteWorkspaceUri(URI.file('Held Title.md'));
+      const other = asAbsoluteWorkspaceUri(URI.file('Elsewhere.md'));
+      const spy = vi
+        .spyOn(window, 'showInputBox')
+        .mockImplementationOnce(() => Promise.resolve('Held Title'))
+        .mockImplementationOnce(() => Promise.resolve(other.toFsPath()));
+      await commands.executeCommand('foam-vscode.create-note', {
+        templatePath: template.uri.path,
+        onRelativeNotePath: 'resolve-from-root',
+      });
+      const unsavedDoc = window.activeTextEditor.document;
+      await commands.executeCommand('foam-vscode.create-note', {
+        notePath: held,
+        text: 'written note',
+        onFileExists: 'overwrite',
+      });
+      expect(spy).toHaveBeenCalledTimes(2);
+      expect(existsSync(held.toFsPath())).toBe(false);
+      expect(unsavedDoc.getText()).toEqual('# Held Title');
+      expect(await readFile(other)).toEqual('written note');
+      await closeEditors();
+      await deleteFile(other);
+      await deleteFile(template.uri);
+    });
+
     it('asks for another path when an unsaved note with the same title is already open (#1243)', async () => {
       const template = await createFile('# ${FOAM_TITLE}', [
         '.foam',

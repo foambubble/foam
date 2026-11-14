@@ -107,6 +107,26 @@ describe('Foam URI', () => {
   });
 });
 
+describe('URI withName', () => {
+  it('should rename the file, keeping its folder and extension', () => {
+    expect(URI.file('/path/to/note.md').withName('renamed')).toEqual(
+      URI.file('/path/to/renamed.md')
+    );
+  });
+
+  it('should keep an extension that is not markdown', () => {
+    expect(URI.file('/path/to/diagram.excalidraw').withName('chart')).toEqual(
+      URI.file('/path/to/chart.excalidraw')
+    );
+  });
+
+  it('should rename a file that has no extension', () => {
+    expect(URI.file('/path/to/LICENSE').withName('COPYING')).toEqual(
+      URI.file('/path/to/COPYING')
+    );
+  });
+});
+
 describe('asAbsoluteUri', () => {
   it('should throw if no workspace folder is found', () => {
     expect(() => asAbsoluteUri(URI.file('relative/path'), [])).toThrow();

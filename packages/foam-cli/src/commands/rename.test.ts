@@ -173,6 +173,20 @@ describe('renameSection', () => {
       }
     ));
 
+  it('rewrites links written as text when the section is named by its slug', () =>
+    withTmpWorkspace(
+      { 'note.md': '# Note\n\n## My Section\n\nsome text\n', 'ref.md': '[[note#My Section]]' },
+      async ({ rootDir, workspace, dataStore }) => {
+        const graph = FoamGraph.fromWorkspace(workspace);
+        const resource = resolveNote(workspace, { identifier: 'note' });
+        const result = await renameSection(workspace, graph, dataStore, resource, 'my-section', 'Objectives');
+
+        expect(fs.readFileSync(path.join(rootDir, 'note.md'), 'utf8')).toContain('## Objectives');
+        expect(fs.readFileSync(path.join(rootDir, 'ref.md'), 'utf8')).toBe('[[note#Objectives]]');
+        expect(result.updated_links).toBe(1);
+      }
+    ));
+
   it('replaces only the heading text, keeping its block anchor', () =>
     withTmpWorkspace(
       {

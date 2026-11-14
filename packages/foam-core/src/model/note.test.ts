@@ -1,7 +1,7 @@
 import { createNoteFromMarkdown } from '../../test/test-utils';
 import { Position } from './position';
 import { URI } from './uri';
-import { Resource, Block, NoteLinkDefinition } from './note';
+import { Resource, Block, NoteLinkDefinition, Section } from './note';
 
 describe('Resource', () => {
   describe('getSectionAtPosition', () => {
@@ -106,6 +106,91 @@ Content two.
         Position.create(99, 0)
       );
       expect(section).toBeUndefined();
+    });
+  });
+
+  describe('findSection', () => {
+    it('should find a section by the heading text', () => {
+      const note = createNoteFromMarkdown('/page.md', `## My Section\n`);
+      expect(Resource.findSection(note, 'My Section')?.label).toBe(
+        'My Section'
+      );
+    });
+
+    it('should find a section by the slug of its heading', () => {
+      const note = createNoteFromMarkdown('/page.md', `## My Section\n`);
+      expect(Resource.findSection(note, 'my-section')?.label).toBe(
+        'My Section'
+      );
+    });
+
+    it('should find a section whose heading has inline markup by its slug', () => {
+      const note = createNoteFromMarkdown('/page.md', `## **Bold** heading\n`);
+      expect(Resource.findSection(note, 'bold-heading')?.label).toBe(
+        'Bold heading'
+      );
+    });
+
+    it('should prefer the heading a reference names exactly over one it slugs to', () => {
+      const note = createNoteFromMarkdown(
+        '/page.md',
+        `## My Section\n\n## my-section\n`
+      );
+      const found = Resource.findSection(note, 'my-section');
+      expect(found?.label).toBe('my-section');
+      expect(found?.range.start.line).toBe(2);
+    });
+
+    it('should find no section when a slug names more than one heading', () => {
+      const note = createNoteFromMarkdown(
+        '/page.md',
+        `## My Section\n\n## MY SECTION\n`
+      );
+      expect(Resource.findSection(note, 'my-section')).toBeNull();
+    });
+
+    it('should find no section for an empty reference', () => {
+      const note = createNoteFromMarkdown('/page.md', `## My Section\n`);
+      expect(Resource.findSection(note, '')).toBeNull();
+    });
+
+    it('should find no section for a reference that names nothing', () => {
+      const note = createNoteFromMarkdown('/page.md', `## My Section\n`);
+      expect(Resource.findSection(note, 'other-section')).toBeNull();
+    });
+  });
+});
+
+describe('Section', () => {
+  describe('match', () => {
+    it('should report how a reference names a heading', () => {
+      expect(Section.match('My Section', 'My Section')).toBe('exact');
+      expect(Section.match('My Section', 'my-section')).toBe('slug');
+      expect(Section.match('My Section', 'other')).toBeNull();
+    });
+
+    it('should report no match for an empty reference', () => {
+      expect(Section.match('My Section', '')).toBeNull();
+      expect(Section.match('', '')).toBeNull();
+    });
+
+    it('should slug punctuation the way GitHub does', () => {
+      expect(Section.match('C++ Tips & Tricks (v2)', 'c-tips--tricks-v2')).toBe(
+        'slug'
+      );
+      expect(Section.match('Hello, World!', 'hello-world')).toBe('slug');
+      expect(Section.match('Multi   spaces', 'multi---spaces')).toBe('slug');
+    });
+
+    it('should keep letters that have no ascii form, and drop emoji', () => {
+      expect(Section.match('Привет мир', 'привет-мир')).toBe('slug');
+      expect(Section.match('日本語 見出し', '日本語-見出し')).toBe('slug');
+      expect(Section.match('Emoji 🎉 heading', 'emoji--heading')).toBe('slug');
+    });
+
+    it('should report an exact match when a heading is its own slug', () => {
+      expect(Section.match('日本語の見出し', '日本語の見出し')).toBe('exact');
+      expect(Section.match('my-section', 'my-section')).toBe('exact');
     });
   });
 });

@@ -137,6 +137,11 @@ export class URI {
     return pathUtils.getExtension(this.path);
   }
 
+  /** The sibling of this uri whose filename stem is `name`, extension kept */
+  withName(name: string): URI {
+    return this.getDirectory().joinPath(`${name}${this.getExtension()}`);
+  }
+
   changeExtension(from: string, to: string): URI {
     const path = pathUtils.changeExtension(this.path, from, to);
     return new URI({ ...this, path });

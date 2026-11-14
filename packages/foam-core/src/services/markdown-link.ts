@@ -23,6 +23,8 @@ function parseWikilink(text: string) {
   return {
     target: hash < 0 ? reference : reference.slice(0, hash),
     section: hash < 0 ? '' : reference.slice(hash + 1),
+    /** Offset of `target` in `text` */
+    targetOffset: open + 2,
     /** Offset of `section` in `text`, -1 without a `#` */
     sectionOffset: hash < 0 ? -1 : open + 2 + hash + 1,
     alias: pipe < 0 ? '' : inner.slice(pipe + 1),
@@ -30,10 +32,78 @@ function parseWikilink(text: string) {
   };
 }
 
+/**
+ * Removes a title after the url, as in `[a](path "Title")`.
+ *
+ * By index rather than by `\s+(?:"[^"]*"|'[^']*')$`, which has to retry from
+ * every space and so is quadratic on a url that is a long run of them.
+ */
+function withoutTitle(url: string): string {
+  const quote = url.at(-1);
+  if (quote !== '"' && quote !== "'") {
+    return url;
+  }
+  const opening = url.lastIndexOf(quote, url.length - 2);
+  if (opening < 1 || !/\s/.test(url[opening - 1])) {
+    return url;
+  }
+  return url.slice(0, opening).trimEnd();
+}
+
+/**
+ * Splits `[alias](target#section "title")`, the url optionally within angle
+ * brackets and the whole optionally an embed. The alias runs to the LAST
+ * `](`, so an image whose alt text holds a link reports the image rather
+ * than the link inside it.
+ *
+ * Done by hand rather than by one pattern: matching alias and url together
+ * means retrying the url at every `](` the alias could end at, which is
+ * quadratic on text holding a long run of them.
+ */
+function parseDirectLink(text: string) {
+  const open = text.startsWith('![') ? 1 : 0;
+  if (text[open] !== '[' || !text.endsWith(')')) {
+    return undefined;
+  }
+  const divider = text.lastIndexOf('](');
+  if (divider < open) {
+    return undefined;
+  }
+  let url = text.slice(divider + 2, text.length - 1);
+  /** Offset of `url` in `text` */
+  let urlOffset = divider + 2;
+  /** What follows the url, as written: the whitespace and the quoted title */
+  let title = '';
+  if (url.startsWith('<')) {
+    const close = url.indexOf('>');
+    if (close < 0) {
+      return undefined;
+    }
+    title = url.slice(close + 1);
+    url = url.slice(1, close);
+    urlOffset += 1;
+  } else {
+    const withoutIt = withoutTitle(url);
+    title = url.slice(withoutIt.length);
+    url = withoutIt;
+  }
+  const hash = url.indexOf('#');
+  return {
+    alias: text.slice(open + 1, divider),
+    target: hash < 0 ? url : url.slice(0, hash),
+    section: hash < 0 ? '' : url.slice(hash + 1),
+    /** Offset of `section` in `text`, -1 without a `#` */
+    sectionOffset: hash < 0 ? -1 : urlOffset + hash + 1,
+    title,
+  };
+}
+
 export abstract class MarkdownLink {
-  private static directLinkRegex = new RegExp(
-    /\[(.*)\]\((?:<([^#>]*)(?:#([^>]*))?>\s*|([^#>]*?)(?:#([^)>"']*))?(?:\s+(?:"[^"]*"|'[^']*'))?)\)/
-  );
+  /** A link Foam parses lies on one line, so an offset into it is a column */
+  private static rangeOf(link: ResourceLink, span: [number, number]): Range {
+    const { line, character } = link.range.start;
+    return Range.create(line, character + span[0], line, character + span[1]);
+  }
 
   public static analyzeLink(link: ResourceLink) {
     try {
@@ -83,8 +153,8 @@ export abstract class MarkdownLink {
           };
         }
 
-        const match = this.directLinkRegex.exec(link.rawText);
-        if (!match) {
+        const parsed = parseDirectLink(link.rawText);
+        if (!parsed) {
           // This might be a reference-style link that wasn't resolved
           // Try to extract just the alias text for reference-style links
           const referenceMatch = /^\[([^\]]*)\]/.exec(link.rawText);
@@ -96,16 +166,14 @@ export abstract class MarkdownLink {
             alias: alias,
           };
         }
-        const [, alias, angleTarget, angleSection, plainTarget, plainSection] =
-          match;
-        const target = angleTarget ?? plainTarget ?? '';
-        const section = angleSection ?? plainSection ?? '';
+        const { alias, target, section, title } = parsed;
         const blockMatch = section?.match(/^\^([a-zA-Z0-9-]+)$/);
         return {
           target,
           section: blockMatch ? '' : section,
           blockId: blockMatch?.[1] ?? '',
           alias: alias ?? '',
+          title,
         };
       }
       throw new Error(`Link of type ${link.type} is not supported`);
@@ -119,16 +187,56 @@ export abstract class MarkdownLink {
    * Undefined for other link types and for wikilinks without a section.
    */
   public static getSectionRange(link: ResourceLink): Range | undefined {
+    const span = MarkdownLink.getSectionSpan(link);
+    return span ? MarkdownLink.rangeOf(link, span) : undefined;
+  }
+
+  /**
+   * Range of `target` in `[[target#section|alias]]`. Undefined for other link
+   * types and for a wikilink naming a section of the note it sits in.
+   */
+  public static getTargetRange(link: ResourceLink): Range | undefined {
     if (link.type !== 'wikilink') {
       return undefined;
     }
     const wikilink = parseWikilink(link.rawText);
-    if (!wikilink?.section) {
+    if (!wikilink?.target) {
       return undefined;
     }
-    const { line, character } = link.range.start;
-    const start = character + wikilink.sectionOffset;
-    return Range.create(line, start, line, start + wikilink.section.length);
+    return MarkdownLink.rangeOf(link, [
+      wikilink.targetOffset,
+      wikilink.targetOffset + wikilink.target.length,
+    ]);
+  }
+
+  /** Where the fragment starts and ends within `link.rawText` */
+  private static getSectionSpan(
+    link: ResourceLink
+  ): [number, number] | undefined {
+    if (link.type === 'wikilink') {
+      const wikilink = parseWikilink(link.rawText);
+      return wikilink?.section
+        ? [
+            wikilink.sectionOffset,
+            wikilink.sectionOffset + wikilink.section.length,
+          ]
+        : undefined;
+    }
+    if (link.type !== 'link') {
+      return undefined;
+    }
+    // A reference-style link keeps its url in a definition elsewhere, so it
+    // has no fragment of its own to point at. A link holding a line break has
+    // one, but an offset into it is no longer a column on the line the link
+    // opens at, so it is left alone — only the ranges need that, not the
+    // parsing a link's target and section go through.
+    if (link.rawText.includes('\n')) {
+      return undefined;
+    }
+    const parsed = parseDirectLink(link.rawText);
+    return parsed && parsed.sectionOffset >= 0
+      ? [parsed.sectionOffset, parsed.sectionOffset + parsed.section.length]
+      : undefined;
   }
 
   public static createUpdateLinkEdit(
@@ -144,7 +252,8 @@ export abstract class MarkdownLink {
     if (link.type === 'external') {
       throw new Error('Cannot update an external link');
     }
-    const { target, section, blockId, alias } = MarkdownLink.analyzeLink(link);
+    const { target, section, blockId, alias, title } =
+      MarkdownLink.analyzeLink(link);
     const newTarget = delta.target ?? target;
     // Preserve the existing fragment (section or block anchor) when not overriding.
     const existingFragment = blockId ? `^${blockId}` : section;
@@ -168,12 +277,16 @@ export abstract class MarkdownLink {
       const defaultAlias = () => {
         return `${newTarget}${sectionDivider}${newSection}`;
       };
-      const useAngles =
-        newTarget.includes(' ') || newSection.includes(' ');
+      const useAngles = newTarget.includes(' ') || newSection.includes(' ');
+      // A title the link carried, as written. Only a link has one, so it goes
+      // when converting to a wikilink, which cannot hold it.
+      const keptTitle = type === link.type ? title ?? '' : '';
       return {
         newText: `${embed}[${newAlias ? newAlias : defaultAlias()}](${
           useAngles ? '<' : ''
-        }${newTarget}${sectionDivider}${newSection}${useAngles ? '>' : ''})`,
+        }${newTarget}${sectionDivider}${newSection}${
+          useAngles ? '>' : ''
+        }${keptTitle})`,
         range: link.range,
       };
     }

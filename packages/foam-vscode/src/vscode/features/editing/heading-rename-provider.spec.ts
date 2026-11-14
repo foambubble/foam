@@ -1,25 +1,17 @@
 /* @unit-ready */
 import * as vscode from 'vscode';
 import { createMarkdownParser } from '@foam/core';
-import { FoamGraph } from '@foam/core';
 import {
   cleanWorkspace,
   closeEditors,
   createFile,
   showInEditor,
 } from '../../../test/test-utils-vscode';
-import { createTestWorkspace } from '../../../test/test-utils';
+import { buildFoamLike, createTestWorkspace } from '../../../test/test-utils';
 import { toVsCodeUri } from '../../utils/vsc-utils';
 import { HeadingRenameProvider } from './heading-rename-provider';
 
 const parser = createMarkdownParser([]);
-
-const buildFoamLike = (ws: ReturnType<typeof createTestWorkspace>) => ({
-  workspace: ws,
-  graph: FoamGraph.fromWorkspace(ws),
-  services: { parser },
-  dispose: () => {},
-});
 
 describe('HeadingRenameProvider', () => {
   beforeEach(async () => {
@@ -178,6 +170,45 @@ describe('HeadingRenameProvider', () => {
       const fileBEdits = edits.get(toVsCodeUri(fileB.uri));
       expect(fileBEdits).toHaveLength(1);
       expect(fileBEdits[0].newText).toBe(`[[${fileA.name}#New Heading]]`);
+    });
+
+    it('should rename the heading and the wikilinks to it when triggered from a markdown link', async () => {
+      const fileA = await createFile('# Old Heading\n\nContent.\n', [
+        'note-a.md',
+      ]);
+      const fileB = await createFile(
+        `Wiki [[${fileA.name}#Old Heading]].\n\nMd [text](./note-a.md#old-heading).\n`
+      );
+
+      const ws = createTestWorkspace()
+        .set(parser.parse(fileA.uri, fileA.content))
+        .set(parser.parse(fileB.uri, fileB.content));
+      const provider = new HeadingRenameProvider(buildFoamLike(ws) as any);
+
+      const { doc } = await showInEditor(fileB.uri);
+      const prepared = (await provider.prepareRename(
+        doc,
+        new vscode.Position(2, 'Md [text](./note-a.md#old'.length),
+        new vscode.CancellationTokenSource().token
+      )) as { range: vscode.Range; placeholder: string };
+      expect(prepared.placeholder).toBe('Old Heading');
+
+      const edits = await provider.provideRenameEdits(
+        doc,
+        new vscode.Position(2, 'Md [text](./note-a.md#old'.length),
+        'New Heading',
+        new vscode.CancellationTokenSource().token
+      );
+
+      const fileAEdits = edits.get(toVsCodeUri(fileA.uri));
+      expect(fileAEdits).toHaveLength(1);
+      expect(fileAEdits[0].newText).toBe('New Heading');
+
+      const fileBEdits = edits.get(toVsCodeUri(fileB.uri));
+      expect(fileBEdits.map(e => e.newText)).toEqual([
+        `[[${fileA.name}#New Heading]]`,
+        '[text](./note-a.md#new-heading)',
+      ]);
     });
 
     it('should replace the whole heading text when the heading has inline markup', async () => {

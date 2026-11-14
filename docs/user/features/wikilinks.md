@@ -21,12 +21,12 @@ View placeholders in the graph with `Foam: Show Graph` command or in the `Placeh
 
 Link to specific sections using `[[note-name#Section Title]]` syntax. Foam provides autocomplete for section titles.
 
-To rename a section, press `F2` on its heading or on `Section Title` in a link to it. Foam updates the heading and every wikilink pointing to it.
-
-Examples:
+Markdown links reach the same sections, by the heading's slug — its text in lowercase with spaces as hyphens:
 
 - External file: `[link text](other-file.md#section-name)`
 - Same document: `[link text](#section-name)`
+
+To rename a section, press `F2` on its heading, or on the section part of a wikilink or of a markdown link from another note.
 
 ## Block Links
 

@@ -12,7 +12,6 @@ import { FoamWorkspace } from '../model/workspace';
 import { URI } from '../model/uri';
 import { IDataStore } from '../services/datastore';
 import { FoamError } from '../common/errors';
-import { getDirectory, getExtension, joinPath } from '../utils/path';
 
 // ─── Return types ─────────────────────────────────────────────────────────────
 
@@ -89,10 +88,9 @@ export async function renameNote(
   targetDir?: URI
 ): Promise<RenameNoteResult> {
   const oldUri = resource.uri;
-  const ext = getExtension(oldUri.path);
   const newUri = targetDir
-    ? targetDir.joinPath(`${newName}${ext}`)
-    : oldUri.forPath(joinPath(getDirectory(oldUri.path), `${newName}${ext}`));
+    ? targetDir.joinPath(`${newName}${oldUri.getExtension()}`)
+    : oldUri.withName(newName);
 
   if (oldUri.isEqual(newUri)) {
     throw new FoamError(
@@ -213,7 +211,9 @@ export async function renameSection(
     graph,
     workspace,
     resource.uri,
-    oldLabel,
+    // The heading's own text: `oldLabel` may name it by slug, which would
+    // then fail to match the links that spell it out
+    section.label,
     newLabel
   );
 

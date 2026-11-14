@@ -9,6 +9,7 @@ import {
 } from '../model/note';
 import { Position } from '../model/position';
 import { Range } from '../model/range';
+import { toSlug } from '../utils/slug';
 import { MarkdownLink } from './markdown-link';
 import { WorkspaceTextEdit } from './text-edit';
 
@@ -34,11 +35,17 @@ export abstract class HeadingEdit {
     const link = resource.links.find(l =>
       Range.containsPosition(l.range, position)
     );
-    const linkSectionRange = link && MarkdownLink.getSectionRange(link);
-    if (
-      linkSectionRange &&
-      Range.containsPosition(linkSectionRange, position)
-    ) {
+    if (link) {
+      // A link inside a heading is the link's text, not the heading's, so the
+      // heading below is never reached from one — which is what keeps a
+      // position from being claimed by two rename providers at once
+      const linkSectionRange = MarkdownLink.getSectionRange(link);
+      if (
+        !linkSectionRange ||
+        !Range.containsPosition(linkSectionRange, position)
+      ) {
+        return undefined;
+      }
       const targetUri = workspace.resolveLink(resource, link);
       const target =
         current.find(r => r.uri.path === targetUri.path) ??
@@ -189,10 +196,12 @@ export abstract class HeadingEdit {
    * Does NOT include the edit to update the heading text itself — that is
    * handled by the caller (the VS Code provider layer).
    *
-   * Handles three link forms:
+   * `oldLabel` is the heading's own text, not a slug naming it, since each
+   * link is rewritten in the form it names the heading by:
    * - Wikilinks: `[[note#OldLabel]]` → `[[note#NewLabel]]`
    * - Self-referencing wikilinks: `[[#OldLabel]]` → `[[#NewLabel]]`
    * - Direct markdown links: `[text](note.md#OldLabel)` → `[text](note.md#NewLabel)`
+   * - Any of them written as a slug: `#old-label` → `#new-label`
    * - Reference-style markdown links: updates the definition URL line, not the inline text
    *
    * The links of a note in `current` are used instead of the graph's for it,
@@ -207,6 +216,33 @@ export abstract class HeadingEdit {
     current: Resource[] = []
   ): HeadingEditResult {
     const currentPaths = new Set(current.map(r => r.uri.path));
+    const target = currentPaths.has(resourceUri.path)
+      ? current.find(r => r.uri.path === resourceUri.path)
+      : workspace.find(resourceUri);
+
+    /**
+     * What a reference to the old heading becomes, or null if it names
+     * another. `inUrl` says the reference sits in a url, where the slug is
+     * the form that resolves outside Foam; it settles a heading that is
+     * already its own slug, which `Section.match` can only call exact.
+     */
+    const renamed = (reference: string, inUrl: boolean): string | null => {
+      const kind = Section.match(oldLabel, reference);
+      if (!kind) {
+        return null;
+      }
+      // Matching the old heading's text or slug is not enough: a reference
+      // that resolves to another heading, or to none because two share a
+      // slug, points somewhere this rename does not touch.
+      if (
+        target &&
+        Resource.findSection(target, reference)?.label !== oldLabel
+      ) {
+        return null;
+      }
+      const slug = kind === 'slug' || (inUrl && reference === toSlug(oldLabel));
+      return slug ? toSlug(newLabel) : newLabel;
+    };
     const backlinks = [
       ...graph
         .getBacklinks(resourceUri)
@@ -233,7 +269,8 @@ export abstract class HeadingEdit {
       // `[ref]: note.md#OldLabel`), update the definition line URL rather than
       // the inline text, which doesn't contain the URL.
       if (link.type === 'link' && ResourceLink.isResolvedReference(link)) {
-        if (section !== oldLabel) {
+        const newSection = renamed(section, true);
+        if (newSection === null) {
           continue;
         }
         const def = link.definition as NoteLinkDefinition;
@@ -243,8 +280,8 @@ export abstract class HeadingEdit {
         const hashIdx = def.url.lastIndexOf('#');
         const newUrl =
           hashIdx >= 0
-            ? def.url.slice(0, hashIdx + 1) + newLabel
-            : def.url + '#' + newLabel;
+            ? def.url.slice(0, hashIdx + 1) + newSection
+            : def.url + '#' + newSection;
 
         totalOccurrences++;
         edits.push({
@@ -266,34 +303,35 @@ export abstract class HeadingEdit {
         // - If in both: update rawText and update definition URL + label
         //   (e.g. `[[note#OldLabel]]` + `[note#OldLabel]: note.md#OldLabel`)
         const def = link.definition as NoteLinkDefinition;
-        const rawTextMatchesSection = section === oldLabel;
+        const newRawTextSection = renamed(section, false);
         const defHashIdx = def.url.lastIndexOf('#');
         const defSection = defHashIdx >= 0 ? def.url.slice(defHashIdx + 1) : '';
-        const defMatchesSection = defSection === oldLabel;
+        const newDefSection = renamed(defSection, true);
 
-        if (!rawTextMatchesSection && !defMatchesSection) {
+        if (newRawTextSection === null && newDefSection === null) {
           continue;
         }
 
         totalOccurrences++;
 
-        if (rawTextMatchesSection) {
+        if (newRawTextSection !== null) {
           const textEdit = MarkdownLink.createUpdateLinkEdit(link, {
-            section: newLabel,
+            section: newRawTextSection,
           });
           edits.push({ uri: connection.source, edit: textEdit });
         }
 
-        if (defMatchesSection && def.range) {
-          const newUrl = def.url.slice(0, defHashIdx + 1) + newLabel;
+        if (newDefSection !== null && def.range) {
+          const newUrl = def.url.slice(0, defHashIdx + 1) + newDefSection;
           // If the definition label also encodes the section
           // (e.g. "note-a#OldLabel"), update the label portion too.
           const labelHashIdx = def.label.lastIndexOf('#');
           const labelSection =
             labelHashIdx >= 0 ? def.label.slice(labelHashIdx + 1) : '';
+          const newLabelSection = renamed(labelSection, false);
           const newDefLabel =
-            labelSection === oldLabel
-              ? def.label.slice(0, labelHashIdx + 1) + newLabel
+            newLabelSection !== null
+              ? def.label.slice(0, labelHashIdx + 1) + newLabelSection
               : def.label;
 
           edits.push({
@@ -310,13 +348,14 @@ export abstract class HeadingEdit {
         }
       } else {
         // Wikilinks without resolved definitions and regular inline markdown links.
-        if (section !== oldLabel) {
+        const newSection = renamed(section, link.type === 'link');
+        if (newSection === null) {
           continue;
         }
         let textEdit: WorkspaceTextEdit['edit'];
         try {
           textEdit = MarkdownLink.createUpdateLinkEdit(link, {
-            section: newLabel,
+            section: newSection,
           });
         } catch {
           continue;

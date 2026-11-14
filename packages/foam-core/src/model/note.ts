@@ -2,6 +2,7 @@ import { URI, URIComponents } from './uri';
 import { Range } from './range';
 import { Position } from './position';
 import type { Task } from './task';
+import { toSlug } from '../utils/slug';
 
 export interface ResourceLink {
   type: 'wikilink' | 'link' | 'external';
@@ -93,6 +94,26 @@ export interface Section {
   headingRange: Range;
   /** The heading's text as written, without markers, closing `#`s or a trailing `^anchor` */
   labelRange: Range;
+}
+
+/** How a link's fragment names a heading: by its text, or by its slug */
+export type SectionMatch = 'exact' | 'slug';
+
+export abstract class Section {
+  /**
+   * How `reference` names a heading labelled `label`, or null if it does not.
+   * The slug form is what the rest of the markdown world links by, so both
+   * are accepted; `exact` is reported so a rewrite can answer in kind.
+   */
+  static match(label: string, reference: string): SectionMatch | null {
+    if (!reference) {
+      return null;
+    }
+    if (reference === label) {
+      return 'exact';
+    }
+    return reference === toSlug(label) ? 'slug' : null;
+  }
 }
 
 export type BlockType =
@@ -204,11 +225,28 @@ export abstract class Resource {
     );
   }
 
-  public static findSection(resource: Resource, label: string): Section | null {
-    if (label) {
-      return resource.sections.find(s => s.label === label) ?? null;
+  /**
+   * The section `reference` names, by heading text or by slug. A slug that
+   * names more than one heading is too ambiguous to act on and finds none.
+   * Slugs are only computed once the heading text has failed to match.
+   */
+  public static findSection(
+    resource: Resource,
+    reference: string
+  ): Section | null {
+    if (!reference) {
+      return null;
     }
-    return null;
+    const exact = resource.sections.find(
+      s => Section.match(s.label, reference) === 'exact'
+    );
+    if (exact) {
+      return exact;
+    }
+    const bySlug = resource.sections.filter(
+      s => Section.match(s.label, reference) === 'slug'
+    );
+    return bySlug.length === 1 ? bySlug[0] : null;
   }
 
   public static findBlock(resource: Resource, id: string): Block | null {

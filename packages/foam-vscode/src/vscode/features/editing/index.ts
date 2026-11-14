@@ -6,6 +6,7 @@ import convertLinks from './convert-links';
 import updateWikilinksCommand from './update-wikilinks';
 import headingRenameProvider from './heading-rename-provider';
 import blockRenameProvider from './block-rename-provider';
+import noteRenameProvider from './note-rename-provider';
 
 export default async function activate(
   context: ExtensionContext,
@@ -17,4 +18,5 @@ export default async function activate(
   await updateWikilinksCommand(context, foamPromise);
   await headingRenameProvider(context, foamPromise);
   await blockRenameProvider(context, foamPromise);
+  await noteRenameProvider(context, foamPromise);
 }

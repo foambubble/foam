@@ -216,9 +216,84 @@ describe('MarkdownLink', () => {
       const link = parser.parse(getRandomURI(), `see [[note]]`).links[0];
       expect(MarkdownLink.getSectionRange(link)).toBeUndefined();
     });
-    it('should return undefined for a direct link', () => {
-      const link = parser.parse(getRandomURI(), `see [text](note.md#section)`)
+  });
+
+  describe('wikilink target range', () => {
+    it('should cover the target of a wikilink', () => {
+      const link = parser.parse(getRandomURI(), `see [[note-a]]`).links[0];
+      const start = 'see [['.length;
+      expect(MarkdownLink.getTargetRange(link)).toEqual(
+        Range.create(0, start, 0, start + 'note-a'.length)
+      );
+    });
+
+    it('should stop at the section and the alias', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        `see ![[note-a#My Section|alias]]`
+      ).links[0];
+      const start = 'see ![['.length;
+      expect(MarkdownLink.getTargetRange(link)).toEqual(
+        Range.create(0, start, 0, start + 'note-a'.length)
+      );
+    });
+
+    it('should return undefined for a link to a section of the same note', () => {
+      const link = parser.parse(getRandomURI(), `[[#My Section]]`).links[0];
+      expect(MarkdownLink.getTargetRange(link)).toBeUndefined();
+    });
+
+    it('should return undefined for a markdown link', () => {
+      const link = parser.parse(getRandomURI(), `[x](note-a.md)`).links[0];
+      expect(MarkdownLink.getTargetRange(link)).toBeUndefined();
+    });
+  });
+
+  describe('markdown link section range', () => {
+    it('should cover the fragment of a markdown link', () => {
+      const prefix = 'see [text](note.md#';
+      const link = parser.parse(getRandomURI(), `${prefix}my-section)`)
         .links[0];
+      expect(MarkdownLink.getSectionRange(link)).toEqual(
+        Range.create(0, prefix.length, 0, prefix.length + 'my-section'.length)
+      );
+    });
+
+    it('should cover the fragment when the url is in angle brackets', () => {
+      const prefix = 'see [text](<note.md#';
+      const link = parser.parse(getRandomURI(), `${prefix}My Section>)`)
+        .links[0];
+      expect(MarkdownLink.getSectionRange(link)).toEqual(
+        Range.create(0, prefix.length, 0, prefix.length + 'My Section'.length)
+      );
+    });
+
+    it('should cover a block anchor, caret included', () => {
+      const prefix = 'see [text](note.md#';
+      const link = parser.parse(getRandomURI(), `${prefix}^blk)`).links[0];
+      expect(MarkdownLink.getSectionRange(link)).toEqual(
+        Range.create(0, prefix.length, 0, prefix.length + '^blk'.length)
+      );
+    });
+
+    it('should return undefined when the link text holds a line break', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        'see [a very long\nlink text](note.md#my-section)'
+      ).links[0];
+      expect(MarkdownLink.getSectionRange(link)).toBeUndefined();
+    });
+
+    it('should return undefined for a markdown link with no fragment', () => {
+      const link = parser.parse(getRandomURI(), 'see [text](note.md)').links[0];
+      expect(MarkdownLink.getSectionRange(link)).toBeUndefined();
+    });
+
+    it('should return undefined for a reference-style link, whose url is elsewhere', () => {
+      const link = parser.parse(
+        getRandomURI(),
+        'see [text][ref]\n\n[ref]: note.md#my-section'
+      ).links[0];
       expect(MarkdownLink.getSectionRange(link)).toBeUndefined();
     });
   });
@@ -244,6 +319,43 @@ describe('MarkdownLink', () => {
   });
 
   describe('parse direct link', () => {
+    // A line ending is allowed before a title and before the closing paren,
+    // so these reach the parser as one link whose text holds a `\n`
+    it('should parse a url followed by a line break and a title', () => {
+      const link = parser.parse(getRandomURI(), '[a](note.md\n"Title")')
+        .links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('note.md');
+      expect(parsed.alias).toEqual('a');
+    });
+
+    it('should parse an angle url followed by a line break', () => {
+      const link = parser.parse(getRandomURI(), '[a](<note.md#Sec>\n)')
+        .links[0];
+      const parsed = MarkdownLink.analyzeLink(link);
+      expect(parsed.target).toEqual('note.md');
+      expect(parsed.section).toEqual('Sec');
+    });
+
+    // Each of these made a pattern retry an alias, a url or a title over and
+    // over, taking time in the square of the length. They close so that the
+    // whole link is parsed rather than turned away at the first character.
+    it.each([
+      ['unclosed brackets', '[' + '[a'.repeat(20000) + '](x)'],
+      ['openings of an angle url', '[](<' + '](<"'.repeat(20000) + ')'],
+      ['openings of an angle fragment', '[](<#' + '](<#='.repeat(20000) + ')'],
+      ['spaces where a title would go', '[](' + ' '.repeat(20000) + ')'],
+    ])('should parse a long run of %s quickly', (_what, rawText) => {
+      const link: ResourceLink = {
+        type: 'link',
+        rawText,
+        range: Range.create(0, 0),
+        isEmbed: false,
+      };
+      const start = performance.now();
+      MarkdownLink.analyzeLink(link);
+      expect(performance.now() - start).toBeLessThan(100);
+    });
     it('should parse target', () => {
       const link = parser.parse(getRandomURI(), `this is a [link](to/path.md)`)
         .links[0];

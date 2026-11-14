@@ -238,13 +238,17 @@ export const withModifiedFoamConfiguration = (
 export const MARKDOWN_EDITOR_VIEW_TYPE = 'vscode.markdown.editor';
 
 /**
- * Runs `fn` with `*.md` associated with the built-in Markdown Editor, and
- * restores the original associations afterwards.
+ * Runs `fn` with the files matching `pattern` (by default, `*.md`) associated
+ * with the built-in Markdown Editor, and restores the original associations
+ * afterwards.
  */
-export const withMarkdownEditorAssociation = (fn: () => void | Promise<void>) =>
+export const withMarkdownEditorAssociation = (
+  fn: () => void | Promise<void>,
+  pattern = '*.md'
+) =>
   withModifiedConfiguration(
     'workbench.editorAssociations',
-    { '*.md': MARKDOWN_EDITOR_VIEW_TYPE },
+    { [pattern]: MARKDOWN_EDITOR_VIEW_TYPE },
     fn
   );
 

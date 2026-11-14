@@ -12,10 +12,14 @@ import {
   withMarkdownEditorAssociation,
 } from '../../../test/test-utils-vscode';
 import { getActiveTabUri } from '../../services/editor';
+import { toVsCodeUri } from '../../utils/vsc-utils';
 
 // Drives VS Code's own Go to Definition, which is what ctrl/cmd+click on a
 // wikilink runs, so it needs the extension host and is not @unit-ready.
 describe('Go to Definition on a wikilink', () => {
+  // inside the wikilink, just past `see [[`
+  const insideLink = new vscode.Position(0, 7);
+
   const openSourceLinkingTo = async (
     targetContent: string,
     name: string,
@@ -27,14 +31,32 @@ describe('Go to Definition on a wikilink', () => {
     ]);
     await waitForNoteInFoamWorkspace(target.uri);
     await waitForNoteInFoamWorkspace(source.uri);
-    const { editor } = await showInEditor(source.uri);
-    // inside the wikilink, just past `see [[`
-    editor.selection = new vscode.Selection(0, 7, 0, 7);
+    await showInEditor(source.uri);
     return { target: target.uri, source: source.uri };
   };
 
-  const goToDefinition = () =>
-    vscode.commands.executeCommand('editor.action.revealDefinition');
+  // What ctrl/cmd+click runs in the clicked editor: the definition providers
+  // at that position, then VS Code's navigation to what they return.
+  // `editor.action.revealDefinition` runs in whichever code editor has focus
+  // instead, such as the Chat input, and does nothing when that is not the
+  // source; `editor.action.goToLocations` runs in the source's own editor.
+  const goToDefinition = async (source: URI) => {
+    const uri = toVsCodeUri(source);
+    const definitions = await vscode.commands.executeCommand<
+      vscode.LocationLink[]
+    >('vscode.executeDefinitionProvider', uri, insideLink);
+    // with more than one, VS Code shows a picker instead of navigating
+    expect(definitions).toHaveLength(1);
+    const [{ targetUri, targetRange, targetSelectionRange }] = definitions;
+    await vscode.commands.executeCommand(
+      'editor.action.goToLocations',
+      uri,
+      insideLink,
+      // VS Code navigates to a link's selection range when it has one
+      [new vscode.Location(targetUri, targetSelectionRange ?? targetRange)],
+      'goto'
+    );
+  };
 
   const cleanUp = async (...uris: URI[]) => {
     await closeEditors();
@@ -51,14 +73,16 @@ describe('Go to Definition on a wikilink', () => {
       'definition-associated'
     );
 
+    // Only the target: `goToDefinition` reopens the source by its URI, which
+    // would otherwise open it in the Markdown Editor, with no definitions.
     await withMarkdownEditorAssociation(async () => {
-      await goToDefinition();
+      await goToDefinition(source);
 
       await waitForExpect(() => {
         expect(getActiveTabViewType()).toEqual(MARKDOWN_EDITOR_VIEW_TYPE);
         expect(getActiveTabUri()?.path).toEqual(target.path);
       });
-    });
+    }, 'definition-associated.md');
 
     await cleanUp(target, source);
   });
@@ -71,7 +95,7 @@ describe('Go to Definition on a wikilink', () => {
       'definition-plain'
     );
 
-    await goToDefinition();
+    await goToDefinition(source);
 
     await waitForExpect(() => {
       expect(getActiveTabViewType()).toBeUndefined();
@@ -91,7 +115,7 @@ describe('Go to Definition on a wikilink', () => {
       'definition-section#Details'
     );
 
-    await goToDefinition();
+    await goToDefinition(source);
 
     await waitForExpect(() => {
       const editor = vscode.window.activeTextEditor;

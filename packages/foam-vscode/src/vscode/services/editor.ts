@@ -280,6 +280,47 @@ export async function createDocAndFocus(
   await note.document.save();
 }
 
+/**
+ * Opens the note in an editor without saving it, inserting the content as a
+ * snippet so tabstops stay active. Without `filepath`, an untitled editor
+ * opens and the user picks where to save. With it, saving writes there
+ * without a dialog: usually through an untitled editor associated with the
+ * path; when something is already there (kept by `onFileExists` for an
+ * overwrite), its editor opens with the content replaced, so the existing
+ * note changes only when the user saves. VS Code refuses an untitled
+ * editor over an existing file, which is why that case reuses the file's.
+ */
+export async function openUnsavedDocAndFocus(
+  text: SnippetString,
+  filepath: URI | undefined,
+  viewColumn: ViewColumn = ViewColumn.Active
+) {
+  const document = !filepath
+    ? await workspace.openTextDocument({ language: 'markdown' })
+    : findUnsavedDocAt(filepath) ??
+      (await workspace.openTextDocument(
+        (await fileExists(filepath))
+          ? toVsCodeUri(filepath)
+          : toVsCodeUri(filepath).with({ scheme: 'untitled' })
+      ));
+  const editor = await window.showTextDocument(document, viewColumn);
+  const end = document.lineAt(document.lineCount - 1).range.end;
+  editor.selection = new Selection(0, 0, end.line, end.character);
+  await editor.insertSnippet(text);
+}
+
+/**
+ * The unsaved (untitled) document associated with `uri`, if one is open.
+ * Such a document claims its path as a file on disk would: saving it writes
+ * there without asking.
+ */
+export function findUnsavedDocAt(uri: URI): TextDocument | undefined {
+  const path = toVsCodeUri(uri).path;
+  return workspace.textDocuments.find(
+    doc => doc.uri.scheme === 'untitled' && doc.uri.path === path
+  );
+}
+
 export async function replaceSelection(
   document: TextDocument,
   selection: Selection,

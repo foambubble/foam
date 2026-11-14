@@ -55,10 +55,16 @@ export async function resolveDailyNote(
     });
   }
   const daily = prepareDailyNote(date, template, foam.workspace, locale);
-  return new NoteCreationEngine(foam).processTemplate(
+  const result = await new NoteCreationEngine(foam).processTemplate(
     daily.trigger,
     daily.template,
     daily.resolver,
     { defaultFilepath: daily.fallbackFilepath }
   );
+  if ('unsaved' in result) {
+    // Unreachable: a daily note always has a target (`fallbackFilepath`),
+    // and this flow does not opt into unsaved notes.
+    throw new FoamError('io_error', 'Daily note resolution produced no target');
+  }
+  return result;
 }

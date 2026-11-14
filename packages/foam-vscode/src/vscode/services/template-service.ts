@@ -17,7 +17,11 @@ import { extractFoamTemplateFrontmatterMetadata } from '@foam/core';
 import { fromVsCodeUri, toVsCodeUri } from '../utils/vsc-utils';
 import { fileExists, focusNote, readFile } from './editor';
 
-const DEFAULT_NEW_NOTE_TEMPLATE = `# \${1:$TM_FILENAME_BASE}
+const DEFAULT_NEW_NOTE_TEMPLATE = `---
+foam_template:
+  filepath: '$FOAM_TITLE_SAFE.md'
+---
+# \${1:$TM_FILENAME_BASE}
 
 Welcome to Foam templates.
 

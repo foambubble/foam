@@ -59,6 +59,25 @@ export interface NoteCreationResult {
 }
 
 /**
+ * A processed template with no target: the note opens in an unsaved editor
+ * instead of being written to a file. Only produced for markdown templates
+ * that define no `filepath`, and only when the client can open unsaved
+ * editors (see `ProcessTemplateOptions.canOpenUnsaved`).
+ */
+export interface UnsavedNoteResult {
+  unsaved: true;
+  content: string;
+  /**
+   * Where the note would be saved, named after the title, when a title is
+   * known (the template uses a title variable, or one was given). Relative
+   * paths are resolved like a template `filepath`. Absent otherwise.
+   */
+  suggestedFilepath?: URI;
+}
+
+export type ProcessedTemplate = NoteCreationResult | UnsavedNoteResult;
+
+/**
  * Function signature for JavaScript template functions
  */
 export type CreateNoteFunction = (

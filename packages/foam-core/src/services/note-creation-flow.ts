@@ -16,6 +16,28 @@ import { isWithinPath } from '../utils/path';
 export const DEFAULT_NEW_NOTE_TEXT = '# ${FOAM_TITLE}\n\n${FOAM_SELECTED_TEXT}';
 
 /**
+ * The `filepath` of the built-in template: named after the title, in the
+ * location new notes go to.
+ */
+const DEFAULT_NEW_NOTE_FILEPATH = '${FOAM_TITLE_SAFE}.md';
+
+/**
+ * The template used when none is loaded. Like any template with a
+ * `filepath`, it creates a file — but a target the caller supplies
+ * (placeholder link, `notePath`) wins, since the user did not write it.
+ */
+function builtInTemplate(hasTarget: boolean): Template {
+  const frontmatter = hasTarget
+    ? ''
+    : `---\nfoam_template:\n  filepath: '${DEFAULT_NEW_NOTE_FILEPATH}'\n---\n`;
+  return {
+    type: 'markdown',
+    content: frontmatter + DEFAULT_NEW_NOTE_TEXT,
+    metadata: new Map(),
+  };
+}
+
+/**
  * Client-specific behavior injected into {@link createNote}.
  */
 export interface NoteCreationHooks {
@@ -28,11 +50,19 @@ export interface NoteCreationHooks {
   fileExists: (uri: URI) => Promise<boolean>;
   /**
    * Called when a file already exists at the target. Return a new target
-   * to retry with (it goes through the same checks), or `undefined` to stop
-   * with an `exists` outcome. Deleting the file for an overwrite belongs
-   * here.
+   * to retry with (it goes through the same checks, even when it equals
+   * `uri`), or `undefined` to stop with an `exists` outcome. `intent` says
+   * what the target is for:
+   * - `'write'`: the note is written there next. Deleting the file for an
+   *   overwrite belongs here.
+   * - `'open-unsaved'`: the note opens unsaved and nothing is written until
+   *   the user saves, so the file must not be deleted. Return `'keep'` to
+   *   keep it as the target, to be replaced on save.
    */
-  onFileExists: (uri: URI) => Promise<URI | undefined>;
+  onFileExists: (
+    uri: URI,
+    intent: NoteTargetIntent
+  ) => Promise<URI | 'keep' | undefined>;
   /**
    * Called when the target is relative. Return an absolute target, or
    * `undefined` to stop with a `cancelled` outcome. Defaults to resolving
@@ -43,7 +73,23 @@ export interface NoteCreationHooks {
   writeNote: (uri: URI, content: string) => Promise<void>;
   /** Runs once the note is written, e.g. to link the source selection to it. */
   onDidCreate?: (uri: URI) => Promise<void>;
+  /**
+   * Opens the note as an unsaved editor instead of writing a file. Providing
+   * it declares the capability: a markdown template with no `filepath` and
+   * no `fallbackFilepath` then opens unsaved (#1243). `uri`
+   * is where saving it should go — named after the title when one is known,
+   * and already resolved and checked like a file target (a file may exist
+   * there when `onFileExists` returned `'keep'`) — or `undefined`
+   * when the user names it on save. Without the hook, a filename is derived
+   * from the title as before. The built-in template declares a `filepath`,
+   * so it always creates a file. `onDidCreate` does not run: nothing exists
+   * until the user saves.
+   */
+  openUnsaved?: (content: string, uri: URI | undefined) => Promise<void>;
 }
+
+/** What a resolved target is for; see `NoteCreationHooks.onFileExists`. */
+export type NoteTargetIntent = 'write' | 'open-unsaved';
 
 export interface NoteCreationRequest {
   foam: Foam;
@@ -71,7 +117,12 @@ export type NoteCreationOutcome =
   /** A file exists at `uri` and `onFileExists` chose to stop. */
   | { status: 'exists'; uri: URI }
   /** `onRelativePath` chose to stop; nothing was written. */
-  | { status: 'cancelled' };
+  | { status: 'cancelled' }
+  /**
+   * The note opened as an unsaved editor via `openUnsaved`; no file exists.
+   * `uri` is where saving it goes, when a title named it.
+   */
+  | { status: 'opened-unsaved'; uri: URI | undefined };
 
 /**
  * Whether a note may be created at `target`.
@@ -113,17 +164,18 @@ export async function createNote(
   const isTrusted = request.isTrusted ?? false;
   const roots = foam.workspace.roots;
 
-  const template: Template = (await hooks.loadTemplate()) ?? {
-    type: 'markdown',
-    content: DEFAULT_NEW_NOTE_TEXT,
-    metadata: new Map(),
-  };
+  const template: Template =
+    (await hooks.loadTemplate()) ??
+    builtInTemplate(fallbackFilepath !== undefined);
 
   const result = await new NoteCreationEngine(foam).processTemplate(
     trigger,
     template,
     resolver,
-    { defaultFilepath: fallbackFilepath }
+    {
+      defaultFilepath: fallbackFilepath,
+      canOpenUnsaved: hooks.openUnsaved !== undefined,
+    }
   );
 
   const onRelativePath =
@@ -146,26 +198,67 @@ export async function createNote(
     return resolved;
   };
 
-  let candidate = result.filepath;
-  let target: URI;
-  for (;;) {
-    while (!candidate.isAbsolute()) {
-      const next = await onRelativePath(candidate);
+  // Resolves a candidate to a free, allowed, absolute target, or to the
+  // outcome that stopped the search.
+  const resolveTarget = async (
+    candidate: URI,
+    intent: NoteTargetIntent
+  ): Promise<{ target: URI } | { stopped: NoteCreationOutcome }> => {
+    for (;;) {
+      while (!candidate.isAbsolute()) {
+        const next = await onRelativePath(candidate);
+        if (next === undefined) {
+          return { stopped: { status: 'cancelled' } };
+        }
+        candidate = next;
+      }
+      const target = resolveInWorkspace(candidate);
+      if (!(await hooks.fileExists(target))) {
+        return { target };
+      }
+      const next = await hooks.onFileExists(target, intent);
       if (next === undefined) {
-        return { status: 'cancelled' };
+        return { stopped: { status: 'exists', uri: target } };
+      }
+      // An unsaved note may open over the existing file, which is only
+      // replaced when the user saves. Any path, even the same one, is
+      // checked again: a prompt answered with its default must not count
+      // as a decision to keep the file.
+      if (next === 'keep') {
+        if (intent === 'open-unsaved') {
+          return { target };
+        }
+        throw new Error(
+          "onFileExists can only 'keep' a target for an unsaved note"
+        );
       }
       candidate = next;
     }
-    target = resolveInWorkspace(candidate);
-    if (!(await hooks.fileExists(target))) {
-      break;
+  };
+
+  if ('unsaved' in result) {
+    // The suggested path goes through the same checks as a file target: the
+    // editor saves to it without asking, so it must be free and allowed.
+    let uri: URI | undefined;
+    if (result.suggestedFilepath) {
+      const resolved = await resolveTarget(
+        result.suggestedFilepath,
+        'open-unsaved'
+      );
+      if ('stopped' in resolved) {
+        return resolved.stopped;
+      }
+      uri = resolved.target;
     }
-    const next = await hooks.onFileExists(target);
-    if (next === undefined) {
-      return { status: 'exists', uri: target };
-    }
-    candidate = next;
+    await hooks.openUnsaved(result.content, uri);
+    return { status: 'opened-unsaved', uri };
   }
+
+  const resolved = await resolveTarget(result.filepath, 'write');
+  if ('stopped' in resolved) {
+    return resolved.stopped;
+  }
+  const { target } = resolved;
 
   await hooks.writeNote(target, result.content);
   await hooks.onDidCreate?.(target);

@@ -5,6 +5,7 @@ import {
   NoteCreationHooks,
   NoteCreationOutcome,
   NoteCreationTrigger,
+  NoteTargetIntent,
   Resolver,
   Template,
   URI,
@@ -17,7 +18,9 @@ import {
   deleteFile,
   fileExists,
   findSelectionContent,
+  findUnsavedDocAt,
   getCurrentEditorDirectory,
+  openUnsavedDocAndFocus,
   replaceSelection,
 } from './editor';
 import { getFoamVsCodeConfig } from '../config';
@@ -29,7 +32,10 @@ export type OnFileExistStrategy =
   | 'overwrite'
   | 'cancel'
   | 'ask'
-  | ((filePath: URI) => Promise<URI | undefined>);
+  | ((
+      filePath: URI,
+      intent: NoteTargetIntent
+    ) => Promise<URI | 'keep' | undefined>);
 
 export type OnRelativePathStrategy =
   | 'resolve-from-root'
@@ -74,28 +80,43 @@ const createFnForOnRelativePathStrategy =
   };
 
 const createFnForOnFileExistsStrategy =
-  (onFileExists: OnFileExistStrategy) => async (existingFile: URI) => {
+  (onFileExists: OnFileExistStrategy) =>
+  async (existingFile: URI, intent: NoteTargetIntent) => {
     if (typeof onFileExists === 'function') {
-      return onFileExists(existingFile);
+      return onFileExists(existingFile, intent);
     }
     switch (onFileExists) {
-      case 'open':
-        await commands.executeCommand('vscode.open', toVsCodeUri(existingFile));
+      case 'open': {
+        const unsaved = findUnsavedDocAt(existingFile);
+        await (unsaved
+          ? window.showTextDocument(unsaved)
+          : commands.executeCommand('vscode.open', toVsCodeUri(existingFile)));
         return;
+      }
       case 'overwrite':
+        // Overwrite never discards unsaved work: an open unsaved note
+        // holding the path has nothing on disk to replace, so ask instead.
+        if (findUnsavedDocAt(existingFile)) {
+          return askForAnotherPath(existingFile);
+        }
+        if (intent === 'open-unsaved') {
+          // The unsaved note replaces the file only when the user saves it.
+          return 'keep';
+        }
         await deleteFile(existingFile);
         return existingFile;
       case 'cancel':
         return undefined;
       case 'ask':
-      default: {
-        const newProposedPath = await askUserForFilepathConfirmation(
-          existingFile
-        );
-        return newProposedPath && existingFile.forPath(newProposedPath);
-      }
+      default:
+        return askForAnotherPath(existingFile);
     }
   };
+
+async function askForAnotherPath(existingFile: URI): Promise<URI | undefined> {
+  const newProposedPath = await askUserForFilepathConfirmation(existingFile);
+  return newProposedPath && existingFile.forPath(newProposedPath);
+}
 
 async function askUserForFilepathConfirmation(
   defaultFilepath: URI
@@ -152,7 +173,7 @@ export const NoteFactory = {
         if (!workspace.isTrusted) {
           await assertInsideWorkspace(uri, foam.workspace.roots);
         }
-        return fileExists(uri);
+        return (await fileExists(uri)) || findUnsavedDocAt(uri) !== undefined;
       },
       onFileExists: createFnForOnFileExistsStrategy(options.onFileExists),
       onRelativePath: createFnForOnRelativePathStrategy(options.onRelativePath),
@@ -175,6 +196,12 @@ export const NoteFactory = {
           );
         }
       },
+      openUnsaved: async (content, uri) =>
+        openUnsavedDocAndFocus(
+          new SnippetString(content),
+          uri,
+          selectedContent ? ViewColumn.Beside : ViewColumn.Active
+        ),
     };
 
     let outcome: NoteCreationOutcome;
@@ -204,6 +231,7 @@ export const NoteFactory = {
       case 'exists':
         return { didCreateFile: false, uri: outcome.uri };
       case 'cancelled':
+      case 'opened-unsaved':
         return { didCreateFile: false, uri: undefined };
     }
   },

@@ -71,10 +71,13 @@ export type {
   NoteCreationHooks,
   NoteCreationRequest,
   NoteCreationOutcome,
+  NoteTargetIntent,
 } from './services/note-creation-flow';
 export type {
   NoteCreationResult,
   NoteCreationTrigger,
+  ProcessedTemplate,
+  UnsavedNoteResult,
 } from './templates/note-creation-types';
 export type { Template, TemplateContext } from './templates/note-creation-types';
 export { TriggerFactory } from './templates/note-creation-triggers';

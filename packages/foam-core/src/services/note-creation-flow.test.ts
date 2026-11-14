@@ -129,6 +129,206 @@ describe('createNote', () => {
       expect(titleRequests).toBe(0);
     });
 
+    it('opens an unsaved note when the template has no target and no title variable (#1243)', async () => {
+      const opened: [string, URI | undefined][] = [];
+      let titleRequests = 0;
+      const resolver = new Resolver(
+        new Map(),
+        new Date(),
+        undefined,
+        'default',
+        {
+          resolveTitle: async () => {
+            titleRequests++;
+            return 'Prompted';
+          },
+          resolveSelectedText: () => '',
+          resolveCurrentDir: () => '/ws',
+        }
+      );
+      const { hooks, writes, created } = makeHooks(markdown('body'), {
+        openUnsaved: async (content, uri) => {
+          opened.push([content, uri]);
+        },
+      });
+      const outcome = await createNote(request('', { resolver }), hooks);
+      expect(outcome).toEqual({ status: 'opened-unsaved', uri: undefined });
+      expect(opened).toEqual([['body', undefined]]);
+      expect(writes).toEqual([]);
+      expect(created).toEqual([]);
+      expect(titleRequests).toBe(0);
+    });
+
+    it('opens an unsaved note associated with the title-derived path when the template uses a title but has no target (#1243)', async () => {
+      const opened: [string, URI | undefined][] = [];
+      const { hooks, writes, created, existsCalls } = makeHooks(
+        markdown('# ${FOAM_TITLE}'),
+        {
+          openUnsaved: async (content, uri) => {
+            opened.push([content, uri]);
+          },
+        }
+      );
+      const outcome = await createNote(request('My Note'), hooks);
+      const target = root.joinPath('My Note.md');
+      expect(outcome).toEqual({ status: 'opened-unsaved', uri: target });
+      expect(opened).toEqual([['# My Note', target]]);
+      expect(existsCalls).toEqual([target]);
+      expect(writes).toEqual([]);
+      expect(created).toEqual([]);
+    });
+
+    it('asks onFileExists before opening an unsaved note whose title-derived path already exists (#1243)', async () => {
+      const opened: [string, URI | undefined][] = [];
+      const asked: URI[] = [];
+      const other = root.joinPath('Other.md');
+      const { hooks, writes } = makeHooks(
+        markdown('# ${FOAM_TITLE}'),
+        {
+          onFileExists: async uri => {
+            asked.push(uri);
+            return other;
+          },
+          openUnsaved: async (content, uri) => {
+            opened.push([content, uri]);
+          },
+        },
+        ['/ws/My Note.md']
+      );
+      const outcome = await createNote(request('My Note'), hooks);
+      expect(asked).toEqual([root.joinPath('My Note.md')]);
+      expect(outcome).toEqual({ status: 'opened-unsaved', uri: other });
+      expect(opened).toEqual([['# My Note', other]]);
+      expect(writes).toEqual([]);
+    });
+
+    it('lets onFileExists keep an existing title-derived path for the unsaved note, which it must not delete (#1243)', async () => {
+      const opened: [string, URI | undefined][] = [];
+      const intents: string[] = [];
+      const target = root.joinPath('My Note.md');
+      const { hooks, writes } = makeHooks(
+        markdown('# ${FOAM_TITLE}'),
+        {
+          // Stop after two calls so a regression fails instead of looping.
+          onFileExists: async (_uri, intent) => {
+            intents.push(intent);
+            return intents.length > 1 ? undefined : 'keep';
+          },
+          openUnsaved: async (content, uri) => {
+            opened.push([content, uri]);
+          },
+        },
+        ['/ws/My Note.md']
+      );
+      const outcome = await createNote(request('My Note'), hooks);
+      expect(intents).toEqual(['open-unsaved']);
+      expect(outcome).toEqual({ status: 'opened-unsaved', uri: target });
+      expect(opened).toEqual([['# My Note', target]]);
+      expect(writes).toEqual([]);
+    });
+
+    it('checks a returned path again even when it equals the existing unsaved target (#1243)', async () => {
+      const opened: string[] = [];
+      const asked: URI[] = [];
+      const other = root.joinPath('Other.md');
+      const { hooks } = makeHooks(
+        markdown('# ${FOAM_TITLE}'),
+        {
+          // First answer: the same path, as when the prompt's default is kept.
+          onFileExists: async uri => {
+            asked.push(uri);
+            return asked.length === 1 ? uri : other;
+          },
+          openUnsaved: async content => {
+            opened.push(content);
+          },
+        },
+        ['/ws/My Note.md']
+      );
+      const outcome = await createNote(request('My Note'), hooks);
+      const target = root.joinPath('My Note.md');
+      expect(asked).toEqual([target, target]);
+      expect(outcome).toEqual({ status: 'opened-unsaved', uri: other });
+      expect(opened).toEqual(['# My Note']);
+    });
+
+    it('tells onFileExists that an existing file target is about to be written', async () => {
+      const intents: string[] = [];
+      const { hooks } = makeHooks(
+        markdown('x', '/own.md'),
+        {
+          onFileExists: async (_uri, intent) => {
+            intents.push(intent);
+            return undefined;
+          },
+        },
+        ['/ws/own.md']
+      );
+      await createNote(request(), hooks);
+      expect(intents).toEqual(['write']);
+    });
+
+    it('opens nothing when onFileExists stops on an existing title-derived path', async () => {
+      const opened: string[] = [];
+      const { hooks } = makeHooks(
+        markdown('# ${FOAM_TITLE}'),
+        {
+          openUnsaved: async content => {
+            opened.push(content);
+          },
+        },
+        ['/ws/My Note.md']
+      );
+      const outcome = await createNote(request('My Note'), hooks);
+      expect(outcome).toEqual({
+        status: 'exists',
+        uri: root.joinPath('My Note.md'),
+      });
+      expect(opened).toEqual([]);
+    });
+
+    it('creates a file from the built-in default text even when the client can open unsaved notes', async () => {
+      const opened: string[] = [];
+      const { hooks, writes } = makeHooks(undefined, {
+        openUnsaved: async content => {
+          opened.push(content);
+        },
+      });
+      const outcome = await createNote(request('Hello'), hooks);
+      expect(outcome).toEqual({
+        status: 'created',
+        uri: root.joinPath('Hello.md'),
+      });
+      expect(writes).toEqual([[root.joinPath('Hello.md'), '# Hello\n\n']]);
+      expect(opened).toEqual([]);
+    });
+
+    it('keeps creating a file named from the title prompt when the client cannot open unsaved notes', async () => {
+      let titleRequests = 0;
+      const resolver = new Resolver(
+        new Map(),
+        new Date(),
+        undefined,
+        'default',
+        {
+          resolveTitle: async () => {
+            titleRequests++;
+            return 'Prompted';
+          },
+          resolveSelectedText: () => '',
+          resolveCurrentDir: () => '/ws',
+        }
+      );
+      const { hooks, writes } = makeHooks(markdown('body'));
+      const outcome = await createNote(request('', { resolver }), hooks);
+      expect(titleRequests).toBe(1);
+      expect(outcome).toEqual({
+        status: 'created',
+        uri: root.joinPath('Prompted.md'),
+      });
+      expect(writes).toEqual([[root.joinPath('Prompted.md'), 'body']]);
+    });
+
     it('resolves Foam variables in JavaScript template content', async () => {
       const template: Template = {
         type: 'javascript',

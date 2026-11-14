@@ -184,6 +184,100 @@ Content without filepath metadata.`,
       expect(result.filepath.path).toBe('My New Note.md'); // Should generate from title
     });
 
+    it('returns an unsaved note instead of a filepath when the template has no target and uses no title variable (#1243)', async () => {
+      const { engine } = await setupFoamEngine();
+      let titleRequests = 0;
+      const resolver = new Resolver(
+        new Map(),
+        new Date(),
+        undefined,
+        'default',
+        {
+          resolveTitle: async () => {
+            titleRequests++;
+            return 'Prompted';
+          },
+          resolveSelectedText: () => '',
+          resolveCurrentDir: () => '/',
+        }
+      );
+      const result = await engine.processTemplate(
+        TriggerFactory.createCommandTrigger(
+          'foam-vscode.create-note-from-template'
+        ),
+        {
+          type: 'markdown',
+          content: 'body with a ${1:tabstop}',
+          metadata: new Map(),
+        },
+        resolver,
+        { canOpenUnsaved: true }
+      );
+      expect(result).toEqual({
+        unsaved: true,
+        content: 'body with a ${1:tabstop}',
+      });
+      expect(titleRequests).toBe(0);
+    });
+
+    it.each([
+      ['FOAM_TITLE', '# ${FOAM_TITLE}', '# Prompted Title'],
+      ['FOAM_TITLE_SAFE', '# ${FOAM_TITLE_SAFE}', '# Prompted Title'],
+      ['FOAM_SLUG', '# ${FOAM_SLUG}', '# prompted-title'],
+    ])(
+      'prompts once and returns an unsaved note named after the title for a %s template with no target (#1243)',
+      async (_variable, content, expectedContent) => {
+        const { engine } = await setupFoamEngine();
+        let titleRequests = 0;
+        const resolver = new Resolver(
+          new Map(),
+          new Date(),
+          undefined,
+          'default',
+          {
+            resolveTitle: async () => {
+              titleRequests++;
+              return 'Prompted Title';
+            },
+            resolveSelectedText: () => '',
+            resolveCurrentDir: () => '/',
+          }
+        );
+        const result = await engine.processTemplate(
+          TriggerFactory.createCommandTrigger(
+            'foam-vscode.create-note-from-template'
+          ),
+          { type: 'markdown', content, metadata: new Map() },
+          resolver,
+          { canOpenUnsaved: true }
+        );
+        expect(titleRequests).toBe(1);
+        if (!('unsaved' in result)) {
+          throw new Error('expected an unsaved result');
+        }
+        expect(result.content).toBe(expectedContent);
+        expect(result.suggestedFilepath?.isAbsolute()).toBe(false);
+        expect(result.suggestedFilepath?.path).toBe('Prompted Title.md');
+      }
+    );
+
+    it('prefers the given default filepath over an unsaved note', async () => {
+      const { engine } = await setupFoamEngine();
+      const defaultFilepath = URI.file('/notes/known.md');
+      const result = await engine.processTemplate(
+        TriggerFactory.createCommandTrigger(
+          'foam-vscode.create-note-from-template'
+        ),
+        { type: 'markdown', content: 'body', metadata: new Map() },
+        new Resolver(new Map(), new Date()),
+        { canOpenUnsaved: true, defaultFilepath }
+      );
+      if ('unsaved' in result) {
+        throw new Error('expected a file result');
+      }
+      expect(result.filepath).toEqual(defaultFilepath);
+    });
+
     it('prompts for the title at most once when the template uses FOAM_TITLE and has no filepath (#1243)', async () => {
       const { engine } = await setupFoamEngine();
       let titleRequests = 0;

@@ -5,6 +5,7 @@ import { Logger } from '../utils/log';
 import {
   NoteCreationResult,
   NoteCreationTrigger,
+  ProcessedTemplate,
   Template,
   TemplateContext,
   isCommandTrigger,
@@ -38,6 +39,15 @@ export interface ProcessTemplateOptions {
    * known. JavaScript templates return their own filepath.
    */
   defaultFilepath?: URI;
+  /**
+   * Whether the client can open the note as an unsaved editor. When set, a
+   * markdown template with no `filepath` and no `defaultFilepath` yields an
+   * `UnsavedNoteResult` (#1243), suggesting a name only when a title is
+   * already available (see `Resolver.isTitleAvailable`) — the title prompt
+   * belongs to the template's content, not to its target. Clients without
+   * the capability keep deriving a filename from the title.
+   */
+  canOpenUnsaved?: boolean;
 }
 
 /**
@@ -61,11 +71,11 @@ export class NoteCreationEngine {
     template: Template,
     resolver: Resolver,
     options: ProcessTemplateOptions = {}
-  ): Promise<NoteCreationResult> {
+  ): Promise<ProcessedTemplate> {
     Logger.info(`Processing ${template.type} template`);
     this.logTriggerInfo(trigger);
 
-    let result: NoteCreationResult | null = null;
+    let result: ProcessedTemplate | null = null;
     switch (template.type) {
       case 'javascript':
         result = await this.executeJSTemplate(trigger, template, resolver);
@@ -131,7 +141,7 @@ export class NoteCreationEngine {
     template: Template & { type: 'markdown' },
     resolver: Resolver,
     options: ProcessTemplateOptions
-  ): Promise<NoteCreationResult> {
+  ): Promise<ProcessedTemplate> {
     // Use the provided resolver directly for variable resolution
     const resolvedContent = await resolver.resolveText(template.content);
 
@@ -150,24 +160,42 @@ export class NoteCreationEngine {
       return { filepath: options.defaultFilepath, content: cleanContent };
     }
 
-    // Determine filepath - get variables from resolver for default generation
-    let filepath =
-      templateFilepath ?? (await this.generateDefaultFilepath(resolver));
+    // The target is decided by `filepath` alone, the title prompt by the
+    // content alone (#1243): without a `filepath` the note opens unsaved,
+    // and a title, when the template uses one, only suggests its name.
+    if (!templateFilepath && options.canOpenUnsaved) {
+      return resolver.isTitleAvailable()
+        ? {
+            unsaved: true,
+            content: cleanContent,
+            suggestedFilepath: this.toTargetUri(
+              await this.generateDefaultFilepath(resolver)
+            ),
+          }
+        : { unsaved: true, content: cleanContent };
+    }
 
-    // Sanitize the filepath to remove invalid characters
-    filepath = sanitizeFilepath(filepath);
-
-    // Only resolve absolute paths via workspace (fixes #1537 path doubling).
-    // Relative paths are left as-is for NoteFactory to resolve downstream,
-    // but backslashes are normalized to forward slashes (mirrors fromFsPath).
-    const isAbsolutePath =
-      filepath.startsWith('/') || /^[a-zA-Z]:/.test(filepath);
     return {
-      filepath: isAbsolutePath
-        ? this.foam.workspace.resolveNoteUri(filepath)
-        : new URI({ scheme: 'file', path: filepath.replace(/\\/g, '/') }),
+      filepath: this.toTargetUri(
+        templateFilepath ?? (await this.generateDefaultFilepath(resolver))
+      ),
       content: cleanContent,
     };
+  }
+
+  /**
+   * Turns a template filepath into a target URI: sanitized, absolute paths
+   * resolved via the workspace (fixes #1537 path doubling), relative ones
+   * left relative for the caller to resolve, with backslashes normalized to
+   * forward slashes (mirrors fromFsPath).
+   */
+  private toTargetUri(rawFilepath: string): URI {
+    const filepath = sanitizeFilepath(rawFilepath);
+    const isAbsolutePath =
+      filepath.startsWith('/') || /^[a-zA-Z]:/.test(filepath);
+    return isAbsolutePath
+      ? this.foam.workspace.resolveNoteUri(filepath)
+      : new URI({ scheme: 'file', path: filepath.replace(/\\/g, '/') });
   }
 
   /**

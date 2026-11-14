@@ -210,9 +210,9 @@ describe('createNote', () => {
         markdown('# ${FOAM_TITLE}'),
         {
           // Stop after two calls so a regression fails instead of looping.
-          onFileExists: async (uri, intent) => {
+          onFileExists: async (_uri, intent) => {
             intents.push(intent);
-            return intents.length > 1 ? undefined : uri;
+            return intents.length > 1 ? undefined : 'keep';
           },
           openUnsaved: async (content, uri) => {
             opened.push([content, uri]);
@@ -225,6 +225,31 @@ describe('createNote', () => {
       expect(outcome).toEqual({ status: 'opened-unsaved', uri: target });
       expect(opened).toEqual([['# My Note', target]]);
       expect(writes).toEqual([]);
+    });
+
+    it('checks a returned path again even when it equals the existing unsaved target (#1243)', async () => {
+      const opened: string[] = [];
+      const asked: URI[] = [];
+      const other = root.joinPath('Other.md');
+      const { hooks } = makeHooks(
+        markdown('# ${FOAM_TITLE}'),
+        {
+          // First answer: the same path, as when the prompt's default is kept.
+          onFileExists: async uri => {
+            asked.push(uri);
+            return asked.length === 1 ? uri : other;
+          },
+          openUnsaved: async content => {
+            opened.push(content);
+          },
+        },
+        ['/ws/My Note.md']
+      );
+      const outcome = await createNote(request('My Note'), hooks);
+      const target = root.joinPath('My Note.md');
+      expect(asked).toEqual([target, target]);
+      expect(outcome).toEqual({ status: 'opened-unsaved', uri: other });
+      expect(opened).toEqual(['# My Note']);
     });
 
     it('tells onFileExists that an existing file target is about to be written', async () => {

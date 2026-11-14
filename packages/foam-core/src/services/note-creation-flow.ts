@@ -50,18 +50,19 @@ export interface NoteCreationHooks {
   fileExists: (uri: URI) => Promise<boolean>;
   /**
    * Called when a file already exists at the target. Return a new target
-   * to retry with (it goes through the same checks), or `undefined` to stop
-   * with an `exists` outcome. `intent` says what the target is for:
+   * to retry with (it goes through the same checks, even when it equals
+   * `uri`), or `undefined` to stop with an `exists` outcome. `intent` says
+   * what the target is for:
    * - `'write'`: the note is written there next. Deleting the file for an
    *   overwrite belongs here.
    * - `'open-unsaved'`: the note opens unsaved and nothing is written until
-   *   the user saves, so the file must not be deleted. Returning `uri`
-   *   itself keeps it as the target, to be replaced on save.
+   *   the user saves, so the file must not be deleted. Return `'keep'` to
+   *   keep it as the target, to be replaced on save.
    */
   onFileExists: (
     uri: URI,
     intent: NoteTargetIntent
-  ) => Promise<URI | undefined>;
+  ) => Promise<URI | 'keep' | undefined>;
   /**
    * Called when the target is relative. Return an absolute target, or
    * `undefined` to stop with a `cancelled` outcome. Defaults to resolving
@@ -78,7 +79,7 @@ export interface NoteCreationHooks {
    * no `fallbackFilepath` then opens unsaved (#1243). `uri`
    * is where saving it should go — named after the title when one is known,
    * and already resolved and checked like a file target (a file may exist
-   * there when `onFileExists` kept it) — or `undefined`
+   * there when `onFileExists` returned `'keep'`) — or `undefined`
    * when the user names it on save. Without the hook, a filename is derived
    * from the title as before. The built-in template declares a `filepath`,
    * so it always creates a file. `onDidCreate` does not run: nothing exists
@@ -220,9 +221,16 @@ export async function createNote(
         return { stopped: { status: 'exists', uri: target } };
       }
       // An unsaved note may open over the existing file, which is only
-      // replaced when the user saves.
-      if (intent === 'open-unsaved' && next.isEqual(target)) {
-        return { target };
+      // replaced when the user saves. Any path, even the same one, is
+      // checked again: a prompt answered with its default must not count
+      // as a decision to keep the file.
+      if (next === 'keep') {
+        if (intent === 'open-unsaved') {
+          return { target };
+        }
+        throw new Error(
+          "onFileExists can only 'keep' a target for an unsaved note"
+        );
       }
       candidate = next;
     }

@@ -436,6 +436,34 @@ describe('create-note command', () => {
       await deleteFile(template.uri);
     });
 
+    it('asks again when the collision prompt is answered with the same path (#1243)', async () => {
+      const template = await createFile('# ${FOAM_TITLE}', [
+        '.foam',
+        'templates',
+        'titled-same-answer-template.md',
+      ]);
+      const first = asAbsoluteWorkspaceUri(URI.file('Same Title.md'));
+      const other = asAbsoluteWorkspaceUri(URI.file('Different Title.md'));
+      const spy = vi
+        .spyOn(window, 'showInputBox')
+        .mockImplementationOnce(() => Promise.resolve('Same Title'))
+        .mockImplementationOnce(() => Promise.resolve('Same Title'))
+        .mockImplementationOnce(() => Promise.resolve(first.toFsPath()))
+        .mockImplementationOnce(() => Promise.resolve(other.toFsPath()));
+      const args = {
+        templatePath: template.uri.path,
+        onRelativeNotePath: 'resolve-from-root',
+      };
+      await commands.executeCommand('foam-vscode.create-note', args);
+      const firstDoc = window.activeTextEditor.document;
+      await commands.executeCommand('foam-vscode.create-note', args);
+      expect(spy).toHaveBeenCalledTimes(4);
+      expect(firstDoc.getText()).toEqual('# Same Title');
+      expect(window.activeTextEditor.document.uri.path).toEqual(other.path);
+      await closeEditors();
+      await deleteFile(template.uri);
+    });
+
     it('asks for another path when an unsaved note with the same title is already open (#1243)', async () => {
       const template = await createFile('# ${FOAM_TITLE}', [
         '.foam',

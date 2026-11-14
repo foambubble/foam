@@ -32,7 +32,10 @@ export type OnFileExistStrategy =
   | 'overwrite'
   | 'cancel'
   | 'ask'
-  | ((filePath: URI, intent: NoteTargetIntent) => Promise<URI | undefined>);
+  | ((
+      filePath: URI,
+      intent: NoteTargetIntent
+    ) => Promise<URI | 'keep' | undefined>);
 
 export type OnRelativePathStrategy =
   | 'resolve-from-root'
@@ -96,10 +99,11 @@ const createFnForOnFileExistsStrategy =
         if (findUnsavedDocAt(existingFile)) {
           return askForAnotherPath(existingFile);
         }
-        // An unsaved note replaces the file only when the user saves it.
-        if (intent === 'write') {
-          await deleteFile(existingFile);
+        if (intent === 'open-unsaved') {
+          // The unsaved note replaces the file only when the user saves it.
+          return 'keep';
         }
+        await deleteFile(existingFile);
         return existingFile;
       case 'cancel':
         return undefined;

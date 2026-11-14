@@ -521,22 +521,32 @@ describe('create-note command', () => {
         .mockImplementationOnce((options: any) =>
           Promise.resolve(options.value)
         )
-        .mockImplementationOnce(() => Promise.resolve('Scaffold Note'));
+        .mockImplementationOnce(() => Promise.resolve('Scaffold Note'))
+        .mockImplementationOnce(() => Promise.resolve('Scaffold Note 2'));
       await commands.executeCommand('foam-vscode.create-new-template');
       const scaffoldUri = asAbsoluteWorkspaceUri(
         URI.file('.foam/templates/new-template.md')
       );
-
-      await commands.executeCommand('foam-vscode.create-note', {
+      const args = {
         templatePath: scaffoldUri.path,
         onRelativeNotePath: 'resolve-from-root',
-      });
+      };
+
+      await commands.executeCommand('foam-vscode.create-note', args);
       expect(spy).toHaveBeenCalledTimes(2);
       const target = asAbsoluteWorkspaceUri(URI.file('Scaffold Note.md'));
       expect(window.activeTextEditor.document.uri.scheme).toEqual('file');
       expectSameUri(target, window.activeTextEditor?.document.uri);
+
+      await commands.executeCommand('foam-vscode.create-note', args);
+      expect(spy).toHaveBeenCalledTimes(3);
+      const second = asAbsoluteWorkspaceUri(URI.file('Scaffold Note 2.md'));
+      expectSameUri(second, window.activeTextEditor?.document.uri);
+      expect(existsSync(target.toFsPath())).toBe(true);
+      expect(existsSync(second.toFsPath())).toBe(true);
       await closeEditors();
       await deleteFile(target);
+      await deleteFile(second);
       await deleteFile(scaffoldUri);
     });
 

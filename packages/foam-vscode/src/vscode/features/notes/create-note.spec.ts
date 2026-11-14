@@ -394,10 +394,11 @@ describe('create-note command', () => {
       expect(doc.getText()).toEqual('# Kept Title');
       expect(existsSync(existing.uri.toFsPath())).toBe(true);
       // The mock writes edits through to disk and never marks a document
-      // dirty; in VS Code the original stays on disk until the save.
-      expect(await readFile(existing.uri)).toEqual(
-        doc.isDirty ? 'ORIGINAL' : '# Kept Title'
-      );
+      // dirty, so only VS Code (e2e) can show the original surviving until
+      // the save.
+      if (doc.isDirty) {
+        expect(await readFile(existing.uri)).toEqual('ORIGINAL'); // eslint-disable-line jest/no-conditional-expect
+      }
       await doc.save();
       expect(await readFile(existing.uri)).toEqual('# Kept Title');
       await closeEditors();

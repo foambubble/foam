@@ -72,15 +72,20 @@ function parseDirectLink(text: string) {
   let url = text.slice(divider + 2, text.length - 1);
   /** Offset of `url` in `text` */
   let urlOffset = divider + 2;
+  /** What follows the url, as written: the whitespace and the quoted title */
+  let title = '';
   if (url.startsWith('<')) {
     const close = url.indexOf('>');
     if (close < 0) {
       return undefined;
     }
+    title = url.slice(close + 1);
     url = url.slice(1, close);
     urlOffset += 1;
   } else {
-    url = withoutTitle(url);
+    const withoutIt = withoutTitle(url);
+    title = url.slice(withoutIt.length);
+    url = withoutIt;
   }
   const hash = url.indexOf('#');
   return {
@@ -89,6 +94,7 @@ function parseDirectLink(text: string) {
     section: hash < 0 ? '' : url.slice(hash + 1),
     /** Offset of `section` in `text`, -1 without a `#` */
     sectionOffset: hash < 0 ? -1 : urlOffset + hash + 1,
+    title,
   };
 }
 
@@ -160,13 +166,14 @@ export abstract class MarkdownLink {
             alias: alias,
           };
         }
-        const { alias, target, section } = parsed;
+        const { alias, target, section, title } = parsed;
         const blockMatch = section?.match(/^\^([a-zA-Z0-9-]+)$/);
         return {
           target,
           section: blockMatch ? '' : section,
           blockId: blockMatch?.[1] ?? '',
           alias: alias ?? '',
+          title,
         };
       }
       throw new Error(`Link of type ${link.type} is not supported`);
@@ -245,7 +252,8 @@ export abstract class MarkdownLink {
     if (link.type === 'external') {
       throw new Error('Cannot update an external link');
     }
-    const { target, section, blockId, alias } = MarkdownLink.analyzeLink(link);
+    const { target, section, blockId, alias, title } =
+      MarkdownLink.analyzeLink(link);
     const newTarget = delta.target ?? target;
     // Preserve the existing fragment (section or block anchor) when not overriding.
     const existingFragment = blockId ? `^${blockId}` : section;
@@ -269,12 +277,16 @@ export abstract class MarkdownLink {
       const defaultAlias = () => {
         return `${newTarget}${sectionDivider}${newSection}`;
       };
-      const useAngles =
-        newTarget.includes(' ') || newSection.includes(' ');
+      const useAngles = newTarget.includes(' ') || newSection.includes(' ');
+      // A title the link carried, as written. Only a link has one, so it goes
+      // when converting to a wikilink, which cannot hold it.
+      const keptTitle = type === link.type ? title ?? '' : '';
       return {
         newText: `${embed}[${newAlias ? newAlias : defaultAlias()}](${
           useAngles ? '<' : ''
-        }${newTarget}${sectionDivider}${newSection}${useAngles ? '>' : ''})`,
+        }${newTarget}${sectionDivider}${newSection}${
+          useAngles ? '>' : ''
+        }${keptTitle})`,
         range: link.range,
       };
     }

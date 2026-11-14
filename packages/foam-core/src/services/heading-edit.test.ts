@@ -711,6 +711,30 @@ Content.
       ]);
     });
 
+    it('should keep a markdown link title through the rename', () => {
+      const ws = createTestWorkspace();
+      const noteA = createNoteFromMarkdown('/note-a.md', '## My Section\n');
+      const noteB = createNoteFromMarkdown(
+        '/note-b.md',
+        '[x](note-a.md#my-section "Setup guide")\n\n[y](<note-a.md#My Section> \'Guide\')'
+      );
+      ws.set(noteA).set(noteB);
+      const graph = FoamGraph.fromWorkspace(ws);
+
+      const result = HeadingEdit.createRenameSectionEdits(
+        graph,
+        ws,
+        noteA.uri,
+        'My Section',
+        'New Section'
+      );
+
+      expect(result.edits.map(e => e.edit.newText)).toEqual([
+        '[x](note-a.md#new-section "Setup guide")',
+        "[y](<note-a.md#New Section> 'Guide')",
+      ]);
+    });
+
     it('should leave a link whose slug names a different heading', () => {
       const ws = createTestWorkspace();
       const noteA = createNoteFromMarkdown(

@@ -40,6 +40,26 @@ describe('resolveStyle', () => {
     expect(result.node.placeholder).toBe(defaults.node.placeholder);
   });
 
+  it('applies node styles per type from payload.style.nodeStyle', () => {
+    const result = resolveStyle(
+      { style: { nodeStyle: { tag: { shape: 'diamond' } } } },
+      makeStyle({ nodeStyle: { placeholder: { outline: 'dashed' } } })
+    );
+    expect(result.nodeStyle).toEqual({
+      tag: { shape: 'diamond' },
+      placeholder: { outline: 'dashed' },
+    });
+  });
+
+  it('keeps the default node styles when payload.style.nodeStyle is null', () => {
+    // a style arrives unvalidated, so any of its keys can be null
+    const result = resolveStyle(
+      { style: { nodeStyle: null as any } },
+      defaults
+    );
+    expect(result.nodeStyle).toEqual(defaults.nodeStyle);
+  });
+
   it('uses explicit lineColor from payload.style', () => {
     const result = resolveStyle({ style: { lineColor: '#123456' } }, defaults);
     expect(result.lineColor).toBe('#123456');

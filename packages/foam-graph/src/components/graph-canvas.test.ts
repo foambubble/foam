@@ -424,6 +424,21 @@ describe('tap size (AC-5)', () => {
     expect(isFilledAt(ctx, hitColor, 39, 0)).toBe(true);
   });
 
+  it('keeps the drawn area of a diamond larger than the minimum tap size', () => {
+    const style = makeStyle({
+      nodeStyle: { note: { shape: 'diamond', size: 40 } },
+    });
+
+    const ctx = hitArea(place({ id: 'n', type: 'note' }), {
+      style,
+      minTapSize: 44,
+      zoom: 1,
+    });
+
+    // inside the diamond's corner, outside both the tap circle and a circle of radius 40
+    expect(isFilledAt(ctx, hitColor, 0, 50)).toBe(true);
+  });
+
   it('hits a diamond within its drawn shape', () => {
     const style = makeStyle({
       nodeStyle: { note: { shape: 'diamond', size: 10 } },

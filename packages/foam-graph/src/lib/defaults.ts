@@ -20,6 +20,7 @@ export function getDefaultStyle(): ResolvedStyle {
         getCSSVar('--vscode-list-deemphasizedForeground') || '#545454',
       tag: getCSSVar('--vscode-list-highlightForeground') || '#f9c74f',
     },
+    nodeStyle: {},
     colorMode: 'type',
     groups: [],
   };

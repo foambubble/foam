@@ -38,6 +38,21 @@ export interface StyleConfig {
     tag?: string;
     [key: string]: string | undefined;
   };
+  /** How the nodes of each type are drawn, beside their colour in `node`. */
+  nodeStyle?: Record<string, NodeStyle | undefined>;
+}
+
+/** How the nodes of one type are drawn. Each field left out keeps the default. */
+export interface NodeStyle {
+  /** Default `circle`. A diamond is a square the circle's diameter wide, turned 45°. */
+  shape?: 'circle' | 'diamond';
+  /** Drawn as an outline in the type's colour instead of filled. */
+  outline?: 'solid' | 'dashed';
+  /**
+   * A fixed radius, in place of one grown from the link count (0.6 with no
+   * links to 3 at 30). The node size multiplier applies to both.
+   */
+  size?: number;
 }
 
 export type GroupMatchProperty = 'type' | 'path' | 'tag' | 'title' | string;

@@ -89,6 +89,8 @@ export class FoamGraph extends LitElement {
   @property({ type: Object }) graphScope: GraphScope =
     defaultViewState().graphScope;
   @property({ type: Number }) maxFitZoom: number | null = null;
+  /** The smallest area, in screen px across, that taps or clicks a node. */
+  @property({ type: Number }) minTapSize: number | null = null;
   @property({ type: Object }) labels: Labels = defaultViewState().labels;
   @property({ type: Object }) forces: Forces = defaultViewState().forces;
   @property({ type: Number }) linkWidthMultiplier: number =
@@ -242,6 +244,7 @@ export class FoamGraph extends LitElement {
         .labelMaxLength=${this.labelMaxLength}
         .animateLinks=${this.animateLinks}
         .maxFitZoom=${this.maxFitZoom}
+        .minTapSize=${this.minTapSize}
         @canvas-node-click=${(e: CustomEvent) =>
           this._onCanvasNodeClick(e.detail)}
         @canvas-node-hover=${(e: CustomEvent) => (this.hoverNodeId = e.detail)}
@@ -421,6 +424,19 @@ export class FoamGraph extends LitElement {
     this.dispatchEvent(
       new CustomEvent('view-state-change', { bubbles: true, composed: true })
     );
+  }
+
+  /**
+   * Fits the graph into view once its layout has settled, or at once if it
+   * has. The view fits only its first graph by itself: call this after
+   * setting `graphData` to fit a later one.
+   */
+  async zoomToFit() {
+    // a new graph reaches the canvas one update after it reaches this element
+    let done = await this.updateComplete;
+    while (!done) done = await this.updateComplete;
+    await this.canvas?.updateComplete;
+    this.canvas?.fitWhenSettled();
   }
 
   selectNote(noteId: string) {

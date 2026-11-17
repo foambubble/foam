@@ -1,9 +1,17 @@
 import type { RGBColor } from 'd3-color';
+import { traceShape, type NodeShape } from './node-style';
 
-interface Circle {
+interface Shape {
   x: number;
   y: number;
   radius: number;
+  shape: NodeShape;
+}
+
+interface Outline extends Shape {
+  color: RGBColor;
+  background: RGBColor;
+  dashed: boolean;
 }
 
 interface Label {
@@ -16,32 +24,50 @@ interface Label {
 }
 
 export class Painter {
-  private circlesByColor: Map<RGBColor, Circle[]> = new Map();
-  private bordersByColor: Map<RGBColor, Circle[]> = new Map();
+  private fillsByColor: Map<RGBColor, Shape[]> = new Map();
+  private bordersByColor: Map<RGBColor, Shape[]> = new Map();
+  private outlines: Outline[] = [];
   private texts: Label[] = [];
   private screenTexts: Label[] = [];
 
-  private _addCircle(
-    x: number,
-    y: number,
-    radius: number,
-    color: RGBColor,
-    isBorder = false
-  ): void {
+  private _addShape(shape: Shape, color: RGBColor, isBorder = false): void {
     if (color.opacity <= 0) return;
-    const target = isBorder ? this.bordersByColor : this.circlesByColor;
+    const target = isBorder ? this.bordersByColor : this.fillsByColor;
     if (!target.has(color)) target.set(color, []);
-    target.get(color)!.push({ x, y, radius });
+    target.get(color)!.push(shape);
   }
 
   private _areSameColor(a: RGBColor, b: RGBColor): boolean {
     return a.r === b.r && a.g === b.g && a.b === b.b && a.opacity === b.opacity;
   }
 
-  circle(x: number, y: number, radius: number, fill: RGBColor, border: RGBColor): this {
-    this._addCircle(x, y, radius + 0.2, border, true);
+  node(
+    x: number,
+    y: number,
+    radius: number,
+    shape: NodeShape,
+    fill: RGBColor,
+    border: RGBColor
+  ): this {
+    this._addShape({ x, y, radius: radius + 0.2, shape }, border, true);
     if (!this._areSameColor(border, fill)) {
-      this._addCircle(x, y, radius, fill);
+      this._addShape({ x, y, radius, shape }, fill);
+    }
+    return this;
+  }
+
+  /** A node drawn as its outline, over `background` so links don't show through. */
+  outlinedNode(
+    x: number,
+    y: number,
+    radius: number,
+    shape: NodeShape,
+    color: RGBColor,
+    background: RGBColor,
+    dashed: boolean
+  ): this {
+    if (color.opacity > 0) {
+      this.outlines.push({ x, y, radius, shape, color, background, dashed });
     }
     return this;
   }
@@ -76,18 +102,32 @@ export class Painter {
 
   paint(ctx: CanvasRenderingContext2D): this {
     // Draw borders first, then fills
-    for (const target of [this.bordersByColor, this.circlesByColor]) {
-      for (const [color, circles] of target.entries()) {
+    for (const target of [this.bordersByColor, this.fillsByColor]) {
+      for (const [color, shapes] of target.entries()) {
         ctx.beginPath();
         ctx.fillStyle = color.toString();
-        for (const c of circles) {
-          ctx.arc(c.x, c.y, c.radius, 0, 2 * Math.PI, false);
+        for (const s of shapes) {
+          traceShape(ctx, s.shape, s.x, s.y, s.radius);
         }
-        ctx.closePath();
         ctx.fill();
       }
       target.clear();
     }
+
+    // Line width and dashes grow with the node, so every outline looks alike
+    ctx.save();
+    for (const o of this.outlines) {
+      ctx.beginPath();
+      traceShape(ctx, o.shape, o.x, o.y, o.radius);
+      ctx.fillStyle = o.background.toString();
+      ctx.fill();
+      ctx.strokeStyle = o.color.toString();
+      ctx.lineWidth = o.radius / 4;
+      ctx.setLineDash(o.dashed ? [o.radius * 0.6, o.radius * 0.5] : []);
+      ctx.stroke();
+    }
+    ctx.restore();
+    this.outlines = [];
 
     // Draw labels
     ctx.textAlign = 'center';

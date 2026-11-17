@@ -15,6 +15,7 @@ export const makeStyle = (overrides: Partial<ResolvedStyle> = {}): ResolvedStyle
     placeholder: '#333333',
     tag: '#ffff00',
   },
+  nodeStyle: {},
   colorMode: 'type',
   ...overrides,
 });
@@ -35,6 +36,118 @@ export const makeGraph = (overrides: Partial<GraphData> = {}): GraphData => ({
   links: [],
   ...overrides,
 });
+
+export type RecordedShape =
+  | { kind: 'circle'; x: number; y: number; radius: number }
+  | { kind: 'diamond'; x: number; y: number; extent: number };
+
+export interface Drawing {
+  op: 'fill' | 'stroke';
+  color: string;
+  lineDash: number[];
+  shapes: RecordedShape[];
+}
+
+/**
+ * A 2D context that keeps what is filled and stroked, as circles and
+ * diamonds (four-point polygons), since happy-dom's canvas draws nothing.
+ */
+export class RecordingContext {
+  fillStyle = '';
+  strokeStyle = '';
+  lineWidth = 1;
+  font = '';
+  textAlign = '';
+  textBaseline = '';
+  readonly drawings: Drawing[] = [];
+  private lineDash: number[] = [];
+  private shapes: RecordedShape[] = [];
+  private points: Array<{ x: number; y: number }> = [];
+
+  beginPath() {
+    this.shapes = [];
+    this.points = [];
+  }
+  moveTo(x: number, y: number) {
+    this.endPolygon();
+    this.points = [{ x, y }];
+  }
+  lineTo(x: number, y: number) {
+    this.points.push({ x, y });
+  }
+  closePath() {
+    this.endPolygon();
+  }
+  arc(x: number, y: number, radius: number) {
+    this.points = [];
+    this.shapes.push({ kind: 'circle', x, y, radius });
+  }
+  fill() {
+    this.record('fill', this.fillStyle);
+  }
+  stroke() {
+    this.record('stroke', this.strokeStyle);
+  }
+  setLineDash(segments: number[]) {
+    this.lineDash = [...segments];
+  }
+  getTransform() {
+    return { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 } as DOMMatrix;
+  }
+  save() {}
+  restore() {}
+  setTransform() {}
+  fillText() {}
+
+  private record(op: Drawing['op'], color: string) {
+    this.endPolygon();
+    this.drawings.push({
+      op,
+      color,
+      lineDash: [...this.lineDash],
+      shapes: [...this.shapes],
+    });
+  }
+
+  private endPolygon() {
+    if (this.points.length === 4) {
+      const x = this.points.reduce((sum, p) => sum + p.x, 0) / 4;
+      const y = this.points.reduce((sum, p) => sum + p.y, 0) / 4;
+      const extent = Math.hypot(this.points[0].x - x, this.points[0].y - y);
+      this.shapes.push({ kind: 'diamond', x, y, extent });
+    }
+    this.points = [];
+  }
+}
+
+/** The drawings with a shape centred on (x, y). */
+export const drawingsAt = (ctx: RecordingContext, x: number, y: number) =>
+  ctx.drawings
+    .map(drawing => ({
+      ...drawing,
+      shapes: drawing.shapes.filter(
+        s => Math.abs(s.x - x) < 1e-9 && Math.abs(s.y - y) < 1e-9
+      ),
+    }))
+    .filter(drawing => drawing.shapes.length > 0);
+
+/** Whether (x, y) lies inside a shape filled in `color`. */
+export const isFilledAt = (
+  ctx: RecordingContext,
+  color: string,
+  x: number,
+  y: number
+) =>
+  ctx.drawings.some(
+    drawing =>
+      drawing.op === 'fill' &&
+      drawing.color === color &&
+      drawing.shapes.some(s =>
+        s.kind === 'circle'
+          ? Math.hypot(x - s.x, y - s.y) <= s.radius
+          : Math.abs(x - s.x) + Math.abs(y - s.y) <= s.extent
+      )
+  );
 
 export const fillOf = (
   node: GraphModelNode,

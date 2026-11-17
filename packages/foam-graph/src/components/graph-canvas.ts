@@ -9,7 +9,9 @@ import {
   forceLink,
 } from 'd3-force';
 import { scaleLinear } from 'd3-scale';
+import { rgb, type RGBColor } from 'd3-color';
 import { Painter } from '../lib/painter';
+import { getNodeRadius, getShapeExtent, traceShape } from '../lib/node-style';
 import { DEFAULT_LABEL_MAX_LENGTH, truncateLabel } from '../lib/labels';
 import {
   getNodeFillAndBorder,
@@ -150,6 +152,7 @@ export class GraphCanvas extends LitElement {
   @property({ type: String }) animateLinks: LinkAnimation = 'forward';
   @property({ type: Array }) groups: GroupRule[] = [];
   @property({ type: Number }) maxFitZoom: number | null = null;
+  @property({ type: Number }) minTapSize: number | null = null;
 
   // Mutable rendering state closed over by force-graph callbacks.
   private rs = {
@@ -178,10 +181,6 @@ export class GraphCanvas extends LitElement {
     this.rs.labelByNodeId = labels;
   }
 
-  private readonly getNodeSize = scaleLinear()
-    .domain([0, 30])
-    .range([0.6, 3])
-    .clamp(true);
   private readonly getNodeLabelOpacity = scaleLinear()
     .domain([1.2, 2.0])
     .range([0, 1])
@@ -189,9 +188,138 @@ export class GraphCanvas extends LitElement {
 
   private graphInstance: ReturnType<ReturnType<typeof ForceGraph>> | null =
     null;
+  private readonly painter = new Painter();
   private firstGraphLoad = true;
+  /** Whether the layout has stopped since the graph or the forces changed. */
+  private layoutSettled = false;
+  /** The duration of a fit waiting for the layout to settle. */
+  private pendingFitDuration: number | null = null;
+  private readonly onLayoutSettled = () => {
+    this.layoutSettled = true;
+    if (this.pendingFitDuration !== null) {
+      this.zoomToFit(this.pendingFitDuration);
+      this.pendingFitDuration = null;
+    }
+  };
   private resizeObserver: ResizeObserver | null = null;
   private readonly onResize = () => this.resizeGraphToViewport();
+
+  /**
+   * How many particles run along a link. Only highlighted links show theirs,
+   * and a link with none lets the canvas stop repainting once nothing moves.
+   */
+  private readonly particlesOnLink = (link: GraphModelLink) =>
+    this.rs.animateLinks !== 'off' &&
+    this.rs.graphStates?.linkStates.get(GraphModelLink.getKey(link)) ===
+      'highlighted'
+      ? 1
+      : 0;
+
+  /** Queues a node and its label on the painter; drawn after the frame. */
+  private readonly paintNode = (
+    node: any,
+    ctx: CanvasRenderingContext2D,
+    globalScale: number
+  ) => {
+    const info = this.rs.nodeInfo[node.id];
+    if (!info) return;
+
+    const radius = getNodeRadius(
+      info,
+      this.rs.style,
+      this.rs.nodeSizeMultiplier
+    );
+    const { shape = 'circle', outline } =
+      this.rs.style.nodeStyle[info.type] ?? {};
+    const state = this.rs.graphStates?.nodeStates.get(node.id) ?? 'regular';
+    const { fill, border } = getNodeFillAndBorder(
+      info,
+      state,
+      this.rs.style,
+      this.rs.colorMode,
+      this.rs.groups
+    );
+    const fontSize = computeLabelFontSize(
+      this.rs.style.fontSize,
+      this.rs.nodeFontSizeMultiplier
+    );
+    const opacity = computeLabelOpacity(
+      state,
+      globalScale,
+      fill.opacity,
+      scale => this.getNodeLabelOpacity(scale),
+      this.labels
+    );
+
+    const textColor = getNodeLabelColor(fill, state, opacity, this.rs.style);
+
+    const labelPosition = graphPointToViewport(
+      ctx.getTransform(),
+      node.x,
+      node.y + getShapeExtent(shape, radius) + 1,
+      window.devicePixelRatio || 1
+    );
+
+    if (outline) {
+      const background = rgb(this.rs.style.background).copy({
+        opacity: fill.opacity,
+      }) as RGBColor;
+      this.painter.outlinedNode(
+        node.x,
+        node.y,
+        radius,
+        shape,
+        fill,
+        background,
+        outline === 'dashed'
+      );
+    } else {
+      this.painter.node(node.x, node.y, radius, shape, fill, border);
+    }
+    this.painter.screenText(
+      this.rs.labelByNodeId[node.id] ?? info.title,
+      labelPosition.x,
+      labelPosition.y,
+      fontSize,
+      this.rs.style.fontFamily,
+      textColor as any
+    );
+  };
+
+  /**
+   * Paints the area that hovers and clicks a node, on the hit-test canvas:
+   * the node as drawn, and at least `minTapSize` screen px across.
+   */
+  private readonly paintHitArea = (
+    node: any,
+    color: string,
+    ctx: CanvasRenderingContext2D,
+    globalScale: number
+  ) => {
+    const info = this.rs.nodeInfo[node.id];
+    if (!info) return;
+    const radius = getNodeRadius(
+      info,
+      this.rs.style,
+      this.rs.nodeSizeMultiplier
+    );
+    const shape = this.rs.style.nodeStyle[info.type]?.shape ?? 'circle';
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    traceShape(ctx, shape, node.x, node.y, radius);
+    ctx.fill();
+    if (this.minTapSize) {
+      ctx.beginPath();
+      traceShape(
+        ctx,
+        'circle',
+        node.x,
+        node.y,
+        this.minTapSize / 2 / globalScale
+      );
+      ctx.fill();
+    }
+  };
 
   render() {
     return html`<div id="canvas-container"></div>`;
@@ -204,7 +332,6 @@ export class GraphCanvas extends LitElement {
     container.addEventListener('mouseleave', () => {
       this._emit('canvas-node-hover', null);
     });
-    const painter = new Painter();
 
     this.graphInstance = ForceGraph()(container)
       .graphData(this.rs.data as any)
@@ -226,74 +353,15 @@ export class GraphCanvas extends LitElement {
       )
       .d3VelocityDecay(1 - (this.rs.forces.velocityDecay ?? 0.4))
       .linkWidth(() => this.rs.style.lineWidth * this.rs.linkWidthMultiplier)
-      .linkDirectionalParticles(1)
+      .linkDirectionalParticles(this.particlesOnLink as any)
       .linkDirectionalParticleSpeed(
         this.rs.animateLinks === 'reverse' ? -0.004 : 0.004
       )
-      .linkDirectionalParticleWidth(link => {
-        if (this.rs.animateLinks === 'off') return 0;
-        const graphLink = link as GraphModelLink;
-        const key = GraphModelLink.getKey(graphLink);
-        const state = this.rs.graphStates?.linkStates.get(key) ?? 'regular';
-        return state === 'highlighted' ? this.rs.style.particleWidth : 0;
-      })
-      .nodeCanvasObject(
-        (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
-          const info = this.rs.nodeInfo[node.id];
-          if (!info) return;
-
-          const size =
-            this.getNodeSize(info.neighbors.length) *
-            this.rs.nodeSizeMultiplier;
-          const state =
-            this.rs.graphStates?.nodeStates.get(node.id) ?? 'regular';
-          const { fill, border } = getNodeFillAndBorder(
-            info,
-            state,
-            this.rs.style,
-            this.rs.colorMode,
-            this.rs.groups
-          );
-          const fontSize = computeLabelFontSize(
-            this.rs.style.fontSize,
-            this.rs.nodeFontSizeMultiplier
-          );
-          const opacity = computeLabelOpacity(
-            state,
-            globalScale,
-            fill.opacity,
-            scale => this.getNodeLabelOpacity(scale),
-            this.labels
-          );
-
-          const textColor = getNodeLabelColor(
-            fill,
-            state,
-            opacity,
-            this.rs.style
-          );
-
-          const labelPosition = graphPointToViewport(
-            ctx.getTransform(),
-            node.x,
-            node.y + size + 1,
-            window.devicePixelRatio || 1
-          );
-
-          painter
-            .circle(node.x, node.y, size, fill, border)
-            .screenText(
-              this.rs.labelByNodeId[node.id] ?? info.title,
-              labelPosition.x,
-              labelPosition.y,
-              fontSize,
-              this.rs.style.fontFamily,
-              textColor as any
-            );
-        }
-      )
+      .linkDirectionalParticleWidth(() => this.rs.style.particleWidth)
+      .onEngineStop(this.onLayoutSettled)
+      .nodeCanvasObject(this.paintNode)
       .onRenderFramePost((ctx: CanvasRenderingContext2D) => {
-        painter.paint(ctx);
+        this.painter.paint(ctx);
       })
       .linkColor((link: any) => {
         const graphLink = link as GraphModelLink;
@@ -310,19 +378,7 @@ export class GraphCanvas extends LitElement {
           this.rs.style
         );
       })
-      .nodePointerAreaPaint(
-        (node: any, color: string, ctx: CanvasRenderingContext2D) => {
-          const info = this.rs.nodeInfo[node.id];
-          if (!info) return;
-          const size =
-            this.getNodeSize(info.neighbors.length) *
-            this.rs.nodeSizeMultiplier;
-          ctx.fillStyle = color;
-          ctx.beginPath();
-          ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
-          ctx.fill();
-        }
-      )
+      .nodePointerAreaPaint(this.paintHitArea)
       .onNodeHover((node: any) => {
         const nodeId = node?.id ?? null;
         this._emit('canvas-node-hover', nodeId);
@@ -381,6 +437,7 @@ export class GraphCanvas extends LitElement {
         (this.graphInstance.d3Force('link') as any)?.distance(this.forces.link);
         this.graphInstance.d3VelocityDecay(1 - this.forces.velocityDecay);
         this.graphInstance.d3ReheatSimulation();
+        this.layoutSettled = false;
       }
     }
 
@@ -444,10 +501,23 @@ export class GraphCanvas extends LitElement {
       this.firstGraphLoad = false;
       this.graphInstance.zoom(this.graphInstance.zoom() * 1.5);
       this.graphInstance.cooldownTicks(100);
-      this.graphInstance.onEngineStop(() => {
-        this.graphInstance!.onEngineStop(() => {});
-        this.zoomToFit(500);
-      });
+      this.fitWhenSettled();
+    }
+
+    if (changed.has('graphStates') || changed.has('animateLinks')) {
+      this.graphInstance?.linkDirectionalParticles(this.particlesOnLink as any);
+    }
+    // force-graph repaints by itself only while something moves; re-setting
+    // the node painter is how a change it can't see asks for a frame.
+    this.graphInstance?.nodeCanvasObject(this.paintNode);
+  }
+
+  /** Fits the graph into view once its layout has settled, or now if it has. */
+  fitWhenSettled(duration = 500) {
+    if (this.layoutSettled) {
+      this.zoomToFit(duration);
+    } else {
+      this.pendingFitDuration = duration;
     }
   }
 
@@ -506,6 +576,7 @@ export class GraphCanvas extends LitElement {
 
   private _updateGraphData(visibleGraph: VisibleGraph) {
     if (!this.graphInstance) return;
+    this.layoutSettled = false;
 
     const nodeIdsToAdd = new Set(visibleGraph.nodes.map(node => node.id));
     const nodeIdsToRemove = new Set<string>();

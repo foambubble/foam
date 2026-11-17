@@ -35,6 +35,10 @@ export function resolveStyle(
       ...defaults.node,
       ...payload.style?.node,
     },
+    nodeStyle: {
+      ...defaults.nodeStyle,
+      ...payload.style?.nodeStyle,
+    },
     colorMode: payload.colorMode ?? defaults.colorMode,
     groups: payload.groups ?? defaults.groups,
   };

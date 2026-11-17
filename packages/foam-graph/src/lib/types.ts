@@ -1,4 +1,4 @@
-import type { NodeInfo, GroupRule } from '../protocol';
+import type { NodeInfo, GroupRule, NodeStyle } from '../protocol';
 
 // Shared display-option shapes live in the protocol (they are part of the
 // persisted view state); re-exported here for the view-internal modules.
@@ -51,6 +51,7 @@ export interface ResolvedStyle {
     tag: string;
     [key: string]: string;
   };
+  nodeStyle: Record<string, NodeStyle | undefined>;
   colorMode: 'none' | 'directory' | 'type';
   groups: GroupRule[];
 }

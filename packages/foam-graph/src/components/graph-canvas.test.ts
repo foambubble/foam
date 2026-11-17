@@ -8,6 +8,83 @@ import {
   measureGraphViewport,
   GraphCanvas,
 } from './graph-canvas';
+import {
+  RecordingContext,
+  drawingsAt,
+  isFilledAt,
+  makeNode,
+  makeStyle,
+} from '../test-utils';
+import type {
+  GraphModelNode,
+  LinkAnimation,
+  NodeState,
+  ResolvedStyle,
+} from '../lib/types';
+
+type PlacedNode = GraphModelNode & { x: number; y: number };
+
+const place = (
+  overrides: Partial<GraphModelNode>,
+  x = 0,
+  y = 0
+): PlacedNode => ({ ...makeNode(overrides), x, y });
+
+const makeCanvas = (
+  nodes: PlacedNode[],
+  options: {
+    style?: ResolvedStyle;
+    states?: Record<string, NodeState>;
+    nodeSizeMultiplier?: number;
+    minTapSize?: number;
+  } = {}
+) => {
+  const canvas = new GraphCanvas();
+  canvas.style = options.style ?? makeStyle();
+  canvas.nodeSizeMultiplier = options.nodeSizeMultiplier ?? 1;
+  canvas.minTapSize = options.minTapSize ?? null;
+  canvas.graphStates = {
+    nodeStates: new Map(Object.entries(options.states ?? {})),
+    linkStates: new Map(),
+  };
+  canvas.visibleGraph = {
+    nodeInfo: Object.fromEntries(nodes.map(node => [node.id, node])),
+    nodes: nodes.map(node => ({ id: node.id })),
+    links: [],
+  };
+  (canvas as any).updated(
+    new Map(
+      [
+        'style',
+        'graphStates',
+        'visibleGraph',
+        'nodeSizeMultiplier',
+        'minTapSize',
+      ].map(key => [key, null])
+    )
+  );
+  return canvas;
+};
+
+/** Paints `nodes` as one frame does, onto a recording context. */
+const paint = (
+  nodes: PlacedNode[],
+  options: Parameters<typeof makeCanvas>[1] = {}
+) => {
+  const canvas = makeCanvas(nodes, options);
+  const ctx = new RecordingContext();
+  for (const node of nodes) {
+    (canvas as any).paintNode({ id: node.id, x: node.x, y: node.y }, ctx, 1);
+  }
+  (canvas as any).painter.paint(ctx);
+  return ctx;
+};
+
+const shapeKindsAt = (ctx: RecordingContext, x: number, y: number) => [
+  ...new Set(
+    drawingsAt(ctx, x, y).flatMap(drawing => drawing.shapes.map(s => s.kind))
+  ),
+];
 
 describe('measureGraphViewport', () => {
   it('uses the graph element size instead of the browser viewport', () => {
@@ -194,5 +271,223 @@ describe('label cache', () => {
     (canvas as any).updated(new Map([['visibleGraph', null]]));
 
     expect((canvas as any).rs.nodeInfo.n1.title).toBe(longTitle);
+  });
+});
+
+describe('node shapes (AC-1)', () => {
+  it('draws the nodes of a type styled as diamonds as diamonds, and every other node as a circle', () => {
+    const note = place({ id: 'n', type: 'note' }, 0, 0);
+    const tag = place({ id: 't', type: 'tag' }, 100, 0);
+    const style = makeStyle({ nodeStyle: { tag: { shape: 'diamond' } } });
+
+    const ctx = paint([note, tag], { style });
+
+    expect(shapeKindsAt(ctx, 100, 0)).toEqual(['diamond']);
+    expect(shapeKindsAt(ctx, 0, 0)).toEqual(['circle']);
+  });
+
+  it('draws every node as a circle when no shape is set', () => {
+    const note = place({ id: 'n', type: 'note' }, 0, 0);
+    const tag = place({ id: 't', type: 'tag' }, 100, 0);
+
+    const ctx = paint([note, tag]);
+
+    expect(shapeKindsAt(ctx, 0, 0)).toEqual(['circle']);
+    expect(shapeKindsAt(ctx, 100, 0)).toEqual(['circle']);
+  });
+});
+
+describe('node outlines (AC-2)', () => {
+  const placeholder = place({ id: 'p', type: 'placeholder' });
+  const placeholderColor = 'rgb(51, 51, 51)';
+  const backgroundColor = 'rgb(32, 32, 32)';
+
+  it('draws an outlined type as its outline in the type colour, filled with the background', () => {
+    const style = makeStyle({
+      nodeStyle: { placeholder: { outline: 'solid' } },
+    });
+
+    const drawings = drawingsAt(paint([placeholder], { style }), 0, 0);
+
+    expect(
+      drawings
+        .filter(d => d.op === 'stroke')
+        .map(d => ({ color: d.color, lineDash: d.lineDash }))
+    ).toEqual([{ color: placeholderColor, lineDash: [] }]);
+    expect(drawings.filter(d => d.op === 'fill').map(d => d.color)).toEqual([
+      backgroundColor,
+    ]);
+  });
+
+  it('dashes the outline of a type styled dashed', () => {
+    const style = makeStyle({
+      nodeStyle: { placeholder: { outline: 'dashed' } },
+    });
+
+    const drawings = drawingsAt(paint([placeholder], { style }), 0, 0);
+    const outline = drawings.find(d => d.op === 'stroke');
+
+    expect(outline?.color).toBe(placeholderColor);
+    expect(outline?.lineDash.length).toBeGreaterThan(0);
+  });
+
+  it('fills nodes in their type colour when no outline is set', () => {
+    const drawings = drawingsAt(paint([placeholder]), 0, 0);
+
+    expect(drawings.map(d => ({ op: d.op, color: d.color }))).toEqual([
+      { op: 'fill', color: placeholderColor },
+    ]);
+  });
+});
+
+describe('node sizes (AC-3, canvas path)', () => {
+  it('draws a node at its type fixed size, scaled by the node size multiplier', () => {
+    const style = makeStyle({ nodeStyle: { note: { size: 4 } } });
+    const note = place({ id: 'n', type: 'note', neighbors: [] });
+
+    const [drawing] = drawingsAt(
+      paint([note], { style, nodeSizeMultiplier: 2 }),
+      0,
+      0
+    );
+    const [circle] = drawing.shapes;
+
+    expect(circle.kind === 'circle' && circle.radius).toBeCloseTo(8, 0);
+  });
+});
+
+describe('node states (AC-4)', () => {
+  it('keeps a styled node shape, outline and size when it is highlighted or dimmed, and changes only its colour', () => {
+    const style = makeStyle({
+      nodeStyle: { tag: { shape: 'diamond', outline: 'dashed', size: 4 } },
+    });
+    const tag = place({ id: 't', type: 'tag' });
+    const outlineIn = (state: NodeState) =>
+      drawingsAt(paint([tag], { style, states: { t: state } }), 0, 0).find(
+        d => d.op === 'stroke'
+      );
+
+    const regular = outlineIn('regular');
+    const highlighted = outlineIn('highlighted');
+    const lessened = outlineIn('lessened');
+
+    expect(regular?.shapes.map(s => s.kind)).toEqual(['diamond']);
+    for (const outline of [highlighted, lessened]) {
+      expect(outline?.shapes).toEqual(regular?.shapes);
+      expect(outline?.lineDash).toEqual(regular?.lineDash);
+    }
+    expect([regular?.color, highlighted?.color, lessened?.color]).toEqual([
+      'rgb(255, 255, 0)',
+      'rgb(255, 255, 255)',
+      'rgba(255, 255, 0, 0.05)',
+    ]);
+  });
+});
+
+describe('tap size (AC-5)', () => {
+  const hitColor = '#010203';
+  const hitArea = (
+    node: PlacedNode,
+    options: { style?: ResolvedStyle; minTapSize?: number; zoom: number }
+  ) => {
+    const canvas = makeCanvas([node], options);
+    const ctx = new RecordingContext();
+    (canvas as any).paintHitArea(
+      { id: node.id, x: node.x, y: node.y },
+      hitColor,
+      ctx,
+      options.zoom
+    );
+    return ctx;
+  };
+
+  it.each([0.5, 1, 4])(
+    'hits a small node from within half the minimum tap size of its centre, at zoom %s',
+    zoom => {
+      const ctx = hitArea(place({ id: 'n' }), { minTapSize: 44, zoom });
+
+      expect(isFilledAt(ctx, hitColor, 21 / zoom, 0)).toBe(true);
+      expect(isFilledAt(ctx, hitColor, 0, -21 / zoom)).toBe(true);
+      expect(isFilledAt(ctx, hitColor, 23 / zoom, 0)).toBe(false);
+    }
+  );
+
+  it('keeps the drawn area of a node larger than the minimum tap size', () => {
+    const style = makeStyle({ nodeStyle: { note: { size: 40 } } });
+
+    const ctx = hitArea(place({ id: 'n', type: 'note' }), {
+      style,
+      minTapSize: 44,
+      zoom: 1,
+    });
+
+    expect(isFilledAt(ctx, hitColor, 39, 0)).toBe(true);
+  });
+
+  it('keeps the drawn area of a diamond larger than the minimum tap size', () => {
+    const style = makeStyle({
+      nodeStyle: { note: { shape: 'diamond', size: 40 } },
+    });
+
+    const ctx = hitArea(place({ id: 'n', type: 'note' }), {
+      style,
+      minTapSize: 44,
+      zoom: 1,
+    });
+
+    // inside the diamond's corner, outside both the tap circle and a circle of radius 40
+    expect(isFilledAt(ctx, hitColor, 0, 50)).toBe(true);
+  });
+
+  it('hits a diamond within its drawn shape', () => {
+    const style = makeStyle({
+      nodeStyle: { note: { shape: 'diamond', size: 10 } },
+    });
+
+    const ctx = hitArea(place({ id: 'n', type: 'note' }), { style, zoom: 1 });
+
+    expect(isFilledAt(ctx, hitColor, 0, 13)).toBe(true);
+    expect(isFilledAt(ctx, hitColor, 9, 9)).toBe(false);
+  });
+
+  it('hits only the drawn node when no minimum is set', () => {
+    const ctx = hitArea(place({ id: 'n', neighbors: [] }), { zoom: 1 });
+
+    expect(isFilledAt(ctx, hitColor, 0.5, 0)).toBe(true);
+    expect(isFilledAt(ctx, hitColor, 1, 0)).toBe(false);
+  });
+});
+
+describe('link particles', () => {
+  const canvasWith = (animateLinks: LinkAnimation) => {
+    const canvas = new GraphCanvas();
+    canvas.animateLinks = animateLinks;
+    canvas.graphStates = {
+      nodeStates: new Map(),
+      linkStates: new Map([
+        ['a->b', 'highlighted'],
+        ['b->c', 'regular'],
+      ]),
+    };
+    (canvas as any).updated(
+      new Map([
+        ['animateLinks', null],
+        ['graphStates', null],
+      ])
+    );
+    return canvas;
+  };
+  const particles = (canvas: GraphCanvas, source: string, target: string) =>
+    (canvas as any).particlesOnLink({ source, target });
+
+  it('runs a particle only along highlighted links while links animate', () => {
+    const canvas = canvasWith('forward');
+
+    expect(particles(canvas, 'a', 'b')).toBe(1);
+    expect(particles(canvas, 'b', 'c')).toBe(0);
+  });
+
+  it('runs no particle along any link when link animation is off', () => {
+    expect(particles(canvasWith('off'), 'a', 'b')).toBe(0);
   });
 });

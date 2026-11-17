@@ -15,6 +15,7 @@ import {
   makeNode,
   makeStyle,
 } from '../test-utils';
+import { getDefaultStyle } from '../lib/defaults';
 import type {
   GraphModelNode,
   LinkAnimation,
@@ -294,6 +295,45 @@ describe('node shapes (AC-1)', () => {
 
     expect(shapeKindsAt(ctx, 0, 0)).toEqual(['circle']);
     expect(shapeKindsAt(ctx, 100, 0)).toEqual(['circle']);
+  });
+});
+
+describe('default node styles', () => {
+  it('draws notes as filled circles, tags as filled diamonds, placeholders as dashed outlines, and attachments and images as solid outlines', () => {
+    const nodes = ['note', 'tag', 'placeholder', 'attachment', 'image'].map(
+      (type, i) => place({ id: type, type }, i * 100, 0)
+    );
+    const ctx = paint(nodes, { style: getDefaultStyle() });
+    const drawnAs = (node: PlacedNode) => {
+      const drawings = drawingsAt(ctx, node.x, node.y);
+      const stroke = drawings.find(d => d.op === 'stroke');
+      return {
+        type: node.type,
+        shape: drawings[0].shapes[0].kind,
+        outline: !stroke ? 'none' : stroke.lineDash.length ? 'dashed' : 'solid',
+      };
+    };
+
+    expect(nodes.map(drawnAs)).toEqual([
+      { type: 'note', shape: 'circle', outline: 'none' },
+      { type: 'tag', shape: 'diamond', outline: 'none' },
+      { type: 'placeholder', shape: 'circle', outline: 'dashed' },
+      { type: 'attachment', shape: 'circle', outline: 'solid' },
+      { type: 'image', shape: 'circle', outline: 'solid' },
+    ]);
+  });
+
+  it('draws tags, placeholders, attachments and images at one size whatever their link count', () => {
+    const style = getDefaultStyle();
+    const sizeOf = (type: string, links: number) => {
+      const node = place({ id: 'n', type, neighbors: Array(links).fill('x') });
+      const [shape] = drawingsAt(paint([node], { style }), 0, 0)[0].shapes;
+      return shape.kind === 'circle' ? shape.radius : shape.extent;
+    };
+
+    for (const type of ['tag', 'placeholder', 'attachment', 'image']) {
+      expect(sizeOf(type, 20)).toBe(sizeOf(type, 0));
+    }
   });
 });
 

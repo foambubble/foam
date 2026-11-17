@@ -42,7 +42,11 @@ export interface StyleConfig {
   nodeStyle?: Record<string, NodeStyle | undefined>;
 }
 
-/** How the nodes of one type are drawn. Each field left out keeps the default. */
+/**
+ * How the nodes of one type are drawn. A type's entry replaces its default
+ * entry whole, so each field left out falls back to the value documented on
+ * it, not to the default entry's.
+ */
 export interface NodeStyle {
   /** Default `circle`. A diamond is a square the circle's diameter wide, turned 45°. */
   shape?: 'circle' | 'diamond';

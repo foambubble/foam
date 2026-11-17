@@ -20,7 +20,12 @@ export function getDefaultStyle(): ResolvedStyle {
         getCSSVar('--vscode-list-deemphasizedForeground') || '#545454',
       tag: getCSSVar('--vscode-list-highlightForeground') || '#f9c74f',
     },
-    nodeStyle: {},
+    nodeStyle: {
+      tag: { shape: 'diamond', size: 0.7 },
+      placeholder: { outline: 'dashed', size: 0.8 },
+      attachment: { outline: 'solid', size: 0.8 },
+      image: { outline: 'solid', size: 0.8 },
+    },
     colorMode: 'type',
     groups: [],
   };

@@ -2,7 +2,7 @@
 
 The graph view transforms your notes into a visual network, revealing connections between ideas. To open it, run the `Foam: Show Graph` command.
 
-Files and tags appear as nodes; links between files and file-to-tag relationships are the edges. A node grows in size with the number of connections it has.
+Files and tags appear as nodes; links between files and file-to-tag relationships are the edges. Notes are circles that grow with the number of connections they have. Tags are diamonds, placeholders (links to notes that don't exist yet) are dashed rings, and attachments and images are hollow rings.
 
 ### The `Show Graph` command
 

@@ -1,5 +1,52 @@
 # Change Log
 
+## 0.49.0
+
+### Minor Changes
+
+- The graph is easier to read:
+
+  - Tags are diamonds, placeholders dashed rings, and attachments and images hollow rings
+  - Nodes are smaller and further apart; **Reset view** brings a view you adjusted to the new defaults
+  - An open graph stops redrawing once it settles, so it no longer uses CPU while idle
+
+- The graph remembers its display options, such as type filters, groups, sliders and label length, for each workspace and each named view:
+
+  - **Reset view** at the bottom of the graph panel returns the open view to its configured settings
+  - The Label Length control is now called Labels, and shortens placeholder labels too (#1205)
+  - The `foam.graph.titleMaxLength` setting is removed; set the label length in the graph panel instead
+
+  In `@foam/core`, `buildGraphData` no longer takes a `transformTitle` option.
+
+- A template without a `filepath` now opens in an unsaved editor, and nothing is written until you save (#1243):
+
+  - Foam asks for a title only when the template uses `FOAM_TITLE`, `FOAM_TITLE_SAFE` or `FOAM_SLUG`, and then saves the note as `<title>.md` in the new-note folder without asking where
+  - `foam-vscode.create-note` with `text` and no `notePath` opens an unsaved editor too; add `notePath` to create a file
+  - To keep creating a file straight away, give the template a `filepath`, as the built-in new note and new templates from Create New Template now do
+
+  In `@foam/core`, `NoteTargetIntent`, `ProcessedTemplate` and `UnsavedNoteResult` are exported.
+
+- Renaming a section updates every link to it, however the link is written (#1772, #1781):
+
+  - Rename works from the heading, from the `#section` of a wikilink to it, or from the `#fragment` of a Markdown link to it, with the same result
+  - Each link keeps its form: `[[note#My Section]]` and `[text](<note.md#My Section>)` get the new heading text, `[text](note.md#my-section)` gets the new slug
+  - A heading keeps its formatting, indentation, `>` quote, closing `##` and `^anchor`, in VS Code and in `foam rename section`
+  - Rename also works on links you haven't saved yet, and on `[[note#Section\|alias]]` in a table
+  - Renaming from `[[note]]` renames the note itself, as renaming it in the explorer does
+
+  A Markdown link to a heading's slug, such as `[text](note.md#my-section)`, now goes to that heading, embeds accept `![[note#my-section]]`, and a wikilink written with the slug is no longer flagged as an unknown section.
+
+  In `@foam/core`, `HeadingEdit.getSectionAtPosition`, `FoamGraph.resolveLinks` and `MarkdownLink.getSectionRange` are added, and sections have a `labelRange`.
+
+### Patch Changes
+
+- A query filter with a field Foam doesn't know now matches no notes and shows a warning, instead of ignoring the field. The removed `expression` field matches nothing; use `jexl` instead.
+
+  In `@foam/core`, the query filter type no longer has `expression`.
+
+- Dependencies updated for security fixes (#1782).
+- A `[[` left open earlier on a line no longer swallows the wikilink after it: in `see [[ syntax [[note]]`, only `[[note]]` is a link (#1780).
+
 ## 0.48.0
 
 ### Minor Changes
@@ -244,7 +291,7 @@ Thank you to @Sherlock290 for the embed fixes in this release, including math re
 
   - `create-note` no longer fails with `path.startsWith is not a function` when
     given a URI, and the workspace no longer throws `reference.split is not a
-    function` when looked up by one. Both accept a URI-like object but narrowed on
+function` when looked up by one. Both accept a URI-like object but narrowed on
     `instanceof URI`, which does not hold for a URI that crosses into the extension
     bundle's inlined copy of `@foam/core`. The other `string | URI` narrowings in
     `URI` itself now discriminate on the string too

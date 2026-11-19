@@ -53,8 +53,8 @@ const defaultViewState = () => ({
   labels: { fade: 0 } as Labels,
   forces: {
     collide: 1,
-    repel: 10,
-    link: 30,
+    repel: 15,
+    link: 25,
     velocityDecay: 0.4,
   } as Forces,
   selection: {
@@ -64,7 +64,7 @@ const defaultViewState = () => ({
   } as Selection,
   graphScope: 'full' as GraphScope,
   nodeFontSizeMultiplier: 1,
-  nodeSizeMultiplier: 2,
+  nodeSizeMultiplier: 1,
   linkWidthMultiplier: 2,
   animateLinks: 'forward' as LinkAnimation,
   labelMaxLength: DEFAULT_LABEL_MAX_LENGTH,

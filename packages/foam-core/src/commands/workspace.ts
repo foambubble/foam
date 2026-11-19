@@ -2,7 +2,7 @@ import { FoamWorkspace } from '../model/workspace';
 import { Resource } from '../model/note';
 import { URI } from '../model/uri';
 import { FoamError } from '../common/errors';
-import { isWithinPath, relativeTo } from '../utils/path';
+import { isAbsolute, isWithinPath, relativeTo } from '../utils/path';
 
 /**
  * A reference to a note. Either the URI is known (the caller resolved a
@@ -39,11 +39,17 @@ export function getRootUriFor(
  * workspaces without the caller having to figure out which root to use.
  *
  * Works on POSIX URI paths regardless of platform.
+ *
+ * A placeholder whose path is not absolute holds a wikilink's target, not a
+ * path, and is returned as it is.
  */
 export function uriToWorkspacePath(
   uri: URI,
   workspace: FoamWorkspace
 ): string {
+  if (uri.isPlaceholder() && !isAbsolute(uri.path)) {
+    return uri.path;
+  }
   const root = getRootUriFor(workspace, uri);
   return relativeTo(uri.path, root.path);
 }

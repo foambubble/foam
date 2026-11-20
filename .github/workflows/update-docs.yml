@@ -15,11 +15,11 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
         with:
           repository: foambubble/foam-template
           path: foam-template
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
         with:
           path: foam
       - name: Copy and fixup user docs files

@@ -107,6 +107,8 @@ export interface Selection {
  * entries can be added here without a storage migration.
  */
 export interface GraphViewState {
+  /** Whether the user keeps the controls panel on screen. Default true. */
+  showControlPanel?: boolean;
   showNodesOfType?: Record<string, boolean>;
   groups?: GroupRule[];
   localStylePatch?: GraphStyle;

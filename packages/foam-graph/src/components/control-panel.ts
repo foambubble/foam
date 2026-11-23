@@ -222,6 +222,26 @@ export class ControlPanel extends LitElement {
       opacity: 1;
     }
 
+    /* over the first section's header, so it costs the panel no height */
+    .hide-controls {
+      position: absolute;
+      top: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      padding: 6px 7px;
+      background: none;
+      border: none;
+      color: var(--vscode-foreground, #ccc);
+      cursor: pointer;
+      opacity: 0.6;
+    }
+
+    .hide-controls:hover,
+    .hide-controls:focus-visible {
+      opacity: 1;
+    }
+
     .panel-footer {
       display: flex;
       justify-content: flex-end;
@@ -385,6 +405,22 @@ export class ControlPanel extends LitElement {
 
   render() {
     return html`
+      <button
+        class="hide-controls"
+        title="Hide the controls panel"
+        aria-label="Hide the controls panel"
+        @click=${() => this._emit('hide-controls', null)}
+      >
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+          <path
+            d="M1.5 1.5 L8.5 8.5 M8.5 1.5 L1.5 8.5"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
+        </svg>
+      </button>
+
       <details open>
         <summary>Groups</summary>
         <div class="section-content">

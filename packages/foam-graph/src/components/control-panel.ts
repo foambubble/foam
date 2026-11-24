@@ -30,7 +30,7 @@ export class ControlPanel extends LitElement {
       user-select: none;
     }
 
-    /* `display: block` above would otherwise outrank the UA's hidden rule */
+    /* the display: block above would otherwise outrank the UA's hidden rule */
     :host([hidden]) {
       display: none;
     }

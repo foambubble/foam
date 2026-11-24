@@ -30,6 +30,11 @@ export class ControlPanel extends LitElement {
       user-select: none;
     }
 
+    /* `display: block` above would otherwise outrank the UA's hidden rule */
+    :host([hidden]) {
+      display: none;
+    }
+
     details {
       border-bottom: 1px solid var(--vscode-panel-border, #454545);
     }

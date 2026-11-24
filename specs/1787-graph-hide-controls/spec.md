@@ -72,9 +72,12 @@ The graph-view user doc describes the panel; it gains a sentence on hiding it.
 - A keyboard shortcut for the toggle. The issue offers it as an alternative to
   the button, not in addition; a button alone is the smaller thing and is
   discoverable, which a shortcut is not.
-- Collapsing the panel to its header, remembering which sections are open, or
-  making the panel narrower, movable or resizable. Hidden or shown, nothing
-  between.
+- Collapsing the panel to its header, or making the panel narrower, movable
+  or resizable. Hidden or shown, nothing between.
+- Saving which of the panel's sections are open. AC-2 asks for them across a
+  hide and a show, which a panel that stays on the page keeps by itself;
+  persisting them per view, so a reload opens the sections the user left
+  open, is a separate thing and not asked for here.
 - Changing what `showControls` means for hosts embedding `<foam-graph>`.
 - Hiding the panel from the extension side — a `foam-vscode.show-graph`
   argument or a command-palette entry.

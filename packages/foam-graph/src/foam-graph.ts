@@ -145,7 +145,12 @@ export class FoamGraph extends LitElement {
   @state() private localStylePatch: GraphStyle =
     defaultViewState().localStylePatch;
   @state() private groups: GroupRule[] = defaultViewState().groups;
-  /** Whether the user keeps the panel on screen, where the host offers controls. */
+  /**
+   * Whether the user keeps the panel on screen, where the host offers
+   * controls. Hiding it sets `hidden` on the panel rather than taking it out
+   * of the render, so the state only its DOM holds — which of its sections
+   * are open — is still there when it comes back.
+   */
   @state() private showControlPanel: boolean =
     defaultViewState().showControlPanel;
   /**
@@ -283,8 +288,9 @@ export class FoamGraph extends LitElement {
         @canvas-background-click=${(e: CustomEvent) =>
           this._onCanvasBackgroundClick(e.detail)}
       ></foam-graph-canvas>
-      ${this.showControls && this.showControlPanel
+      ${this.showControls
         ? html`<foam-control-panel
+            ?hidden=${!this.showControlPanel}
             .style=${resolved}
             .showNodesOfType=${this.showNodesOfType}
             .nodeTypeCounts=${computeNodeTypeCounts(this.graphModel)}

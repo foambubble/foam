@@ -1,4 +1,4 @@
-import type { TemplateResult } from 'lit';
+import { render, type TemplateResult } from 'lit';
 
 import type { GraphData } from './protocol';
 import type { GraphModelNode, ResolvedStyle } from './lib/types';
@@ -19,6 +19,21 @@ export const renderedMarkup = (value: unknown): string => {
   return strings
     .map((part, index) => part + renderedMarkup(values[index]))
     .join('');
+};
+
+/**
+ * The elements a rendered template draws, in a container outside the
+ * document: the template's event bindings are live, while the custom
+ * elements it names stay undrawn, so rendering the graph does not start a
+ * force simulation. Pass the container back to render into it again, as a
+ * component re-render does, keeping the elements Lit reuses.
+ */
+export const renderedElements = (
+  value: unknown,
+  into: HTMLElement = document.createElement('div')
+): HTMLElement => {
+  render(value as TemplateResult, into);
+  return into;
 };
 
 export const makeStyle = (overrides: Partial<ResolvedStyle> = {}): ResolvedStyle => ({

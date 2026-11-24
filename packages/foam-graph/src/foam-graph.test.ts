@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import type { TemplateResult } from 'lit';
 
 import { FoamGraph } from './foam-graph';
-import { makeGraph, renderedMarkup } from './test-utils';
+import { makeGraph, renderedElements, renderedMarkup } from './test-utils';
+
+/** The control panel the graph drew, which is there hidden or shown. */
+const panelOf = (root: HTMLElement) =>
+  root.querySelector<HTMLElement>('foam-control-panel')!;
 
 describe('foam-graph', () => {
   it('can show/hide the control panel', () => {
@@ -30,32 +34,45 @@ describe('foam-graph', () => {
     );
   });
 
-  // AC-1: hiding the panel leaves nothing over the graph but the control
-  // that brings it back
+  // AC-1: hiding the panel leaves nothing drawn over the graph but the
+  // control that brings it back
   it('hides the control panel, leaving only the control that shows it', () => {
     const element = new FoamGraph();
     element.showControls = true;
 
     (element as any)._setControlPanelVisible(false);
 
-    const markup = renderedMarkup(element.render());
-    expect(markup).not.toContain('foam-control-panel');
-    expect(markup).toContain('class="show-controls"');
+    const root = renderedElements(element.render());
+    expect(panelOf(root).hidden).toBe(true);
+    expect(root.querySelector('.show-controls')).not.toBeNull();
   });
 
-  // AC-2: showing it again brings back the panel and the values it had
-  it('shows the control panel again with the values it had', () => {
+  // AC-1 and AC-2 end to end: the panel's hide control and the graph's show
+  // control are what the user activates, and the panel they act on is the
+  // same element throughout, keeping the state only its DOM holds
+  it('hides and shows the panel from its own controls, panel and values intact', () => {
     const element = new FoamGraph();
     element.showControls = true;
     (element as any)._onLabelMaxLengthChange(7);
     (element as any)._onToggleNodeType({ type: 'tag', visible: false });
+    const root = renderedElements(element.render());
+    const panel = panelOf(root);
 
-    (element as any)._setControlPanelVisible(false);
-    (element as any)._setControlPanelVisible(true);
+    panel.dispatchEvent(
+      new CustomEvent('hide-controls', { bubbles: true, composed: true })
+    );
+    renderedElements(element.render(), root);
 
-    const markup = renderedMarkup(element.render());
-    expect(markup).toContain('foam-control-panel');
-    expect(markup).not.toContain('class="show-controls"');
+    expect(element.getViewState().showControlPanel).toBe(false);
+    expect(panel.hidden).toBe(true);
+
+    root.querySelector<HTMLButtonElement>('.show-controls')!.click();
+    renderedElements(element.render(), root);
+
+    expect(element.getViewState().showControlPanel).toBe(true);
+    expect(panelOf(root)).toBe(panel);
+    expect(panel.hidden).toBe(false);
+    expect(root.querySelector('.show-controls')).toBeNull();
     const state = element.getViewState();
     expect(state.labelMaxLength).toBe(7);
     expect(state.showNodesOfType?.tag).toBe(false);
@@ -78,13 +95,11 @@ describe('foam-graph', () => {
     expect(emitted).toBe(true);
 
     element.applyViewState(saved);
-    expect(renderedMarkup(element.render())).not.toContain(
-      'foam-control-panel'
-    );
+    expect(panelOf(renderedElements(element.render())).hidden).toBe(true);
 
     // a view with its own, untouched state keeps its panel
     element.applyViewState({});
-    expect(renderedMarkup(element.render())).toContain('foam-control-panel');
+    expect(panelOf(renderedElements(element.render())).hidden).toBe(false);
   });
 
   // AC-4: Reset view puts the panel back, like a view never changed
@@ -96,7 +111,7 @@ describe('foam-graph', () => {
     (element as any)._onResetView();
 
     expect(element.getViewState().showControlPanel).toBe(true);
-    expect(renderedMarkup(element.render())).toContain('foam-control-panel');
+    expect(panelOf(renderedElements(element.render())).hidden).toBe(false);
   });
 
   // AC-5: a host that offers no controls gets neither the panel nor a

@@ -63,7 +63,7 @@ Groups layer on top of the default coloring — last matching group wins. Unchec
 
 ### Hiding the panel
 
-Once the graph looks the way you want it, click the **✕** in the panel's top-right corner to get the whole graph back. A small button takes its place in the same corner; click it to bring the panel back. Each named view remembers whether you hid it, so a view you use without the panel opens that way next time — and **Reset view** brings it back along with the view's other configured settings.
+Once the graph looks the way you want it, click the **✕** in the panel's top-right corner to get the whole graph back. A small button takes its place in the same corner; click it to bring the panel back as you left it. Each named view remembers whether you hid it, so a view you use without the panel opens that way next time — and **Reset view** brings it back along with the view's other configured settings.
 
 ## Named Views
 

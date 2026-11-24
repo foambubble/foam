@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import type { TemplateResult } from 'lit';
 
 import { FoamGraph } from './foam-graph';
-import { makeGraph } from './test-utils';
+import { makeGraph, renderedElements, renderedMarkup } from './test-utils';
+
+/** The control panel the graph drew, which is there hidden or shown. */
+const panelOf = (root: HTMLElement) =>
+  root.querySelector<HTMLElement>('foam-control-panel')!;
 
 describe('foam-graph', () => {
   it('can show/hide the control panel', () => {
@@ -21,33 +25,105 @@ describe('foam-graph', () => {
     });
     element.showControls = true;
 
-    const t1 = element.render() as TemplateResult;
-    const c1 = t1.values.find(
-      v =>
-        v != null &&
-        typeof v === 'object' &&
-        'strings' in v &&
-        (v as TemplateResult).strings.some(s =>
-          s.includes('foam-control-panel')
-        )
-    );
-
-    expect(c1).not.toBeUndefined();
+    expect(renderedMarkup(element.render())).toContain('foam-control-panel');
 
     element.showControls = false;
 
-    const t2 = element.render() as TemplateResult;
-    const c2 = t2.values.find(
-      v =>
-        v != null &&
-        typeof v === 'object' &&
-        'strings' in v &&
-        (v as TemplateResult).strings.some(s =>
-          s.includes('foam-control-panel')
-        )
+    expect(renderedMarkup(element.render())).not.toContain(
+      'foam-control-panel'
     );
+  });
 
-    expect(c2).toBeUndefined();
+  // AC-1: hiding the panel leaves nothing drawn over the graph but the
+  // control that brings it back
+  it('hides the control panel, leaving only the control that shows it', () => {
+    const element = new FoamGraph();
+    element.showControls = true;
+
+    (element as any)._setControlPanelVisible(false);
+
+    const root = renderedElements(element.render());
+    expect(panelOf(root).hidden).toBe(true);
+    expect(root.querySelector('.show-controls')).not.toBeNull();
+  });
+
+  // AC-1 and AC-2 end to end: the panel's hide control and the graph's show
+  // control are what the user activates, and the panel they act on is the
+  // same element throughout, keeping the state only its DOM holds
+  it('hides and shows the panel from its own controls, panel and values intact', () => {
+    const element = new FoamGraph();
+    element.showControls = true;
+    (element as any)._onLabelMaxLengthChange(7);
+    (element as any)._onToggleNodeType({ type: 'tag', visible: false });
+    const root = renderedElements(element.render());
+    const panel = panelOf(root);
+
+    panel.dispatchEvent(
+      new CustomEvent('hide-controls', { bubbles: true, composed: true })
+    );
+    renderedElements(element.render(), root);
+
+    expect(element.getViewState().showControlPanel).toBe(false);
+    expect(panel.hidden).toBe(true);
+
+    root.querySelector<HTMLButtonElement>('.show-controls')!.click();
+    renderedElements(element.render(), root);
+
+    expect(element.getViewState().showControlPanel).toBe(true);
+    expect(panelOf(root)).toBe(panel);
+    expect(panel.hidden).toBe(false);
+    expect(root.querySelector('.show-controls')).toBeNull();
+    const state = element.getViewState();
+    expect(state.labelMaxLength).toBe(7);
+    expect(state.showNodesOfType?.tag).toBe(false);
+  });
+
+  // AC-3: the choice rides the view state the host persists per view name,
+  // so the view it was made in reopens hidden and another view does not
+  it('persists a hidden panel in the view state of the view it was hidden in', () => {
+    const element = new FoamGraph();
+    element.showControls = true;
+    let emitted = false;
+    element.addEventListener('view-state-change', () => {
+      emitted = true;
+    });
+
+    (element as any)._setControlPanelVisible(false);
+
+    const saved = element.getViewState();
+    expect(saved.showControlPanel).toBe(false);
+    expect(emitted).toBe(true);
+
+    element.applyViewState(saved);
+    expect(panelOf(renderedElements(element.render())).hidden).toBe(true);
+
+    // a view with its own, untouched state keeps its panel
+    element.applyViewState({});
+    expect(panelOf(renderedElements(element.render())).hidden).toBe(false);
+  });
+
+  // AC-4: Reset view puts the panel back, like a view never changed
+  it('shows the control panel again on reset', () => {
+    const element = new FoamGraph();
+    element.showControls = true;
+    element.applyViewState({ showControlPanel: false });
+
+    (element as any)._onResetView();
+
+    expect(element.getViewState().showControlPanel).toBe(true);
+    expect(panelOf(renderedElements(element.render())).hidden).toBe(false);
+  });
+
+  // AC-5: a host that offers no controls gets neither the panel nor a
+  // control to bring it back, whatever the saved state says
+  it('draws no panel and no toggle for a host that offers no controls', () => {
+    const element = new FoamGraph();
+    element.showControls = false;
+    element.applyViewState({ showControlPanel: false });
+
+    const markup = renderedMarkup(element.render());
+    expect(markup).not.toContain('foam-control-panel');
+    expect(markup).not.toContain('class="show-controls"');
   });
 
   it('derives visible graph data from raw graph data', () => {

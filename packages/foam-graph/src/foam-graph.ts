@@ -41,6 +41,7 @@ import './components/control-panel';
  * view restore starts from, under the declared style and the saved state.
  */
 const defaultViewState = () => ({
+  showControlPanel: true,
   showNodesOfType: {
     placeholder: true,
     image: false,
@@ -79,6 +80,34 @@ export class FoamGraph extends LitElement {
       width: 100%;
       height: 100%;
     }
+
+    /*
+     * All that is left over the graph while the controls are hidden, so it
+     * takes the corner the panel had and nothing more.
+     */
+    .show-controls {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      background: var(--vscode-sideBar-background, #252526);
+      border: 1px solid var(--vscode-panel-border, #454545);
+      border-radius: 4px;
+      color: var(--vscode-foreground, #ccc);
+      cursor: pointer;
+      opacity: 0.75;
+      z-index: 10;
+    }
+
+    .show-controls:hover,
+    .show-controls:focus-visible {
+      opacity: 1;
+    }
   `;
 
   // Public API
@@ -116,6 +145,14 @@ export class FoamGraph extends LitElement {
   @state() private localStylePatch: GraphStyle =
     defaultViewState().localStylePatch;
   @state() private groups: GroupRule[] = defaultViewState().groups;
+  /**
+   * Whether the user keeps the panel on screen, where the host offers
+   * controls. Hiding it sets `hidden` on the panel rather than taking it out
+   * of the render, so the state only its DOM holds — which of its sections
+   * are open — is still there when it comes back.
+   */
+  @state() private showControlPanel: boolean =
+    defaultViewState().showControlPanel;
   /**
    * The user's layer of the display state: the last restored state, then
    * the full snapshot after each user change (what the host persists).
@@ -253,6 +290,7 @@ export class FoamGraph extends LitElement {
       ></foam-graph-canvas>
       ${this.showControls
         ? html`<foam-control-panel
+            ?hidden=${!this.showControlPanel}
             .style=${resolved}
             .showNodesOfType=${this.showNodesOfType}
             .nodeTypeCounts=${computeNodeTypeCounts(this.graphModel)}
@@ -320,7 +358,30 @@ export class FoamGraph extends LitElement {
               this.selection = e.detail;
               this._emitViewStateChange();
             }}
+            @hide-controls=${() => this._setControlPanelVisible(false)}
           ></foam-control-panel>`
+        : null}
+      ${this.showControls && !this.showControlPanel
+        ? html`<button
+            class="show-controls"
+            title="Show the controls panel"
+            aria-label="Show the controls panel"
+            @click=${() => this._setControlPanelVisible(true)}
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.4"
+              stroke-linecap="round"
+              aria-hidden="true"
+            >
+              <path d="M2 4.5 H14 M2 11.5 H14" />
+              <path d="M6 2.5 V6.5 M10.5 9.5 V13.5" />
+            </svg>
+          </button>`
         : null}
     `;
   }
@@ -328,6 +389,7 @@ export class FoamGraph extends LitElement {
   /** Snapshot of the interactive display state, for persistence. */
   getViewState(): GraphViewState {
     return {
+      showControlPanel: this.showControlPanel,
       showNodesOfType: { ...this.showNodesOfType },
       groups: this.groups,
       localStylePatch: this.localStylePatch,
@@ -352,6 +414,7 @@ export class FoamGraph extends LitElement {
   applyViewState(state: GraphViewState) {
     this.userLayer = state;
     const defaults = defaultViewState();
+    this.showControlPanel = defaults.showControlPanel;
     this.showNodesOfType = defaults.showNodesOfType;
     this.groups = defaults.groups;
     this.localStylePatch = defaults.localStylePatch;
@@ -375,6 +438,9 @@ export class FoamGraph extends LitElement {
       };
     }
 
+    if (state.showControlPanel !== undefined) {
+      this.showControlPanel = state.showControlPanel;
+    }
     if (state.showNodesOfType) {
       this.showNodesOfType = {
         ...this.showNodesOfType,
@@ -491,6 +557,11 @@ export class FoamGraph extends LitElement {
     this.dispatchEvent(
       new CustomEvent('view-state-reset', { bubbles: true, composed: true })
     );
+  }
+
+  private _setControlPanelVisible(visible: boolean) {
+    this.showControlPanel = visible;
+    this._emitViewStateChange();
   }
 
   private _onLabelMaxLengthChange(value: number) {

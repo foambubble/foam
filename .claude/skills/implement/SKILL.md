@@ -31,8 +31,8 @@ order of work.
 
 2. **Write the failing tests.** Every acceptance criterion needs at least one,
    at the level it declares (`unit`, `e2e`, `ui`), following the plan's
-   verification map when there is one. A criterion often needs more than one case — the
-   happy path and the edges it implies. Add ordinary unit tests for internals
+   verification map when there is one. A criterion often needs more than one
+   case — the happy path and the edges it implies. Add ordinary unit tests for internals
    the criteria don't reach, and keep those separate from the ones that stand
    for a criterion, so the map stays readable.
 
@@ -57,8 +57,9 @@ order of work.
    Lerna runs across every package — a change to `@foam/core` breaks
    `foam-vscode` and `@foam/cli` without touching a file in either. Fix what
    you broke. `yarn test` runs no UI test, and CI runs only the ones a PR
-   adds, so also run every `*.ui.ts` you added or changed. While iterating, `yarn workspace <name> test:unit` is the fast
-   loop, but it is not what you report.
+   adds, so also run every `*.ui.ts` you added or changed. While iterating,
+   `yarn workspace <name> test:unit` is the fast loop, but it is not what you
+   report.
 
 5. **Consolidate before anyone else reads it.** Re-read the whole diff
    (`git diff origin/main...HEAD`) as one change rather than as the sequence

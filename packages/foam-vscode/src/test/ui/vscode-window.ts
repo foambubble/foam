@@ -190,7 +190,7 @@ export class VSCodeWindow {
       return Array.from(editor.querySelectorAll('.view-line'))
         .map(line => ({
           top: line.getBoundingClientRect().top,
-          text: (line.textContent ?? '').replace(/ /g, ' '),
+          text: (line.textContent ?? '').replace(/\u00a0/g, ' '),
         }))
         .sort((a, b) => a.top - b.top)
         .map(line => line.text);
@@ -211,7 +211,7 @@ export class VSCodeWindow {
         while (walker.nextNode()) {
           const node = walker.currentNode as Text;
           nodes.push({ node, start: content.length });
-          content += node.data.replace(/ /g, ' ');
+          content += node.data.replace(/\u00a0/g, ' ');
         }
         const index = content.indexOf(text);
         if (index < 0) continue;

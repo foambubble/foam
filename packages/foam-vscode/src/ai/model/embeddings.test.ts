@@ -271,6 +271,27 @@ describe('FoamEmbeddings', () => {
 
       workspace.dispose();
     });
+
+    it('returns the URIs of the similar resources, scheme and authority included', async () => {
+      const root = URI.parse('vscode-vfs://github/foambubble/notes', null);
+      const datastore = new InMemoryDataStore();
+      const workspace = createTestWorkspace([root], datastore);
+      const embeddings = new FoamEmbeddings(workspace, new MockProvider());
+
+      const target = root.joinPath('target.md');
+      const other = root.joinPath('other.md');
+      for (const uri of [target, other]) {
+        datastore.set(uri, `# ${uri.getName()}`);
+        await workspace.fetchAndSet(uri);
+        await embeddings.updateResource(uri);
+      }
+
+      const similar = embeddings.getSimilar(target, 10);
+
+      expect(similar.map(s => s.uri.toString())).toEqual([other.toString()]);
+
+      workspace.dispose();
+    });
   });
 
   describe('fromWorkspace with monitoring', () => {

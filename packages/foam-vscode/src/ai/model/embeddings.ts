@@ -35,9 +35,9 @@ export interface EmbeddingProgressContext {
  */
 export class FoamEmbeddings implements IDisposable {
   /**
-   * Maps resource URIs to their embeddings
+   * Maps resource paths to their URIs and embeddings
    */
-  private embeddings: Map<string, Embedding> = new Map();
+  private embeddings: Map<string, Embedding & { uri: URI }> = new Map();
 
   private onDidUpdateEmitter = new Emitter<void>();
   onDidUpdate = this.onDidUpdateEmitter.event;
@@ -104,7 +104,7 @@ export class FoamEmbeddings implements IDisposable {
         embedding.vector
       );
       similarities.push({
-        uri: URI.file(path),
+        uri: embedding.uri,
         similarity,
       });
     }
@@ -182,7 +182,7 @@ export class FoamEmbeddings implements IDisposable {
             vector: cached.embedding,
             createdAt: Date.now(),
           };
-          this.embeddings.set(uri.path, embedding);
+          this.embeddings.set(uri.path, { ...embedding, uri: resource.uri });
           return embedding;
         }
       }
@@ -194,7 +194,7 @@ export class FoamEmbeddings implements IDisposable {
         vector,
         createdAt: Date.now(),
       };
-      this.embeddings.set(uri.path, embedding);
+      this.embeddings.set(uri.path, { ...embedding, uri: resource.uri });
 
       // Update cache
       if (this.cache) {
@@ -277,6 +277,7 @@ export class FoamEmbeddings implements IDisposable {
 
             // Restore from cache
             this.embeddings.set(resource.uri.path, {
+              uri: resource.uri,
               vector: cached.embedding,
               createdAt: Date.now(),
             });
@@ -288,6 +289,7 @@ export class FoamEmbeddings implements IDisposable {
         // Generate new embedding
         const vector = await this.provider.embed(text);
         this.embeddings.set(resource.uri.path, {
+          uri: resource.uri,
           vector,
           createdAt: Date.now(),
         });

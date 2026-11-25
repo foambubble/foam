@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, onTestFinished } from 'vitest';
 import type { TemplateResult } from 'lit';
 
 import { FoamGraph } from './foam-graph';
 import type { ControlPanel } from './components/control-panel';
+import type { GraphCanvas } from './components/graph-canvas';
 import {
   fillOf,
   makeGraph,
@@ -696,5 +697,60 @@ describe('foam-graph folders (#452)', () => {
     const style = (element as any).resolvedStyle;
     const folder = (element as any).visibleGraph.nodeInfo[folderId];
     expect(fillOf(folder, style.colorMode, style)).toBe('rgb(136, 136, 136)');
+  });
+});
+
+describe('foam-graph colour theme', () => {
+  /**
+   * Switches the colour theme as the VS Code webview host does: the theme
+   * kind on the body's class, the colours as `--vscode-*` variables in the
+   * root element's inline style.
+   */
+  const applyTheme = (kind: string, background: string, foreground: string) => {
+    document.body.classList.remove('vscode-light', 'vscode-dark');
+    document.body.classList.add(kind);
+    const root = document.documentElement.style;
+    root.setProperty('--vscode-panel-background', background);
+    root.setProperty('--vscode-editor-foreground', foreground);
+  };
+
+  /**
+   * The graph in the document, running its own update cycle, with what it
+   * renders kept in a container outside the document, where the canvas stays
+   * undrawn and starts no force simulation. Resolves once updates settle.
+   */
+  const mountGraph = async () => {
+    const element = new FoamGraph();
+    const rendered = document.createElement('div');
+    (element as any).createRenderRoot = () => rendered;
+    document.body.append(element);
+    onTestFinished(() => element.remove());
+    while (!(await element.updateComplete));
+    return rendered.querySelector<GraphCanvas>('foam-graph-canvas')!;
+  };
+
+  it('draws the canvas in the new theme colours when the theme changes', async () => {
+    onTestFinished(() => {
+      document.body.classList.remove('vscode-light', 'vscode-dark');
+      document.documentElement.removeAttribute('style');
+    });
+    applyTheme('vscode-dark', '#1f1f1f', '#cccccc');
+    const canvas = await mountGraph();
+    expect(canvas.style).toMatchObject({
+      background: '#1f1f1f',
+      lineColor: '#cccccc',
+      node: { note: '#cccccc' },
+    });
+
+    applyTheme('vscode-light', '#f8f8f8', '#3b3b3b');
+    // the host's change is observed, and any re-render it asks for lands,
+    // before the next task
+    await new Promise(resolve => setTimeout(resolve));
+
+    expect(canvas.style).toMatchObject({
+      background: '#f8f8f8',
+      lineColor: '#3b3b3b',
+      node: { note: '#3b3b3b' },
+    });
   });
 });

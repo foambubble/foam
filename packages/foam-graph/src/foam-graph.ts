@@ -150,6 +150,28 @@ export class FoamGraph extends LitElement {
   @state() private visibleGraph: VisibleGraph | null = null;
   @state() private graphStates: GraphStates | null = null;
 
+  /**
+   * The default style is read at render time from the `--vscode-*` variables
+   * in the root element's inline style, which the host rewrites when the
+   * colour theme changes; nothing else re-renders on that.
+   */
+  private readonly themeObserver = new MutationObserver(() =>
+    this.requestUpdate()
+  );
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['style'],
+    });
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.themeObserver.disconnect();
+  }
+
   private get resolvedStyle(): ResolvedStyle {
     const merged = mergeStyles(this.graphStyle, this.localStylePatch);
     return resolveStyle(merged, getDefaultStyle());

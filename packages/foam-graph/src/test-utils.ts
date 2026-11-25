@@ -73,7 +73,8 @@ export const makeGraph = (overrides: Partial<GraphData> = {}): GraphData => ({
 
 export type RecordedShape =
   | { kind: 'circle'; x: number; y: number; radius: number }
-  | { kind: 'diamond'; x: number; y: number; extent: number };
+  | { kind: 'diamond'; x: number; y: number; extent: number }
+  | { kind: 'square'; x: number; y: number; half: number };
 
 export interface Drawing {
   op: 'fill' | 'stroke';
@@ -83,8 +84,9 @@ export interface Drawing {
 }
 
 /**
- * A 2D context that keeps what is filled and stroked, as circles and
- * diamonds (four-point polygons), since happy-dom's canvas draws nothing.
+ * A 2D context that keeps what is filled and stroked, as circles, diamonds
+ * (four-point polygons starting at a tip) and squares (four-point polygons
+ * starting at a corner), since happy-dom's canvas draws nothing.
  */
 export class RecordingContext {
   fillStyle = '';
@@ -147,8 +149,13 @@ export class RecordingContext {
     if (this.points.length === 4) {
       const x = this.points.reduce((sum, p) => sum + p.x, 0) / 4;
       const y = this.points.reduce((sum, p) => sum + p.y, 0) / 4;
-      const extent = Math.hypot(this.points[0].x - x, this.points[0].y - y);
-      this.shapes.push({ kind: 'diamond', x, y, extent });
+      const dx = Math.abs(this.points[0].x - x);
+      const dy = Math.abs(this.points[0].y - y);
+      this.shapes.push(
+        dx > 1e-9 && dy > 1e-9
+          ? { kind: 'square', x, y, half: dx }
+          : { kind: 'diamond', x, y, extent: Math.hypot(dx, dy) }
+      );
     }
     this.points = [];
   }
@@ -179,6 +186,8 @@ export const isFilledAt = (
       drawing.shapes.some(s =>
         s.kind === 'circle'
           ? Math.hypot(x - s.x, y - s.y) <= s.radius
+          : s.kind === 'square'
+          ? Math.max(Math.abs(x - s.x), Math.abs(y - s.y)) <= s.half
           : Math.abs(x - s.x) + Math.abs(y - s.y) <= s.extent
       )
   );

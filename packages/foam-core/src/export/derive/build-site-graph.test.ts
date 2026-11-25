@@ -44,6 +44,7 @@ describe('export buildSite graph data', () => {
       testExportTarget()
     );
 
+    // AC-9 (#452): notes in folders, and no folder nodes
     expect(result.graph.nodeInfo).toEqual({
       '/': {
         id: '/',

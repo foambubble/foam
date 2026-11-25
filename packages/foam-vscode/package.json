@@ -957,7 +957,7 @@
               },
               "show": {
                 "type": "object",
-                "description": "Visibility and color overrides for built-in types: tag, attachment, image, placeholder. E.g. { \"tag\": { \"enabled\": false }, \"placeholder\": { \"color\": \"#ff0000\" } }"
+                "description": "Visibility and color overrides for built-in types: tag, attachment, image, placeholder, folder. Folders are shown only with \"enabled\": true. E.g. { \"tag\": { \"enabled\": false }, \"placeholder\": { \"color\": \"#ff0000\" }, \"folder\": { \"enabled\": true } }"
               },
               "background": {
                 "type": "string"

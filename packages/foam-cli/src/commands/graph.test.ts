@@ -72,4 +72,27 @@ describe('runGraphCommand', () => {
         expect(result.links).toHaveLength(1);
       }
     ));
+
+  // AC-9 (#452): folder nodes are for the VS Code graph view only
+  it('emits no folder nodes for notes in folders', () =>
+    withTmpWorkspace(
+      {
+        'projects/alpha/kickoff.md': '# Kickoff\n\n[[top]]',
+        'top.md': '# Top',
+      },
+      async ({ rootDir }) => {
+        const logger = new TestLogger();
+        const code = await runGraphCommand(['--workspace', rootDir], logger);
+        expect(code).toBe(0);
+
+        const result = JSON.parse(logger.logs[0]);
+        expect(result.nodes.map((n: any) => n.id).sort()).toEqual([
+          'projects/alpha/kickoff.md',
+          'top.md',
+        ]);
+        expect(result.links).toEqual([
+          { source: 'projects/alpha/kickoff.md', target: 'top.md' },
+        ]);
+      }
+    ));
 });

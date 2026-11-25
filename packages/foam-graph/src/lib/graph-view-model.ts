@@ -8,6 +8,7 @@ import type {
 } from './types';
 import { matchesGroup } from './groups';
 import { getFocusSubset } from './graph-utils';
+import { defaultViewState } from './view-state';
 
 export interface VisibleGraph {
   nodeInfo: Record<string, GraphModelNode>;
@@ -15,7 +16,13 @@ export interface VisibleGraph {
   links: GraphModelLink[];
 }
 
-const ALWAYS_KEEP_TYPES = new Set(['tag', 'attachment', 'image', 'placeholder']);
+const ALWAYS_KEEP_TYPES = new Set([
+  'tag',
+  'attachment',
+  'image',
+  'placeholder',
+  'folder',
+]);
 const BUILTIN_TYPES = new Set([...ALWAYS_KEEP_TYPES, 'note']);
 
 export function computeVisibleGraph(
@@ -30,6 +37,7 @@ export function computeVisibleGraph(
       .filter(node => isNodeVisible(node, showNodesOfType, groups))
       .map(node => node.id)
   );
+  dropFoldersHoldingNothingShown(graphModel, nodeIds);
 
   if (focusNodeId && graphScope !== 'full') {
     const focusSet = getFocusSubset(graphModel, focusNodeId, graphScope.depth);
@@ -64,10 +72,11 @@ export function deriveNodeTypeFilters(
     ...Object.keys(style.node).filter(type => !BUILTIN_TYPES.has(type)),
   ]);
   const next = { ...current };
+  const defaults = defaultViewState().showNodesOfType;
 
   for (const type of types) {
     if (next[type] == null) {
-      next[type] = type !== 'image' && type !== 'attachment';
+      next[type] = defaults[type] ?? true;
     }
   }
 
@@ -137,6 +146,44 @@ export function computePreviewMatchCount(
   };
   return Object.values(graphModel.nodeInfo).filter(node => matchesGroup(node, rule))
     .length;
+}
+
+/**
+ * Removes from `nodeIds` each folder that holds nothing in `nodeIds`, through
+ * folders that are in it, so a folder is not left floating once everything
+ * under it is hidden.
+ */
+function dropFoldersHoldingNothingShown(
+  graphModel: GraphModel,
+  nodeIds: Set<string>
+) {
+  const holding = new Set<string>();
+  for (const id of nodeIds) {
+    if (graphModel.nodeInfo[id].type === 'folder') continue;
+    let folder = getParentFolder(graphModel, id);
+    while (folder && nodeIds.has(folder) && !holding.has(folder)) {
+      holding.add(folder);
+      folder = getParentFolder(graphModel, folder);
+    }
+  }
+  for (const id of nodeIds) {
+    if (graphModel.nodeInfo[id].type === 'folder' && !holding.has(id)) {
+      nodeIds.delete(id);
+    }
+  }
+}
+
+function getParentFolder(graphModel: GraphModel, id: string) {
+  for (const link of graphModel.nodeInfo[id].links) {
+    const source = GraphModelLink.getNodeId(link.source);
+    if (
+      GraphModelLink.getNodeId(link.target) === id &&
+      graphModel.nodeInfo[source]?.type === 'folder'
+    ) {
+      return source;
+    }
+  }
+  return undefined;
 }
 
 function isNodeVisible(

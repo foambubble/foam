@@ -3,7 +3,12 @@ import type { TemplateResult } from 'lit';
 
 import { FoamGraph } from './foam-graph';
 import type { ControlPanel } from './components/control-panel';
-import { makeGraph, renderedElements, renderedMarkup } from './test-utils';
+import {
+  fillOf,
+  makeGraph,
+  renderedElements,
+  renderedMarkup,
+} from './test-utils';
 
 /** The control panel the graph drew, which is there hidden or shown. */
 const panelOf = (root: HTMLElement) =>
@@ -614,5 +619,82 @@ describe('foam-graph', () => {
     element.applyViewState({});
 
     expect(element.getViewState().showNodesOfType?.tag).toBe(false);
+  });
+});
+
+describe('foam-graph folders (#452)', () => {
+  const folderId = 'folder:/ws/projects';
+  const folderGraph = () =>
+    makeGraph({
+      nodeInfo: {
+        [folderId]: {
+          id: folderId,
+          type: 'folder',
+          title: 'projects',
+          properties: {},
+          tags: [],
+        },
+        '/ws/projects/kickoff.md': {
+          id: '/ws/projects/kickoff.md',
+          type: 'note',
+          title: 'Kickoff',
+          properties: {},
+          tags: [],
+        },
+      },
+      links: [{ source: folderId, target: '/ws/projects/kickoff.md' }],
+    });
+  const loadGraph = (element: FoamGraph) => {
+    element.graphData = folderGraph();
+    (element as any).updated(new Map([['graphData', null]]));
+  };
+  const drawsFolder = (element: FoamGraph) =>
+    (element as any).visibleGraph.nodeInfo[folderId] !== undefined;
+
+  // AC-6
+  it('hides folders by default, behind an unchecked Show folders', () => {
+    const element = new FoamGraph();
+    element.showControls = true;
+    loadGraph(element);
+
+    expect(drawsFolder(element)).toBe(false);
+    const panel = panelOf(renderedElements(element.render()));
+    expect(panel.showNodesOfType.folder).toBe(false);
+  });
+
+  // AC-6
+  it('shows folders once checked, and restores that choice with the view', () => {
+    const element = new FoamGraph();
+    element.showControls = true;
+    loadGraph(element);
+
+    panelOf(renderedElements(element.render())).dispatchEvent(
+      new CustomEvent('toggle-node-type', {
+        detail: { type: 'folder', visible: true },
+      })
+    );
+
+    expect(drawsFolder(element)).toBe(true);
+    const saved = element.getViewState();
+    const reopened = new FoamGraph();
+    reopened.applyViewState(saved);
+    loadGraph(reopened);
+    expect(drawsFolder(reopened)).toBe(true);
+  });
+
+  // AC-7
+  it('shows folders in the colour a view gives them', () => {
+    const element = new FoamGraph();
+    element.graphStyle = {
+      showNodesOfType: { folder: true },
+      style: { node: { folder: '#888888' } },
+    };
+    element.applyViewState({});
+    loadGraph(element);
+
+    expect(drawsFolder(element)).toBe(true);
+    const style = (element as any).resolvedStyle;
+    const folder = (element as any).visibleGraph.nodeInfo[folderId];
+    expect(fillOf(folder, style.colorMode, style)).toBe('rgb(136, 136, 136)');
   });
 });

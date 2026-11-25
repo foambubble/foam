@@ -162,6 +162,7 @@ function generateGraphData(foam: Foam) {
   return buildGraphData(foam.workspace.list(), foam.graph.getAllConnections(), {
     resourceToId: uri => uri.path,
     includePlaceholders: true,
+    folderRoots: foam.workspace.roots,
   });
 }
 
@@ -329,11 +330,13 @@ export function viewConfigToStyle(config: GraphViewConfig): GraphStyle {
       )
     : undefined;
 
+  // folders are shown only where a view enables them; colouring them alone
+  // does not
   const showNodesOfType = config.show
     ? Object.fromEntries(
         Object.entries(config.show).map(([type, cfg]) => [
           type,
-          cfg.enabled ?? true,
+          cfg.enabled ?? type !== 'folder',
         ])
       )
     : undefined;

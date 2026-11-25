@@ -65,6 +65,27 @@ describe('deriveNodeTypeFilters', () => {
     });
   });
 
+  // AC-6 (#452)
+  it('defaults folders to hidden', () => {
+    const graph = createGraphModel(
+      makeGraph({
+        nodeInfo: {
+          'folder:/ws/notes': {
+            id: 'folder:/ws/notes',
+            type: 'folder',
+            title: 'notes',
+            properties: {},
+            tags: [],
+          },
+        },
+      })
+    );
+
+    const filters = deriveNodeTypeFilters(graph, makeStyle(), {});
+
+    expect(filters.folder).toBe(false);
+  });
+
   it('preserves configured visibility and adds styled custom types', () => {
     const graph = createGraphModel(
       makeGraph({
@@ -152,6 +173,58 @@ describe('computeVisibleGraph', () => {
 
     expect(visible.nodes.map(node => node.id).sort()).toEqual(['a', 'b']);
     expect(visible.links).toEqual([{ source: 'a', target: 'b' }]);
+  });
+});
+
+describe('computeVisibleGraph folders (#452)', () => {
+  const node = (id: string, type: string) => ({
+    id,
+    type,
+    title: id,
+    properties: {},
+    tags: [],
+  });
+  const graph = createGraphModel(
+    makeGraph({
+      nodeInfo: {
+        docs: node('docs', 'folder'),
+        assets: node('assets', 'folder'),
+        icons: node('icons', 'folder'),
+        note: node('note', 'note'),
+        diagram: node('diagram', 'image'),
+        logo: node('logo', 'image'),
+      },
+      links: [
+        { source: 'docs', target: 'note' },
+        { source: 'assets', target: 'diagram' },
+        { source: 'assets', target: 'icons' },
+        { source: 'icons', target: 'logo' },
+      ],
+    })
+  );
+  const visibleIds = (showNodesOfType: Record<string, boolean>) =>
+    computeVisibleGraph(graph, showNodesOfType, [], null, 'full')
+      .nodes.map(n => n.id)
+      .sort();
+
+  // AC-10
+  it('hides a folder, and its subfolders, while every file under it is hidden', () => {
+    expect(visibleIds({ folder: true, note: true, image: false })).toEqual([
+      'docs',
+      'note',
+    ]);
+  });
+
+  // AC-10
+  it('shows the folder again once its files are shown', () => {
+    expect(visibleIds({ folder: true, note: true, image: true })).toEqual([
+      'assets',
+      'diagram',
+      'docs',
+      'icons',
+      'logo',
+      'note',
+    ]);
   });
 });
 

@@ -69,6 +69,14 @@ describe('color by directory', () => {
     // tags are not file-based, so directory coloring does not apply to them
     expect(fillOf(graph.tagNode, 'directory')).toBe(fillOf(graph.tagNode, 'type'));
   });
+
+  it('folders keep their own color regardless of directory', () => {
+    const style = makeStyle({
+      node: { note: '#1111ff', placeholder: '#333333', tag: '#ffff00', folder: '#888888' },
+    });
+    const folder = makeNode({ id: 'folder:/work/sub', type: 'folder' });
+    expect(fillOf(folder, 'directory', style)).toBe('rgb(136, 136, 136)');
+  });
 });
 
 describe('color by none', () => {

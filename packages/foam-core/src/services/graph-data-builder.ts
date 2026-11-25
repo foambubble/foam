@@ -1,6 +1,7 @@
 import type { Resource } from '../model/note';
 import type { Connection } from '../model/graph';
 import type { URI } from '../model/uri';
+import { isWithinPath } from '../utils/path';
 
 export interface GraphNodeData {
   id: string;
@@ -55,6 +56,16 @@ export interface GraphBuilderOptions {
    * when their source is included. Defaults to `false`.
    */
   includePlaceholders?: boolean;
+  /**
+   * Workspace roots whose folders become `folder` nodes. Each folder holding
+   * an included resource, directly or in a subfolder, links to its
+   * subfolders and to the resources directly inside it. A root gets no node
+   * of its own, and placeholders belong to no folder.
+   *
+   * A folder's id is `folder:` followed by its path, so `resourceToId` must
+   * not return ids of that form. Defaults to no roots, and so no folders.
+   */
+  folderRoots?: URI[];
 }
 
 export function buildGraphData(
@@ -66,6 +77,7 @@ export function buildGraphData(
     resourceToId,
     transformProperties,
     includePlaceholders = false,
+    folderRoots = [],
   } = options;
   const nodeInfo: Record<string, GraphNodeData> = {};
   const links = new Map<string, { source: string; target: string }>();
@@ -89,6 +101,30 @@ export function buildGraphData(
         : resource.properties ?? {},
       tags: resource.tags.map(tag => ({ label: tag.label })),
     };
+
+    const root = folderRoots.find(r => isWithinPath(resource.uri, r));
+    let childId = id;
+    let folder = resource.uri.getDirectory();
+    // compared by length: drive letters may differ in case from the root's
+    while (root && folder.path.length > root.path.length) {
+      const folderId = `folder:${folder.path}`;
+      links.set(`${folderId}->${childId}`, {
+        source: folderId,
+        target: childId,
+      });
+      if (folderId in nodeInfo) {
+        break;
+      }
+      nodeInfo[folderId] = {
+        id: folderId,
+        type: 'folder',
+        title: folder.getBasename(),
+        properties: {},
+        tags: [],
+      };
+      childId = folderId;
+      folder = folder.getDirectory();
+    }
   }
 
   for (const connection of connections) {

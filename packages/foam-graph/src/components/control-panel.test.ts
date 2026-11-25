@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { ControlPanel } from './control-panel';
-import { renderedMarkup } from '../test-utils';
+import { makeStyle, renderedMarkup } from '../test-utils';
 
 /** The panel in the document, drawn, so its own controls can be activated. */
 const mountPanel = async () => {
@@ -33,6 +33,33 @@ describe('foam-control-panel', () => {
       .click();
 
     expect(events).toHaveLength(1);
+    panel.remove();
+  });
+
+  // AC-6 (#452)
+  it('offers Show folders among the built-in types, unchecked while folders are hidden', async () => {
+    const panel = await mountPanel();
+    panel.style = makeStyle();
+    panel.showNodesOfType = { note: true, tag: true, folder: false };
+    await panel.updateComplete;
+    const events: CustomEvent[] = [];
+    panel.addEventListener('toggle-node-type', event =>
+      events.push(event as CustomEvent)
+    );
+
+    const row = Array.from(
+      panel.shadowRoot!.querySelectorAll<HTMLElement>('.checkbox-row')
+    ).find(r => r.textContent!.includes('Show folders'))!;
+    const checkbox = row.querySelector<HTMLInputElement>(
+      'input[type="checkbox"]'
+    )!;
+    expect(checkbox.checked).toBe(false);
+
+    checkbox.click();
+
+    expect(events.map(event => event.detail)).toEqual([
+      { type: 'folder', visible: true },
+    ]);
     panel.remove();
   });
 

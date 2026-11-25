@@ -37,11 +37,11 @@ Foam helps you create the connections between your notes, and your placeholders 
 
 ![Link Autocompletion](./assets/screenshots/feature-link-autocompletion.gif)
 
-### Sync links on file rename
+### Sync links on rename
 
-Foam updates the links to renamed files, so your notes stay consistent.
+Foam updates the links to renamed files and sections, so your notes stay consistent.
 
-![Sync links on file rename](./assets/screenshots/feature-link-sync.gif)
+![Sync links on rename](./assets/screenshots/feature-link-sync.gif)
 
 ### Unique identifiers across directories
 
@@ -85,16 +85,16 @@ Foam supports link aliasing, so you can have a `[[wikilink]]`, or a `[[wikilink|
 
 ### Templates
 
-Use [custom templates](https://docs.foam.md/features/templates/) to have avoid repetitve work on your notes.
+Use [custom templates](https://docs.foam.md/features/templates/) to avoid repetitive work on your notes.
 
 ![Templates](./assets/screenshots/feature-templates.gif)
 
-### Backlinks Panel
+### Connections Panel
 
-Quickly check which notes are referencing the currently active note.
-See for each occurrence the context in which it lives, as well as a preview of the note.
+See which notes link to the current note, and which notes it links to, in the [Connections panel](https://docs.foam.md/features/backlinking/).
+Each link shows the line it appears in: click it to jump there.
 
-![Backlinks Panel](./assets/screenshots/feature-backlinks-panel.gif)
+![Connections Panel](./assets/screenshots/feature-backlinks-panel.gif)
 
 ### Tag Explorer Panel
 
@@ -133,7 +133,7 @@ With references you can also make your notes navigable both in GitHub UI as well
 ### Commands
 
 - Explore your knowledge base with the `Foam: Open Random Note` command
-- Access your daily note with the `Foam: Open Daily Note` command
+- Open today's note with the `Foam: Open Today's Note` command, or pick another day with `Foam: Open Daily Note`
 - Create a new note with the `Foam: Create New Note` command
   - This becomes very powerful when combined with [note templates](https://docs.foam.md/features/templates/) and the `Foam: Create New Note from Template` command
 - See your workspace as a connected graph with the `Foam: Show Graph` command

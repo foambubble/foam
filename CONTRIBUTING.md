@@ -85,6 +85,7 @@ We use the following convention in Foam:
 
 - `*.test.ts` are unit tests (Vitest, no VS Code dependency)
 - `*.spec.ts` are integration tests (need the VS Code extension host; those marked `/* @unit-ready */` also run against a mock)
+- `*.ui.ts` are UI tests that drive a real VS Code window (`yarn workspace foam-vscode test:ui`; they run outside CI)
 
 Tests live alongside the code in `src`.
 

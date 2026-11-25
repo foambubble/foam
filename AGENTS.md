@@ -50,9 +50,10 @@ In `foam-vscode`:
 | --------------------------- | ------------------------------------------------------------------------------------- |
 | `yarn test:unit`            | `*.test.ts` + `@unit-ready` specs against the mock `vscode` — **use this by default** |
 | `yarn test:e2e`             | all `*.spec.ts` in a real VS Code host (slow)                                         |
+| `yarn test:ui [files]`      | `*.ui.ts` in a real VS Code window; not part of `yarn test`                           |
 | `yarn test-reset-workspace` | clean the test workspace                                                              |
 
-The runner ignores extra arguments — you cannot run a single test, only the whole suite.
+The unit and e2e runners ignore extra arguments — you cannot run a single test, only the whole suite. `test:ui` takes file paths.
 
 Lint is oxlint (`yarn lint`; the pre-push hook runs it too). Formatting is Prettier with the config in the root `package.json`.
 
@@ -62,7 +63,7 @@ Lint is oxlint (`yarn lint`; the pre-push hook runs it too). Formatting is Prett
 
 **Never fix a test by weakening a correct expectation.** If the expectation is right, the code is wrong.
 
-`*.test.ts` are unit tests (Vitest, Node). `*.spec.ts` are integration tests needing the VS Code extension host. Both live alongside the code in `src/`. A test is integration if it depends on `vscode`, directly or transitively. A `*.spec.ts` starting with `/* @unit-ready */` can run against the mock `vscode` module — those run in both `test:unit` and `test:e2e`, intentionally. Details in `docs/dev/testing-conventions.md`.
+`*.test.ts` are unit tests (Vitest, Node). `*.spec.ts` are integration tests needing the VS Code extension host. Both live alongside the code in `src/`. A test is integration if it depends on `vscode`, directly or transitively. A `*.spec.ts` starting with `/* @unit-ready */` can run against the mock `vscode` module — those run in both `test:unit` and `test:e2e`, intentionally. `*.ui.ts` are UI tests that drive a real VS Code window, for `_verify: ui_` criteria; CI runs only the ones a pull request adds, so run any you add or change. Details in `docs/dev/testing-conventions.md`.
 
 - When a feature has a domain layer and a VS Code adapter, domain behavior (what is detected, which edits are produced) goes in `*.test.ts` and adapter plumbing (diagnostics collection, code actions, editor edits) in `*.spec.ts`. Don't re-assert domain results in the spec.
 - Keep mocking minimal. Never mock anything in `packages/foam-core`. Write code that's testable without mocks; use real I/O in temp directories when needed.

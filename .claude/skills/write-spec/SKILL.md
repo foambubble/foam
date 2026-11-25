@@ -111,9 +111,15 @@ it real.
    be a poor name for a commit that carries the implementation.
 
    Drop Out of scope or Open questions when genuinely empty. Every criterion
-   says how it is verified — `unit`, `e2e` or `human` — and nothing else.
-   CI runs `unit` and `e2e` on every PR; `human` means somebody looks at it,
-   and is a promise to the same standard.
+   says how it is verified — `unit`, `e2e`, `ui` or `human` — and nothing
+   else. CI runs `unit` and `e2e` on every PR. `ui` is a `*.ui.ts` test
+   driving a real VS Code window, which runs outside CI except in the PR that
+   adds it, weekly, and by hand before a release. Choose it only for a fact
+   about the window that the VS Code API can't check: a webview's content,
+   what completion or hover draws, a theme, what survives a reload. A
+   criterion that asks for judgment, such as "findable" or "legible", stays
+   `human`, which means somebody looks at it, and is a promise to the same
+   standard.
 
    Past roughly ten criteria, propose a split into stacked specs with an
    explicit order, and say so under Open questions.

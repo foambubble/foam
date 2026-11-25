@@ -20,6 +20,7 @@ export const defaultViewState = () => ({
     attachment: false,
     note: true,
     tag: true,
+    folder: false,
   } as Record<string, boolean>,
   groups: [] as GroupRule[],
   localStylePatch: {} as GraphStyle,

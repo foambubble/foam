@@ -328,12 +328,40 @@ describe('default node styles', () => {
     const sizeOf = (type: string, links: number) => {
       const node = place({ id: 'n', type, neighbors: Array(links).fill('x') });
       const [shape] = drawingsAt(paint([node], { style }), 0, 0)[0].shapes;
-      return shape.kind === 'circle' ? shape.radius : shape.extent;
+      return shape.kind === 'circle'
+        ? shape.radius
+        : shape.kind === 'square'
+        ? shape.half
+        : shape.extent;
     };
 
     for (const type of ['tag', 'placeholder', 'attachment', 'image']) {
       expect(sizeOf(type, 20)).toBe(sizeOf(type, 0));
     }
+  });
+
+  // AC-8 (#452)
+  it('draws folders as squares of one size, whatever they hold', () => {
+    const holding = (count: number, x: number) =>
+      place(
+        { id: `holds-${count}`, type: 'folder', neighbors: Array(count).fill('x') },
+        x,
+        0
+      );
+    const ctx = paint([holding(1, 0), holding(200, 100)], {
+      style: getDefaultStyle(),
+    });
+    const squareSizesAt = (x: number) =>
+      drawingsAt(ctx, x, 0).flatMap(drawing =>
+        drawing.shapes.map(shape => (shape.kind === 'square' ? shape.half : NaN))
+      );
+
+    const small = squareSizesAt(0);
+    const large = squareSizesAt(100);
+    expect(small.length).toBeGreaterThan(0);
+    expect(small.every(half => half > 0)).toBe(true);
+    expect(large).toHaveLength(small.length);
+    large.forEach((half, i) => expect(half).toBeCloseTo(small[i]));
   });
 });
 

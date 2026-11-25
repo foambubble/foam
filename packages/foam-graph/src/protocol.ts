@@ -9,9 +9,11 @@ export type NodeType =
   | 'placeholder'
   | 'image'
   | 'attachment'
+  | 'folder'
   | string;
 
 export interface NodeInfo {
+  /** A `folder` node's id is `folder:` followed by the folder's path. */
   id: string;
   type: NodeType;
   title: string;
@@ -48,8 +50,11 @@ export interface StyleConfig {
  * it, not to the default entry's.
  */
 export interface NodeStyle {
-  /** Default `circle`. A diamond is a square the circle's diameter wide, turned 45°. */
-  shape?: 'circle' | 'diamond';
+  /**
+   * Default `circle`. A square is the circle's diameter wide; a diamond is
+   * that square turned 45°.
+   */
+  shape?: 'circle' | 'diamond' | 'square';
   /** Drawn as an outline in the type's colour instead of filled. */
   outline?: 'solid' | 'dashed';
   /**
@@ -123,7 +128,7 @@ export interface GraphViewState {
   labelMaxLength?: number;
 }
 
-/** Config for a built-in special type (tag, attachment, image, placeholder) */
+/** Config for a built-in special type (tag, attachment, image, placeholder, folder) */
 export interface BuiltinTypeConfig {
   enabled?: boolean;
   color?: string;
@@ -138,7 +143,7 @@ export interface GraphViewConfig {
   name?: string;
   colorBy?: 'none' | 'directory' | 'type';
   groups?: GroupRule[];
-  /** Visibility and color for built-in types: tag, attachment, image, placeholder */
+  /** Visibility and color for built-in types: tag, attachment, image, placeholder, folder */
   show?: Record<string, BuiltinTypeConfig>;
   background?: string;
   fontSize?: number;

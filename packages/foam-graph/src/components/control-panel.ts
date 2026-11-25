@@ -403,12 +403,14 @@ export class ControlPanel extends LitElement {
     'attachment',
     'image',
     'placeholder',
+    'folder',
   ];
   private static readonly _SPECIAL_LABELS: Record<string, string> = {
     tag: 'Show tags',
     attachment: 'Show attachments',
     image: 'Show images',
     placeholder: 'Show placeholders',
+    folder: 'Show folders',
   };
 
   private static readonly _MATCH_HINT: Record<string, string> = {

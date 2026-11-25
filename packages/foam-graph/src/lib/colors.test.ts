@@ -69,6 +69,21 @@ describe('color by directory', () => {
     // tags are not file-based, so directory coloring does not apply to them
     expect(fillOf(graph.tagNode, 'directory')).toBe(fillOf(graph.tagNode, 'type'));
   });
+
+  // AC-11 (#452)
+  it('folders take the color of the files directly inside them', () => {
+    const folder = makeNode({ id: 'folder:/work/sub', type: 'folder' });
+    const inside = makeNode({ id: '/work/sub/b.md', type: 'note' });
+    const beside = makeNode({ id: '/work/a.md', type: 'note' });
+    expect(fillOf(folder, 'directory')).toBe(fillOf(inside, 'directory'));
+    expect(fillOf(folder, 'directory')).not.toBe(fillOf(beside, 'directory'));
+  });
+
+  it('folders with a dot in their name take the color of their files', () => {
+    const folder = makeNode({ id: 'folder:/work/v1.2', type: 'folder' });
+    const inside = makeNode({ id: '/work/v1.2/notes.md', type: 'note' });
+    expect(fillOf(folder, 'directory')).toBe(fillOf(inside, 'directory'));
+  });
 });
 
 describe('color by none', () => {

@@ -2,7 +2,7 @@
 
 The graph view transforms your notes into a visual network, revealing connections between ideas. To open it, run the `Foam: Show Graph` command.
 
-Files and tags appear as nodes; links between files and file-to-tag relationships are the edges. Notes are circles that grow with the number of connections they have. Tags are diamonds, placeholders (links to notes that don't exist yet) are dashed rings, and attachments and images are hollow rings.
+Files and tags appear as nodes; links between files and file-to-tag relationships are the edges. Notes are circles that grow with the number of connections they have. Tags are diamonds, folders are squares, placeholders (links to notes that don't exist yet) are dashed rings, and attachments and images are hollow rings.
 
 ### The `Show Graph` command
 
@@ -43,9 +43,15 @@ The **Groups** panel (top-right of the graph) controls which nodes are visible a
 
 - `None` — each node type gets its own color
 - `Type` — colors by the note's `type` frontmatter property
-- `Directory` — colors by the directory the file lives in
+- `Directory` — colors by the directory the file lives in; a folder node gets the color of its files
 
-**Built-in types** — checkboxes and color dots for `tag`, `attachment`, `image`, and `placeholder` nodes. Uncheck to hide, click the colored dot to change the color.
+**Built-in types** — checkboxes and color dots for `tag`, `attachment`, `image`, `placeholder`, and `folder` nodes. Uncheck to hide, click the colored dot to change the color.
+
+Folders are hidden until you check **Show folders**. Each folder then links to its subfolders and to the files directly inside it, so a note with no links still sits beside the rest of its folder. To show folders whenever a view opens, enable them in the view's config (see [Named Views](#named-views)):
+
+```json
+"show": { "folder": { "enabled": true, "color": "#888888" } }
+```
 
 **Custom groups** — rules you define to color (and optionally hide) a subset of notes. Each group matches notes by a property and assigns a color. Click `+ Add group` to create one.
 

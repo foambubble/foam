@@ -114,6 +114,40 @@ describe('createGraphModel', () => {
     expect(graphModel.nodeInfo['parent/child'].type).toBe('tag');
   });
 
+  // AC-5 (#452)
+  it('keeps a nested tag and a folder of the same name as separate nodes', () => {
+    const folder = (id: string, title: string) => ({
+      id, type: 'folder', title, properties: {}, tags: [],
+    });
+    const graph = makeGraph({
+      nodeInfo: {
+        'folder:/ws/projects': folder('folder:/ws/projects', 'projects'),
+        'folder:/ws/projects/alpha': folder('folder:/ws/projects/alpha', 'alpha'),
+        '/ws/projects/alpha/kickoff.md': {
+          id: '/ws/projects/alpha/kickoff.md', type: 'note', title: 'Kickoff',
+          properties: {}, tags: [{ label: 'projects/alpha' }],
+        },
+      },
+      links: [
+        { source: 'folder:/ws/projects', target: 'folder:/ws/projects/alpha' },
+        { source: 'folder:/ws/projects/alpha', target: '/ws/projects/alpha/kickoff.md' },
+      ],
+    });
+
+    const graphModel = createGraphModel(graph);
+
+    const typesTitled = (title: string) =>
+      Object.values(graphModel.nodeInfo)
+        .filter(n => n.title === title)
+        .map(n => n.type);
+    expect(typesTitled('alpha')).toEqual(['folder']);
+    expect(typesTitled('#projects/alpha')).toEqual(['tag']);
+    expect(graphModel.nodeInfo['folder:/ws/projects/alpha'].neighbors).toEqual([
+      'folder:/ws/projects',
+      '/ws/projects/alpha/kickoff.md',
+    ]);
+  });
+
   it('should create a link from tag to note', () => {
     const graph = makeGraph({
       nodeInfo: {

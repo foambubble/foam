@@ -25,6 +25,7 @@ export function getDefaultStyle(): ResolvedStyle {
       placeholder: { outline: 'dashed', size: 0.8 },
       attachment: { outline: 'solid', size: 0.8 },
       image: { outline: 'solid', size: 0.8 },
+      folder: { shape: 'square', size: 0.7 },
     },
     colorMode: 'type',
     groups: [],

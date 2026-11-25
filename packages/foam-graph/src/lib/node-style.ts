@@ -43,6 +43,14 @@ export function traceShape(
     ctx.closePath();
     return;
   }
+  if (shape === 'square') {
+    ctx.moveTo(x - radius, y - radius);
+    ctx.lineTo(x + radius, y - radius);
+    ctx.lineTo(x + radius, y + radius);
+    ctx.lineTo(x - radius, y + radius);
+    ctx.closePath();
+    return;
+  }
   ctx.moveTo(x + radius, y);
   ctx.arc(x, y, radius, 0, 2 * Math.PI);
 }

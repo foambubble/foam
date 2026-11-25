@@ -217,6 +217,21 @@ describe('viewConfigToStyle', () => {
     expect(style.style?.node?.tag).toBe('#ff0000');
   });
 
+  // AC-7 (#452)
+  it('shows folders in their colour when a view enables them', () => {
+    const style = viewConfigToStyle({
+      show: { folder: { enabled: true, color: '#888888' } },
+    });
+    expect(style.showNodesOfType?.folder).toBe(true);
+    expect(style.style?.node?.folder).toBe('#888888');
+  });
+
+  it('keeps folders hidden when a view colours them without enabling them', () => {
+    const style = viewConfigToStyle({ show: { folder: { color: '#888888' } } });
+    expect(style.showNodesOfType?.folder).toBe(false);
+    expect(style.style?.node?.folder).toBe('#888888');
+  });
+
   it('omits style.node when no colors are set', () => {
     const style = viewConfigToStyle({ show: { tag: { enabled: false } } });
     expect(style.style?.node).toBeUndefined();
@@ -374,6 +389,37 @@ describe('foam.graph.titleMaxLength removal (#1205)', () => {
         .getConfiguration()
         .update('foam.graph.titleMaxLength', undefined);
     }
+  });
+});
+
+describe('graph data folders (#452)', () => {
+  it("sends a folder node for each workspace folder's subfolders", () => {
+    const rootA = URI.file('/a');
+    const rootB = URI.file('/b');
+    const workspace = createTestWorkspace([rootA, rootB]);
+    const inA = createTestNote({ uri: '/a/notes/one.md' });
+    const inB = createTestNote({ uri: '/b/notes/two.md' });
+    workspace.set(inA).set(inB);
+    const foam = { workspace, graph: FoamGraph.fromWorkspace(workspace) } as any;
+    const panel = {
+      webview: { postMessage: vi.fn() },
+    } as unknown as vscode.WebviewPanel;
+
+    updateGraph(panel, foam);
+
+    const { payload } = (panel.webview.postMessage as any).mock.calls[0][0];
+    const folders = Object.values<any>(payload.nodeInfo).filter(
+      node => node.type === 'folder'
+    );
+    expect(folders.map(folder => folder.title)).toEqual(['notes', 'notes']);
+    expect(payload.links).toEqual(
+      expect.arrayContaining(
+        folders.map(folder => expect.objectContaining({ source: folder.id }))
+      )
+    );
+    expect(payload.links.map(link => link.target).sort()).toEqual(
+      [inA.uri.path, inB.uri.path].sort()
+    );
   });
 });
 

@@ -28,11 +28,33 @@ export class ControlPanel extends LitElement {
       color: var(--vscode-foreground, #ccc);
       z-index: 10;
       user-select: none;
+      transform-origin: top right;
+      /* allow-discrete holds display: block until the fade-out ends */
+      transition:
+        opacity 150ms ease-out,
+        scale 150ms ease-out,
+        display 150ms allow-discrete;
+    }
+
+    /* where a fade-in starts from, since display: none has no style to leave */
+    @starting-style {
+      :host {
+        opacity: 0;
+        scale: 0.95;
+      }
     }
 
     /* the display: block above would otherwise outrank the UA's hidden rule */
     :host([hidden]) {
       display: none;
+      opacity: 0;
+      scale: 0.95;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      :host {
+        transition: none;
+      }
     }
 
     details {

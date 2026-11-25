@@ -102,11 +102,24 @@ export class FoamGraph extends LitElement {
       cursor: pointer;
       opacity: 0.75;
       z-index: 10;
+      transition: opacity 150ms ease-out;
+    }
+
+    @starting-style {
+      .show-controls {
+        opacity: 0;
+      }
     }
 
     .show-controls:hover,
     .show-controls:focus-visible {
       opacity: 1;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .show-controls {
+        transition: none;
+      }
     }
   `;
 

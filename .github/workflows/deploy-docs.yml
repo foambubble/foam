@@ -42,7 +42,7 @@ jobs:
             node_modules
             */*/node_modules
             packages/foam-vscode/.vscode-test
-          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock', 'packages/foam-vscode/src/test/run-tests.ts') }}-${{ secrets.CACHE_VERSION }}
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock', 'packages/foam-vscode/src/test/support/vscode-version.ts') }}-${{ secrets.CACHE_VERSION }}
       - name: Install Dependencies
         run: yarn
       - name: Publish Foam Docs Site

@@ -65,7 +65,7 @@ jobs:
             node_modules
             */*/node_modules
             packages/foam-vscode/.vscode-test
-          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock', 'packages/foam-vscode/src/test/run-tests.ts') }}-${{ secrets.CACHE_VERSION }}
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock', 'packages/foam-vscode/src/test/support/vscode-version.ts') }}-${{ secrets.CACHE_VERSION }}
       - run: yarn
       - run: yarn build
 
@@ -83,3 +83,13 @@ jobs:
           claude_args: |
             --model claude-opus-5
             --allowedTools "Bash(yarn:*),Bash(git:*),Bash(gh:*),Read,Write,Edit,Glob,Grep"
+
+      # The implement stage saves screenshots of what UI tests drew, including
+      # evidence for criteria a person judges; they outlive the job only here.
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ui-test-results
+          path: packages/foam-vscode/out/ui-test-results
+          if-no-files-found: ignore
+          retention-days: 14

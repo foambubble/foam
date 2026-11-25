@@ -1,0 +1,83 @@
+name: UI tests
+
+# The `*.ui.ts` tests drive a real VS Code window, so they stay out of CI:
+# a pull request runs only the UI tests it adds, and the whole set runs
+# weekly against main and when started by hand, as before a release
+# (docs/dev/releasing-foam.md).
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'packages/foam-vscode/src/**/*.ui.ts'
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ui-tests:
+    name: UI tests
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # a pull request checks out its merge commit; its first parent is
+          # the base, so the diff between the two is what the PR brings
+          fetch-depth: 2
+      - name: List the UI tests to run
+        id: select
+        run: |
+          if [ "$GITHUB_EVENT_NAME" != pull_request ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          files=$(git diff --name-only --no-renames --diff-filter=A HEAD^1 HEAD -- 'packages/foam-vscode/src/*.ui.ts' \
+            | sed 's|^packages/foam-vscode/||' | tr '\n' ' ')
+          if [ -z "$files" ]; then
+            echo "This pull request adds no UI test."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Running the UI tests this pull request adds: $files"
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            echo "files=$files" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Setup Node
+        if: steps.select.outputs.run == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+      - name: Restore Dependencies and VS Code test instance
+        if: steps.select.outputs.run == 'true'
+        uses: actions/cache@v6
+        with:
+          path: |
+            node_modules
+            */*/node_modules
+            packages/foam-vscode/.vscode-test
+          key: ${{ runner.os }}-${{ hashFiles('**/yarn.lock', 'packages/foam-vscode/src/test/support/vscode-version.ts') }}-${{ secrets.CACHE_VERSION }}
+      - name: Install Dependencies
+        if: steps.select.outputs.run == 'true'
+        run: yarn
+      - name: Build Packages
+        if: steps.select.outputs.run == 'true'
+        run: yarn build
+      - name: Run UI tests
+        if: steps.select.outputs.run == 'true'
+        # The file names come from the pull request, so they reach the shell
+        # through the environment, never interpolated into the script.
+        env:
+          FILES: ${{ steps.select.outputs.files }}
+        run: xvfb-run --auto-servernum --server-args='-screen 0 1600x1000x24' yarn workspace foam-vscode test:ui $FILES
+      - name: Keep screenshots
+        if: always() && steps.select.outputs.run == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ui-test-results
+          path: packages/foam-vscode/out/ui-test-results
+          if-no-files-found: ignore
+          retention-days: 14

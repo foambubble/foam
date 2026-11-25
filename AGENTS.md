@@ -22,6 +22,8 @@ Guidance for coding agents working in this repository — Claude Code, Codex, Cu
 
 **Nothing leaves the machine unless the contributor says so.** No pushes, PRs, issues, comments, or releases unless explicitly asked for in that same exchange. Cut branches from `origin/main` (fetch first — a local `main` may carry unpushed work), commit locally, and hand over a ready-to-paste PR title and description. Reading GitHub with `gh` is fine.
 
+**Land work on `main` by rebasing, not merging.** Asked to commit a branch on `main`, rebase the branch onto local `main`, then fast-forward `main` to it — no cherry-picks, no merge commits. `git fetch . <branch>:main` does the fast-forward when no worktree has `main` checked out, and refuses anything else. Landing on local `main` is not a push.
+
 ## Specs
 
 Work that warrants acceptance criteria before code gets a spec in `specs/<slug>/`. `spec.md` is what and why and is reviewer-visible; `plan.md` is how, and a code reviewer must not read it — a reviewer who knows the intended approach checks the code against the plan instead of checking whether it's right. `specs.local/` is the same layout, gitignored, for exploration that hasn't graduated.

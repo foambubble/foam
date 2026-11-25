@@ -2662,6 +2662,27 @@ export function resetMockState(): void {
     // Mock command for setting VS Code context
     return Promise.resolve();
   });
+
+  // Only moves by character, across line breaks like VS Code does
+  commands.registerCommand(
+    'cursorMove',
+    ({ to, by, value = 1 }: { to: string; by: string; value?: number }) => {
+      if ((to !== 'left' && to !== 'right') || by !== 'character') {
+        throw new Error(`cursorMove to ${to} by ${by} is not mocked`);
+      }
+      const editor = mockState.activeTextEditor;
+      if (editor) {
+        const { document } = editor;
+        const offset =
+          document.offsetAt(editor.selection.active) +
+          (to === 'left' ? -value : value);
+        const position = document.positionAt(offset);
+        editor.selection = new Selection(position, position);
+        editor.selections = [editor.selection];
+      }
+      return Promise.resolve();
+    }
+  );
 }
 
 // Initialize the mock state when the module is loaded

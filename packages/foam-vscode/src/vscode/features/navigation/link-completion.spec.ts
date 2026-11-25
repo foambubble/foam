@@ -937,3 +937,116 @@ describe('Accepting a completion with linkFormat set to link', () => {
     await deleteFile(source);
   });
 });
+
+// Inserts the item as a text editor does, leaving the cursor at the end of
+// the inserted text
+const insertInEditor = async (
+  editor: vscode.TextEditor,
+  item: vscode.CompletionItem
+) => {
+  const range = item.range as vscode.Range;
+  const text = String(item.insertText ?? item.label);
+  const edit = new vscode.WorkspaceEdit();
+  edit.replace(editor.document.uri, range, text);
+  await vscode.workspace.applyEdit(edit);
+  const end = range.start.translate(0, text.length);
+  editor.selection = new vscode.Selection(end, end);
+};
+
+const typeInEditor = async (editor: vscode.TextEditor, text: string) => {
+  const position = editor.selection.active;
+  const edit = new vscode.WorkspaceEdit();
+  edit.insert(editor.document.uri, position, text);
+  await vscode.workspace.applyEdit(edit);
+  const after = position.translate(0, text.length);
+  editor.selection = new vscode.Selection(after, after);
+};
+
+describe('Moving the cursor after accepting a completion in a text editor', () => {
+  it('puts the cursor after the closing brackets', async () => {
+    await closeEditors();
+    const target = await createFile('# Sprinkler', ['sprinkler.md']);
+    const source = await createFile('See [[spr]] here');
+    await waitForNoteInFoamWorkspace(target.uri);
+    const { doc, editor } = await showInEditor(source.uri);
+
+    const item = await completeAt(
+      doc,
+      new vscode.Position(0, 'See [[spr'.length),
+      'sprinkler'
+    );
+    await insertInEditor(editor, item);
+    await vscode.commands.executeCommand(
+      item.command.command,
+      ...(item.command.arguments ?? [])
+    );
+
+    expect(doc.getText()).toBe('See [[sprinkler]] here');
+    expect(editor.selection.active).toEqual(
+      new vscode.Position(0, 'See [[sprinkler]]'.length)
+    );
+
+    await deleteFile(target);
+    await deleteFile(source);
+  });
+
+  // The editor types the commit character right after inserting the
+  // completion, and it can reach Foam before the completion's command
+  it('keeps the cursor after a # that committed a note before the command ran', async () => {
+    await closeEditors();
+    const target = await createFile('# Sprinkler', ['sprinkler.md']);
+    const source = await createFile('See [[spr]] here');
+    await waitForNoteInFoamWorkspace(target.uri);
+    const { doc, editor } = await showInEditor(source.uri);
+
+    const item = await completeAt(
+      doc,
+      new vscode.Position(0, 'See [[spr'.length),
+      'sprinkler'
+    );
+    await insertInEditor(editor, item);
+    await typeInEditor(editor, '#');
+    await vscode.commands.executeCommand(
+      item.command.command,
+      ...(item.command.arguments ?? [])
+    );
+
+    expect(doc.getText()).toBe('See [[sprinkler#]] here');
+    expect(editor.selection.active).toEqual(
+      new vscode.Position(0, 'See [[sprinkler#'.length)
+    );
+
+    await deleteFile(target);
+    await deleteFile(source);
+  });
+
+  it('keeps the cursor after a | that committed a section before the command ran', async () => {
+    await closeEditors();
+    const target = await createFile('# Hose\n\n## Setup', ['hose.md']);
+    const source = await createFile('See [[hose#Set]] here');
+    await waitForNoteInFoamWorkspace(target.uri);
+    const { doc, editor } = await showInEditor(source.uri);
+
+    const foam = await getFoamFromVSCode();
+    const provider = new SectionCompletionProvider(foam.workspace);
+    const sections = await provider.provideCompletionItems(
+      doc,
+      new vscode.Position(0, 'See [[hose#Set'.length)
+    );
+    const item = sections.items.find(i => i.label === 'Setup');
+    await insertInEditor(editor, item);
+    await typeInEditor(editor, '|');
+    await vscode.commands.executeCommand(
+      item.command.command,
+      ...(item.command.arguments ?? [])
+    );
+
+    expect(doc.getText()).toBe('See [[hose#Setup|]] here');
+    expect(editor.selection.active).toEqual(
+      new vscode.Position(0, 'See [[hose#Setup|'.length)
+    );
+
+    await deleteFile(target);
+    await deleteFile(source);
+  });
+});

@@ -19,6 +19,15 @@ const COMPLETION_CURSOR_MOVE = {
   title: 'Foam: Move cursor after completion',
 };
 
+// The command for a completion that inserts `text` at `start`
+const completionCursorMove = (
+  start: vscode.Position,
+  text: string
+): vscode.Command => ({
+  ...COMPLETION_CURSOR_MOVE,
+  arguments: [start.translate(0, text.length)],
+});
+
 export default async function activate(
   context: vscode.ExtensionContext,
   foamPromise: Promise<Foam>
@@ -44,48 +53,30 @@ export default async function activate(
      */
     vscode.commands.registerCommand(
       COMPLETION_CURSOR_MOVE.command,
-      async () => {
+      async (insertEnd: vscode.Position) => {
         const activeEditor = vscode.window.activeTextEditor;
         // Without a text editor there is no cursor to move
         if (!activeEditor) {
           return;
         }
-        const document = activeEditor.document;
-        const currentPosition = activeEditor.selection.active;
-        const cursorChange = vscode.window.onDidChangeTextEditorSelection(
-          async e => {
-            const changedPosition = e.selections[0].active;
-            const preChar = document
-              .lineAt(changedPosition.line)
-              .text.charAt(changedPosition.character - 1);
-
-            const { character: selectionChar, line: selectionLine } =
-              e.selections[0].active;
-
-            const { line: completionLine, character: completionChar } =
-              currentPosition;
-
-            const inCompleteBySectionDivider =
-              linkCommitCharacters.includes(preChar) &&
-              selectionLine === completionLine &&
-              selectionChar === completionChar + 1;
-
-            cursorChange.dispose();
-            if (inCompleteBySectionDivider) {
-              await vscode.commands.executeCommand('cursorMove', {
-                to: 'left',
-                by: 'character',
-                value: 2,
-              });
-            }
-          }
-        );
-
         await vscode.commands.executeCommand('cursorMove', {
           to: 'right',
           by: 'character',
           value: 2,
         });
+        // The editor types a commit character before it handles this move,
+        // so the document holds it now, even when it reached Foam after this
+        // command started
+        const next = activeEditor.document.getText(
+          new vscode.Range(insertEnd, insertEnd.translate(0, 1))
+        );
+        if (linkCommitCharacters.includes(next)) {
+          await vscode.commands.executeCommand('cursorMove', {
+            to: 'left',
+            by: 'character',
+            value: 2,
+          });
+        }
       }
     )
   );
@@ -130,7 +121,7 @@ export class SectionCompletionProvider
           item.sortText = String(b.range.start.line).padStart(5, '0');
           item.range = replacementRange;
           item.commitCharacters = sectionCommitCharacters;
-          item.command = COMPLETION_CURSOR_MOVE;
+          item.command = completionCursorMove(replacementRange.start, label);
           return item;
         });
         return new vscode.CompletionList(items);
@@ -145,7 +136,7 @@ export class SectionCompletionProvider
         item.sortText = String(b.range.start.line).padStart(5, '0');
         item.range = replacementRange;
         item.commitCharacters = sectionCommitCharacters;
-        item.command = COMPLETION_CURSOR_MOVE;
+        item.command = completionCursorMove(replacementRange.start, b.label);
         return item;
       });
       return new vscode.CompletionList(items);
@@ -250,16 +241,19 @@ export class WikilinkCompletionProvider
         aliasSetting !== 'never' &&
         wikilinkRequiresAlias(resource, this.ws.defaultExtension);
 
-      item.insertText = useAlias
+      const insertText = useAlias
         ? `${identifier}|${resource.title}`
         : identifier;
+      item.insertText = insertText;
       // When using aliases or markdown link format, don't allow commit characters
       // since we either have the full text or will convert it
       item.commitCharacters =
         useAlias || linkFormat === 'link' ? [] : linkCommitCharacters;
       item.range = replacementRange;
       item.command =
-        linkFormat === 'link' ? convertToMarkdownLink : COMPLETION_CURSOR_MOVE;
+        linkFormat === 'link'
+          ? convertToMarkdownLink
+          : completionCursorMove(replacementRange.start, insertText);
       return item;
     });
     const aliases = this.ws.list().flatMap(resource =>
@@ -272,7 +266,8 @@ export class WikilinkCompletionProvider
 
         const identifier = this.ws.getIdentifier(resource.uri);
 
-        item.insertText = `${identifier}|${a.title}`;
+        const insertText = `${identifier}|${a.title}`;
+        item.insertText = insertText;
         // When using markdown link format, don't allow commit characters
         item.commitCharacters =
           linkFormat === 'link' ? [] : aliasCommitCharacters;
@@ -282,7 +277,7 @@ export class WikilinkCompletionProvider
         item.command =
           linkFormat === 'link'
             ? convertToMarkdownLink
-            : COMPLETION_CURSOR_MOVE;
+            : completionCursorMove(replacementRange.start, insertText);
 
         item.detail = `Alias of ${vscode.workspace.asRelativePath(
           toVsCodeUri(resource.uri)
@@ -297,7 +292,7 @@ export class WikilinkCompletionProvider
           vscode.CompletionItemKind.Interface
         );
         item.insertText = uri.path;
-        item.command = COMPLETION_CURSOR_MOVE;
+        item.command = completionCursorMove(replacementRange.start, uri.path);
         item.range = replacementRange;
         return item;
       }

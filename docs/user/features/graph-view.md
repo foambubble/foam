@@ -43,7 +43,7 @@ The **Groups** panel (top-right of the graph) controls which nodes are visible a
 
 - `None` — each node type gets its own color
 - `Type` — colors by the note's `type` frontmatter property
-- `Directory` — colors by the directory the file lives in
+- `Directory` — colors by the directory the file lives in; a folder node gets the color of its files
 
 **Built-in types** — checkboxes and color dots for `tag`, `attachment`, `image`, `placeholder`, and `folder` nodes. Uncheck to hide, click the colored dot to change the color.
 

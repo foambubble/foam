@@ -23,9 +23,9 @@ nodes and links, nothing that reshapes the layout or writes files.
 
 1. **Folders are a built-in node type, `folder`, modelled on `tag`.** A folder
    links to each of its subfolders and to each file directly inside it, the
-   way a tag links to its child tags and to its notes. Like tags and
-   placeholders, folders keep their own colour when the graph is coloured by
-   directory.
+   way a tag links to its child tags and to its notes. When the graph is
+   coloured by directory, a folder takes the colour of the files directly
+   inside it.
 2. **Hidden by default.** The control panel gets a "Show folders" checkbox
    among the built-in types. A view turns folders on with
    `show.folder.enabled: true` and colours them with `show.folder.color`; a
@@ -90,6 +90,11 @@ nodes and links, nothing that reshapes the layout or writes files.
 - **AC-10**: Given `assets/` holding only images, when folders are shown and
   images are hidden, then `assets` is not drawn; showing images brings it
   back.
+  _verify: unit_
+- **AC-11**: Given `plants/basil.md` and `garden-plan.md`, when folders are
+  shown and the graph is coloured by directory, then `plants` has basil's
+  colour, not the colour of `garden-plan.md`, and the control panel offers no
+  colour for folders.
   _verify: unit_
 
 ## Out of scope

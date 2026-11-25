@@ -13,6 +13,7 @@ export type NodeType =
   | string;
 
 export interface NodeInfo {
+  /** A `folder` node's id is `folder:` followed by the folder's path. */
   id: string;
   type: NodeType;
   title: string;

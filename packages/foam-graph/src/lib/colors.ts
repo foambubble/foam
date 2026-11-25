@@ -56,9 +56,12 @@ export function getNodeFillAndBorder(
     baseColor = nodeInfo.properties.color as string;
   } else if (colorMode === 'none') {
     baseColor = style.node['note'];
+  } else if (colorMode === 'directory' && nodeInfo.type === 'folder') {
+    // the trailing slash keeps a dotted folder name from reading as a file
+    baseColor = getDirectoryColor(nodeInfo.id.slice('folder:'.length) + '/');
   } else if (
     colorMode === 'directory' &&
-    !['placeholder', 'tag', 'folder'].includes(nodeInfo.type)
+    !['placeholder', 'tag'].includes(nodeInfo.type)
   ) {
     baseColor = getDirectoryColor(nodeInfo.id);
   } else {

@@ -63,6 +63,21 @@ describe('foam-control-panel', () => {
     panel.remove();
   });
 
+  // AC-11 (#452)
+  it('offers no folder color when coloring by directory', async () => {
+    const panel = await mountPanel();
+    panel.style = makeStyle({ colorMode: 'directory' });
+    panel.showNodesOfType = { note: true, tag: true, folder: true };
+    await panel.updateComplete;
+
+    const row = Array.from(
+      panel.shadowRoot!.querySelectorAll<HTMLElement>('.checkbox-row')
+    ).find(r => r.textContent!.includes('Show folders'))!;
+
+    expect(row.querySelector('.group-dot')).toBeNull();
+    panel.remove();
+  });
+
   it('draws reset only while the view has changed', () => {
     const panel = new ControlPanel();
 

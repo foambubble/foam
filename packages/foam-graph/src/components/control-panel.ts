@@ -512,8 +512,7 @@ export class ControlPanel extends LitElement {
                 >
                 ${this.style.colorMode !== 'directory' ||
                 type === 'tag' ||
-                type === 'placeholder' ||
-                type === 'folder'
+                type === 'placeholder'
                   ? html`<span
                       class="group-dot"
                       title="Click to change color"

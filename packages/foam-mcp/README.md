@@ -15,16 +15,11 @@ import { bootstrap, QueryStore, URI } from '@foam/core';
 const rootUri = URI.file('/path/to/workspace');
 
 // Bootstrap a Foam instance. The dataStore and watcher are yours to provide.
-const foam = await bootstrap(
-  [rootUri],
-  matcher,
-  watcher,        // optional — IWatcher implementation keeps the graph fresh
-  dataStore,      // IDataStore implementation
-  parser,
-  providers,
-  '.md',
-  'off'
-);
+const foam = await bootstrap({
+  roots: [rootUri],
+  dataStore, // IDataStore implementation
+  watcher, // optional — IWatcher implementation keeps the graph fresh
+});
 
 // Saved queries — backs the list_queries / get_query / run_query tools.
 const queryStore = new QueryStore(dataStore, rootUri);

@@ -13,7 +13,7 @@ import { mapWithConcurrency } from '../utils/core';
 import { Emitter } from '../common/event';
 import { ResourceProvider } from './provider';
 import { IDisposable } from '../common/lifecycle';
-import { IDataStore } from '../services/datastore';
+import { IDataStore, IMatcher } from '../services/datastore';
 import TrieMap from 'mnemonist/trie-map';
 
 export class FoamWorkspace implements IDisposable {
@@ -628,16 +628,20 @@ export class FoamWorkspace implements IDisposable {
     return identifier;
   }
 
+  /**
+   * Loads the files `dataStore` lists that `matcher` matches.
+   */
   static async fromProviders(
     roots: URI[],
     providers: ResourceProvider[],
     dataStore: IDataStore,
+    matcher: IMatcher,
     defaultExtension: string = '.md',
     fetchConcurrency: number = 256
   ): Promise<FoamWorkspace> {
     const workspace = new FoamWorkspace(roots, defaultExtension);
     await Promise.all(providers.map(p => workspace.registerProvider(p)));
-    const files = await dataStore.list();
+    const files = matcher.match(await dataStore.list());
     await mapWithConcurrency(files, fetchConcurrency, f =>
       workspace.fetchAndSet(f)
     );

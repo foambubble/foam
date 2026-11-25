@@ -223,16 +223,16 @@ export async function loadWorkspaceFromDirectory(
     new AttachmentResourceProvider(Config.getAttachmentExtensions()),
   ];
 
-  const foam = await bootstrap(
-    [rootUri],
+  const foam = await bootstrap({
+    roots: [rootUri],
     matcher,
-    options.watcher,
+    watcher: options.watcher,
     dataStore,
     parser,
     providers,
-    Config.getDefaultNoteExtension(),
-    options.watcher ? 'info' : 'debug'
-  );
+    defaultExtension: Config.getDefaultNoteExtension(),
+    timingLogLevel: options.watcher ? 'info' : 'debug',
+  });
 
   return {
     rootDir,

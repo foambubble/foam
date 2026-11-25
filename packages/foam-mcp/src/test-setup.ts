@@ -100,16 +100,14 @@ export async function withMcpServer<T>(
     ['.md']
   );
 
-  const foam = await bootstrap(
-    [rootUri],
-    new AlwaysIncludeMatcher(),
-    undefined,
-    dataStore as IDataStore,
+  const foam = await bootstrap({
+    roots: [rootUri],
+    matcher: new AlwaysIncludeMatcher(),
+    dataStore: dataStore as IDataStore,
     parser,
-    [provider],
-    '.md',
-    'off'
-  );
+    providers: [provider],
+    timingLogLevel: 'off',
+  });
 
   const server = new FoamMcpServer({
     foam,

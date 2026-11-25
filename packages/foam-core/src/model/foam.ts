@@ -8,6 +8,14 @@ import { ResourceParser } from './note';
 import { ResourceProvider } from './provider';
 import { FoamTags } from './tags';
 import { Logger, withTiming, withTimingAsync } from '../utils/log';
+import { GlobMatcher } from '../services/glob-matcher';
+import { createMarkdownParser } from '../services/markdown-parser';
+import { MarkdownResourceProvider } from '../services/markdown-provider';
+import {
+  AttachmentResourceProvider,
+  defaultAttachmentExtensions,
+} from '../services/attachment-provider';
+import { ALWAYS_EXCLUDED } from '../vscode-settings';
 
 export interface Services {
   dataStore: IDataStore;
@@ -29,23 +37,56 @@ export interface Foam extends IDisposable {
   tags: FoamTags;
 }
 
-export const bootstrap = async (
-  roots: URI[],
-  matcher: IMatcher,
-  watcher: IWatcher | undefined,
-  dataStore: IDataStore,
-  parser: ResourceParser,
-  initialProviders: ResourceProvider[],
-  defaultExtension: string = '.md',
-  timingLogLevel: 'debug' | 'info' | 'off' = 'info',
-  fetchConcurrency: number = 256
-) => {
+export interface BootstrapOptions {
+  /** The workspace folders */
+  roots: URI[];
+  /** Lists, reads and writes the workspace's files */
+  dataStore: IDataStore;
+  /**
+   * Which of the files the data store lists belong to the workspace.
+   * Defaults to every file under `roots` except {@link ALWAYS_EXCLUDED}.
+   */
+  matcher?: IMatcher;
+  /** Keeps the workspace in sync with changes; without one it is a snapshot */
+  watcher?: IWatcher;
+  /** Defaults to `createMarkdownParser()` */
+  parser?: ResourceParser;
+  /**
+   * Defaults to `.md` notes, plus images and
+   * {@link defaultAttachmentExtensions} as attachments
+   */
+  providers?: ResourceProvider[];
+  /** Extension given to new notes. Defaults to `.md` */
+  defaultExtension?: string;
+  /** Level at which load timings are logged. Defaults to `info` */
+  timingLogLevel?: 'debug' | 'info' | 'off';
+  /** How many files are read at once while loading. Defaults to 256 */
+  fetchConcurrency?: number;
+}
+
+export const bootstrap = async ({
+  roots,
+  dataStore,
+  matcher = new GlobMatcher(
+    roots.map(uri => ({ uri, include: ['**/*'], exclude: ALWAYS_EXCLUDED }))
+  ),
+  watcher,
+  parser = createMarkdownParser(),
+  providers = [
+    new MarkdownResourceProvider(dataStore, parser),
+    new AttachmentResourceProvider(defaultAttachmentExtensions),
+  ],
+  defaultExtension = '.md',
+  timingLogLevel = 'info',
+  fetchConcurrency = 256,
+}: BootstrapOptions) => {
   const workspace = await withTimingAsync(
     () =>
       FoamWorkspace.fromProviders(
         roots,
-        initialProviders,
+        providers,
         dataStore,
+        matcher,
         defaultExtension,
         fetchConcurrency
       ),

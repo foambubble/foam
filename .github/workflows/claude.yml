@@ -29,7 +29,7 @@ jobs:
       # not remove and which wins over the App token it puts in the remote
       # URL. Pushes then go out as github-actions[bot]: the runs they trigger
       # wait for approval, and review.yml refuses the actor.
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 1
           persist-credentials: false
@@ -56,10 +56,10 @@ jobs:
       # setup in ci.yml, including its cache key, so a warm cache makes this
       # cheap; a steering comment that touches no code just pays the cache
       # restore.
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         with:
           path: |
             node_modules

@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Actions Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Check spelling with custom config file
         uses: crate-ci/typos@v1.14.8
         with:
@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Run oxlint
         uses: oxc-project/oxlint-action@v3.0.0
         with:
@@ -43,13 +43,13 @@ jobs:
     #   OS: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: Restore Dependencies and VS Code test instance
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             node_modules
@@ -87,13 +87,13 @@ jobs:
       # v2: workspace bench regrouped by operation (benchmark keys changed)
       PERF_CACHE_VERSION: v2
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: Restore Dependencies and VS Code test instance
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             node_modules
@@ -113,7 +113,7 @@ jobs:
         # exists its baseline is frozen (not overwritten on a hit). Bump
         # PERF_CACHE_VERSION to force a reseed. One shared cache entry holds both
         # packages' baselines.
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             packages/foam-core/out/perf/perf-baseline.json
@@ -143,13 +143,13 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '22'
       - name: Restore Dependencies and VS Code test instance
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             node_modules

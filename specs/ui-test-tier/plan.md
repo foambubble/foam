@@ -23,15 +23,21 @@ then launches the downloaded build with this package as
 nondeterministic: the chat side bar, tips, the startup editor, telemetry,
 updates and workspace trust. It also starts on a fixed theme.
 
-It removes `ELECTRON_RUN_AS_NODE` from the child's environment itself. On a
-fresh profile Foam announces What's New once it has activated, so the harness
-waits for that notification and dismisses it, and uses it as the readiness
-signal. An `onTestFinished` hook screenshots the window when the test failed,
+It removes `ELECTRON_RUN_AS_NODE` from the child's environment itself. Foam
+declares no activation events, so nothing activates it at startup. The harness
+runs "Foam: Show What's New". VS Code runs a command only after its extension
+has finished activating, and Foam's activation includes loading the workspace
+(`extension.ts:180`), so the What's New page opening means Foam is ready. The
+harness then dismisses the fresh-profile notice and closes the page with its
+tab's Close button. A key pressed into that page, a webview still loading, is
+lost. An `onTestFinished` hook screenshots the window when the test failed,
 prints the path, then closes VS Code and removes the temp dir.
 
 The window object offers only what the tests use:
 - `openFile` (quick open);
-- `runCommand` (palette, matched by title prefix);
+- `runCommand` (palette, matched by title prefix). It fills the palette's
+  textbox instead of typing, and presses F1 again if the palette hasn't
+  opened: a key pressed in a webview reaches the workbench asynchronously;
 - `editorLines` and `hoverText`;
 - `webview(selector)` (the frame whose document has it);
 - `updateSettings` (rewrites the user `settings.json`, which VS Code picks up
@@ -56,7 +62,7 @@ on macOS) confirmed these handles:
   which is VS Code's documented contract for webviews.
 
 The one exception is the editor's drawn lines. `role=code` gives its text in
-DOM order, not line order, so `editorLines` and `textBox` read Monaco's
+DOM order, not line order, so `editorLines` and `hoverText` read Monaco's
 `.view-line` elements sorted by position. That class lives in the harness and
 nowhere else.
 
@@ -78,8 +84,11 @@ those files.
 3. AC-5 pilot, `src/vscode/features/graph-webview/graph-controls-panel.ui.ts`:
    - Open the graph, hide the panel, wait out the view-state save debounce
      (`VIEW_STATE_DEBOUNCE_MS`, 250 ms, in `foam-graph/src/host-bridge.ts:4`,
-     which isn't exported), reload, and expect the show control and no hide
-     control.
+     which isn't exported), reload, open the graph again, and expect the show
+     control and no hide control. The graph is opened after the reload, as
+     the criterion says, rather than relying on its restored tab: with no
+     `onWebviewPanel:foam-graph` activation event, that tab stays blank until
+     something else activates Foam.
    - Red first: temporarily drop `showControlPanel` from what
      `saveViewState` (`view-state-store.ts:31`) stores, run it, and confirm it
      fails at the post-reload assertion with a failure screenshot path
@@ -91,12 +100,13 @@ those files.
      evidence for 1787 AC-6, a judgment criterion that stays `human`;
    - `navigation/link-completion.ui.ts`: `[[` offers the workspace's notes and
      accepting one writes the link, and hovering a wikilink shows the linked
-     note;
+     note. Typing happens in an empty note, so no platform-specific key is
+     needed to reach the end of a document;
    - `notes/connections.ui.ts`: the Connections view lists the notes that link
      to the active note, and opening one shows it in the editor.
 5. `.github/workflows/ui-tests.yml`. The cache keys in `ci.yml` (three jobs),
-   `claude.yml` and the new workflow hash `vscode-version.ts` instead of
-   `run-tests.ts`. `claude.yml` uploads `out/ui-test-results` with
+   `claude.yml`, `deploy-docs.yml`, which shares the key, and the new workflow
+   hash `vscode-version.ts` instead of `run-tests.ts`. `claude.yml` uploads `out/ui-test-results` with
    `if: always()`.
 6. Process:
    - `specs/README.md` and `docs/dev/testing-conventions.md` (AC-6), with
@@ -134,7 +144,7 @@ checks.
   write-spec `SKILL.md`.
 - AC-7 → the implement `SKILL.md` diff.
 - AC-8 → the `review.yml` prompt diff.
-- AC-9 → `ui-tests.yml`. This PR adds four `*.ui.ts`, so its own checks are
+- AC-9 → `ui-tests.yml`. This PR adds three `*.ui.ts`, so its own checks are
   the first Linux run.
 - AC-10 → the `releasing-foam.md` diff.
 
@@ -187,8 +197,9 @@ Made while planning:
 - **Linux under xvfb is untested locally.** Docker isn't running on this
   machine. This PR's own `ui-tests.yml` run is the first Linux run.
   Sandboxing, GPU or font differences would surface there.
-- **Readiness depends on the What's New notification.** If it stops showing
-  on a fresh profile, every UI test fails at launch, loudly, in one place.
+- **Readiness depends on Foam's What's New command and its fresh-profile
+  notice.** If either changes, every UI test fails at launch, loudly, in one
+  place: `activateFoam` in the harness.
 - **Monaco's `.view-line` class** is the one internal selector. A VS Code bump
   that renames it breaks `editorLines` and `hoverText` in the harness only.
 - **Fixed wait in the pilot**, for the 250 ms view-state debounce, which has

@@ -5,6 +5,7 @@ import {
   _electron as electron,
   type ElectronApplication,
   type Frame,
+  type Locator,
   type Page,
 } from 'playwright-core';
 import { expect, inject, onTestFinished } from 'vitest';
@@ -143,18 +144,7 @@ export class VSCodeWindow {
   async runCommand(title: string) {
     const name = 'Type the name of a command to run.';
     const input = this.page.getByRole('textbox', { name });
-    // A key pressed in a webview reaches the workbench only once the webview
-    // has loaded, and then asynchronously: F1 may need pressing again, and
-    // the title is filled in rather than typed in case focus is still away.
-    for (let attempt = 1; ; attempt++) {
-      await this.page.keyboard.press('F1');
-      try {
-        await input.waitFor({ timeout: 5_000 });
-        break;
-      } catch (error) {
-        if (attempt === 3) throw error;
-      }
-    }
+    await this.openQuickInput('F1', input);
     await input.fill(`>${title}`);
     // a command with a keybinding carries it in the option's name
     await this.page
@@ -166,10 +156,11 @@ export class VSCodeWindow {
 
   /** Opens a workspace file in the editor through Quick Open. */
   async openFile(file: string) {
-    await this.page.keyboard.press('ControlOrMeta+P');
-    await this.page
-      .getByRole('textbox', { name: /^Search files by name/ })
-      .fill(file);
+    const input = this.page.getByRole('textbox', {
+      name: /^Search files by name/,
+    });
+    await this.openQuickInput('ControlOrMeta+P', input);
+    await input.fill(file);
     const name = path.basename(file);
     await this.page
       .getByRole('option', { name: new RegExp(`^${escapeRegExp(name)}`) })
@@ -178,6 +169,24 @@ export class VSCodeWindow {
     await this.page
       .getByRole('tab', { name: new RegExp(`^${escapeRegExp(name)}`) })
       .waitFor();
+  }
+
+  /**
+   * Presses `key` until `input`, the quick input it opens, is shown. A key
+   * pressed in a webview reaches the workbench only once the webview has
+   * loaded, and then asynchronously, so it may need pressing again; callers
+   * fill the input rather than type, in case focus is still away.
+   */
+  private async openQuickInput(key: string, input: Locator) {
+    for (let attempt = 1; ; attempt++) {
+      await this.page.keyboard.press(key);
+      try {
+        await input.waitFor({ timeout: 5_000 });
+        return;
+      } catch (error) {
+        if (attempt === 3) throw error;
+      }
+    }
   }
 
   /** The lines drawn in the editor that has focus, top to bottom. */

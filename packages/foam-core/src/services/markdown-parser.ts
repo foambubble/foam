@@ -21,6 +21,7 @@ import { Logger } from '../utils/log';
 import { getYAMLKey } from '../utils/md';
 import { URI } from '../model/uri';
 import { ICache } from '../utils/cache';
+import { mathSyntax } from './markdown-math';
 
 export interface ParserPlugin {
   name?: string;
@@ -43,7 +44,8 @@ export interface ParserCacheEntry {
  * This caches the parsed markdown for a given URI.
  *
  * The URI identifies the resource that needs to be parsed,
- * the checksum identifies the text that needs to be parsed.
+ * the checksum identifies the text that needs to be parsed and the parser
+ * options it is parsed with.
  *
  * If the URI and the Checksum have not changed, the cached resource is returned.
  */
@@ -88,11 +90,16 @@ function innermostWikilink(this: unified.Processor) {
   tokenizers.wikiLink = tokenizer;
 }
 
-const parser = unified()
-  .use(markdownParse, { gfm: true })
-  .use(frontmatterPlugin, ['yaml'])
-  .use(wikiLinkPlugin, { aliasDivider: '|' })
-  .use(innermostWikilink);
+const createProcessor = (math: boolean): unified.Processor => {
+  const processor = unified()
+    .use(markdownParse, { gfm: true })
+    .use(frontmatterPlugin, ['yaml'])
+    .use(wikiLinkPlugin, { aliasDivider: '|' })
+    .use(innermostWikilink);
+  return math ? processor.use(mathSyntax) : processor;
+};
+
+const parser = createProcessor(true);
 
 export function getLinkDefinitions(markdown: string): NoteLinkDefinition[] {
   const definitions: NoteLinkDefinition[] = [];
@@ -117,8 +124,19 @@ export function getLinkDefinitions(markdown: string): NoteLinkDefinition[] {
 export function createMarkdownParser(
   extraPlugins: ParserPlugin[] = [],
   cache?: ParserCache,
-  onParse?: ParseObserver
+  onParse?: ParseObserver,
+  options: {
+    /**
+     * Whether `$…$` and `$$…$$` are math, which holds no links or tags.
+     * Defaults to true.
+     */
+    math?: boolean;
+  } = {}
 ): ResourceParser {
+  const math = options.math ?? true;
+  const processor = createProcessor(math);
+  // A cached resource is only valid for the options it was parsed with
+  const checksumSuffix = math ? '' : ':no-math';
   const plugins = [
     titlePlugin,
     wikilinkPlugin,
@@ -132,7 +150,7 @@ export function createMarkdownParser(
 
   for (const plugin of plugins) {
     try {
-      plugin.onDidInitializeParser?.(parser);
+      plugin.onDidInitializeParser?.(processor);
     } catch (e) {
       handleError(plugin, 'onDidInitializeParser', undefined, e);
     }
@@ -148,7 +166,7 @@ export function createMarkdownParser(
           handleError(plugin, 'onWillParseMarkdown', uri, e);
         }
       }
-      const tree = parser.parse(markdown);
+      const tree = processor.parse(markdown);
 
       const note: Resource = {
         uri: uri,
@@ -306,7 +324,7 @@ export function createMarkdownParser(
   const cachedParser: ResourceParser = {
     parse: (uri: URI, markdown: string): Resource => {
       const start = performance.now();
-      const actualChecksum = hash(markdown);
+      const actualChecksum = hash(markdown) + checksumSuffix;
       if (cache.has(uri)) {
         const { checksum, resource } = cache.get(uri);
         if (actualChecksum === checksum) {
@@ -365,6 +383,10 @@ const getTextFromChildren = (root: Node): string => {
   visit(root, node => {
     if (node.type === 'text' || node.type === 'wikiLink') {
       text = text + ((node as any).value || '');
+    }
+    if (node.type === 'inlineMath') {
+      const { delimiter } = (node as any).data;
+      text = text + delimiter + (node as any).value + delimiter;
     }
   });
   return text;

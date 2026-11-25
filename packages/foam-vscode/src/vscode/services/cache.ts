@@ -39,7 +39,8 @@ export default class VsCodeBasedParserCache implements ParserCache {
   // v7: Section.headingRange added
   // v8: Resource.tasks added
   // v9: Section.labelRange added
-  static CACHE_VERSION = 9;
+  // v10: no wikilinks or tags read inside math ($…$, $$…$$)
+  static CACHE_VERSION = 10;
   static CACHE_VERSION_KEY = 'foam-cache-version';
   static CACHE_DIR_NAME = 'parser-cache';
   static BUCKET_COUNT = 64;

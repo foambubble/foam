@@ -134,7 +134,12 @@ export async function activate(context: ExtensionContext) {
 
     const parserCache = await VsCodeBasedParserCache.create(context);
     context.subscriptions.push(parserCache);
-    const parser = createMarkdownParser([], parserCache, profiler.onParse);
+    // A change to `markdown.math.enabled` applies from the next activation
+    const parser = createMarkdownParser([], parserCache, profiler.onParse, {
+      math: workspace
+        .getConfiguration('markdown')
+        .get<boolean>('math.enabled', true),
+    });
 
     const workspaceRoots =
       workspace.workspaceFolders?.map(folder => fromVsCodeUri(folder.uri)) ??

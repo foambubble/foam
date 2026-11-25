@@ -18,6 +18,9 @@
   "categories": [
     "Other"
   ],
+  "activationEvents": [
+    "onWebviewPanel:foam-graph"
+  ],
   "main": "./out/bundles/extension-node.js",
   "browser": "./out/bundles/extension-web.js",
   "capabilities": {

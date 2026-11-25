@@ -19,6 +19,7 @@ import {
   saveViewState,
 } from './view-state-store';
 
+export const GRAPH_VIEW_TYPE = 'foam-graph';
 const GRAPH_PANEL_TITLE = 'Foam Graph';
 const GRAPH_PANEL_TITLE_PREFIX = `${GRAPH_PANEL_TITLE}: `;
 
@@ -70,7 +71,7 @@ export default async function activate(
   };
 
   context.subscriptions.push(
-    vscode.window.registerWebviewPanelSerializer('foam-graph', {
+    vscode.window.registerWebviewPanelSerializer(GRAPH_VIEW_TYPE, {
       async deserializeWebviewPanel(
         webviewPanel: vscode.WebviewPanel,
         _state: unknown
@@ -172,7 +173,7 @@ async function createGraphPanel(
   options: { initialStyle?: GraphStyle; view?: string } = {}
 ) {
   const panel = vscode.window.createWebviewPanel(
-    'foam-graph',
+    GRAPH_VIEW_TYPE,
     graphPanelTitle(options.view),
     vscode.ViewColumn.Beside,
     {

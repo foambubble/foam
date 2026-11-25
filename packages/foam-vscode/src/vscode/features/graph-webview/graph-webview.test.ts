@@ -9,6 +9,7 @@ import {
   createWebviewMessageHandler,
   getGraphStyle,
   getNodeNavigationCommand,
+  GRAPH_VIEW_TYPE,
   handleActiveResourceChange,
   mergeStyles,
   postRestyledView,
@@ -430,6 +431,19 @@ describe('viewNameFromPanelTitle', () => {
 
   it('maps the nameless panel title to the Default bucket', () => {
     expect(viewNameFromPanelTitle('Foam Graph')).toBe('Default');
+  });
+});
+
+describe('graph panel restore', () => {
+  it('declares the activation event VS Code fires to restore a graph panel', () => {
+    const pkg = JSON.parse(
+      fs.readFileSync(path.join(__dirname, '../../../../package.json'), 'utf-8')
+    );
+    // VS Code fires this event to restore a panel and infers it from no
+    // contribution point, so only the manifest can declare it
+    expect(pkg.activationEvents ?? []).toContain(
+      `onWebviewPanel:${GRAPH_VIEW_TYPE}`
+    );
   });
 });
 

@@ -1,5 +1,15 @@
 # Change Log
 
+## 0.50.0
+
+### Minor Changes
+
+- The graph's controls panel stays out of the way:
+
+  - The ✕ in its corner hides the panel, leaving a small button that brings it back; each view remembers whether its panel is shown (#1787)
+  - **Reset view** is now an icon beside the ✕, shown only while the view differs from its configured settings
+  - Right-clicking the graph no longer opens a Cut, Copy and Paste menu
+
 ## 0.49.0
 
 ### Minor Changes

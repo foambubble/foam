@@ -1,6 +1,6 @@
 {
   "scopeName": "foam.wikilink.injection",
-  "injectionSelector": "L:meta.paragraph.markdown, L:markup.heading.markdown, L:markup.list.unnumbered.markdown, L:markup.list.numbered.markdown",
+  "injectionSelector": "L:meta.paragraph.markdown, L:markup.heading.markdown",
   "patterns": [
     {
       "comment": "Footnote reference: [^id] (not a definition line [^id]: ...)",

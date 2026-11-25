@@ -161,16 +161,16 @@ export async function activate(context: ExtensionContext) {
     profiler.start();
     eventLoopMonitor.start();
 
-    const foamPromise = bootstrap(
-      workspaceRoots,
+    const foamPromise = bootstrap({
+      roots: workspaceRoots,
       matcher,
       watcher,
       dataStore,
       parser,
-      [markdownProvider, attachmentProvider],
+      providers: [markdownProvider, attachmentProvider],
       defaultExtension,
-      embeddingProvider
-    );
+      embeddingProvider,
+    });
 
     // Load the features
     const featuresPromises = features.map(feature =>

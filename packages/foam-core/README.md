@@ -18,57 +18,31 @@ Load a folder of notes from disk, then look up a note's links and backlinks, lin
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
-  ALWAYS_EXCLUDED,
-  AttachmentResourceProvider,
   bootstrap,
-  createMarkdownParser,
   GenericDataStore,
-  GlobMatcher,
   listOrphans,
   listPlaceholders,
-  MarkdownResourceProvider,
   resolveNote,
   URI,
 } from 'foam-core';
 
 const root = URI.file('/path/to/notes');
 
-// Which files belong to the workspace (globs are relative to the root)
-const matcher = new GlobMatcher([
-  {
-    uri: root,
-    include: ['**/*'],
-    exclude: [...ALWAYS_EXCLUDED, '**/node_modules/**'],
-  },
-]);
-
-// How to list and read them
+// How to list and read the files in the workspace
 const listFiles = async () => {
   const entries = await readdir(root.toFsPath(), {
     recursive: true,
     withFileTypes: true,
   });
-  const files = entries
+  return entries
     .filter(entry => entry.isFile())
     .map(entry => URI.file(join(entry.parentPath, entry.name)));
-  return matcher.match(files);
 };
 const dataStore = new GenericDataStore(listFiles, uri =>
   readFile(uri.toFsPath(), 'utf8')
 );
 
-const parser = createMarkdownParser();
-const foam = await bootstrap(
-  [root],
-  matcher,
-  undefined, // no watcher: load a snapshot
-  dataStore,
-  parser,
-  [
-    new MarkdownResourceProvider(dataStore, parser),
-    new AttachmentResourceProvider(),
-  ]
-);
+const foam = await bootstrap({ roots: [root], dataStore });
 const { workspace, graph } = foam;
 
 // Find a note by the identifier you'd write in a [[wikilink]]
@@ -111,14 +85,14 @@ Foam logs load timings to the console; `Logger.setLevel('warn')` quiets them.
 
 | | |
 | --- | --- |
-| `bootstrap(roots, matcher, watcher, dataStore, parser, providers)` | Loads every matched file and returns a `Foam`: `{ workspace, graph, tags, dispose() }`. Pass an `IWatcher` (`onDidChange`, `onDidCreate`, `onDidDelete` events) to keep it in sync with changes on disk; without one you get a snapshot. |
+| `bootstrap({ roots, dataStore })` | Loads the workspace and returns a `Foam`: `{ workspace, graph, tags, dispose() }`. Optional: `matcher` (by default every file except `.foam`, `.git` and the rest of `ALWAYS_EXCLUDED`), `parser`, `providers` (by default `.md` notes, images and `defaultAttachmentExtensions`), and `watcher`, an `IWatcher` (`onDidChange`, `onDidCreate`, `onDidDelete` events) that keeps the workspace in sync with changes on disk; without one you get a snapshot. |
 | `FoamWorkspace` | The loaded resources. `find(identifierOrUri)`, `list()`, `getIdentifier(uri)` (the shortest unique name, as used in wikilinks), `listByIdentifier(name)`. |
 | `FoamGraph` | The links between resources: `getLinks(uri)`, `getBacklinks(uri)`, `getAllConnections()`. A link to a note that doesn't exist becomes a placeholder node, listed in `graph.placeholders`. Updates when the workspace changes. |
 | `FoamTags` | `tags.tags`: every tag, mapped to where it appears. |
 | `Resource` | A parsed file: `uri`, `type` (`note`, `image`, `attachment`), `title`, `properties` (frontmatter), `tags`, `aliases`, `links`, `sections`, `blocks`, `tasks`. |
 | `URI` | How Foam identifies files. `URI.file(fsPath)` and `uri.toFsPath()` convert at the edges; `uri.path` is always POSIX. Functions take and return URIs, not path strings. |
 | `IDataStore` | How Foam lists, reads and writes files. Implement it for your storage, or wrap plain functions with `GenericDataStore`. |
-| `IMatcher` | Decides which files are part of the workspace. `GlobMatcher` takes include/exclude globs per root. |
+| `IMatcher` | Decides which of the files the data store lists are part of the workspace. `GlobMatcher` takes include/exclude globs per root. |
 | `ResourceProvider` | Turns a file into a `Resource`. `MarkdownResourceProvider` handles notes (`.md` by default — pass other extensions as its third argument); `AttachmentResourceProvider` handles images plus any extensions you list (`defaultAttachmentExtensions` adds PDFs, audio, video and office documents). Add your own for other file types. |
 
 ## Operations

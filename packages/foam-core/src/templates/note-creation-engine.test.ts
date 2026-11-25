@@ -26,9 +26,13 @@ async function setupFoamEngine() {
   const parser = createMarkdownParser();
   const provider = new MarkdownResourceProvider(dataStore, parser, ['.md']);
   const roots = [strToUri(tmpDir)];
-  const foam = await bootstrap(roots, matcher, undefined, dataStore, parser, [
-    provider,
-  ]);
+  const foam = await bootstrap({
+    roots,
+    matcher,
+    dataStore,
+    parser,
+    providers: [provider],
+  });
   const engine = new NoteCreationEngine(foam);
   return { foam, engine, tmpDir };
 }
@@ -945,14 +949,13 @@ foam_template:
       const matcher = new Matcher([root1, root2], ['**/*.md']);
       const parser = createMarkdownParser();
       const provider = new MarkdownResourceProvider(dataStore, parser, ['.md']);
-      const foam = await bootstrap(
-        [root1, root2],
+      const foam = await bootstrap({
+        roots: [root1, root2],
         matcher,
-        undefined,
         dataStore,
         parser,
-        [provider]
-      );
+        providers: [provider],
+      });
       const engine = new NoteCreationEngine(foam);
 
       const template: Template = {
@@ -979,14 +982,13 @@ foam_template:
         const roots = dirs.map(strToUri);
         const dataStore = new FileDataStore(readFileFromFs, dirs[0]);
         const parser = createMarkdownParser();
-        const foam = await bootstrap(
+        const foam = await bootstrap({
           roots,
-          new Matcher(roots, ['**/*.md']),
-          undefined,
+          matcher: new Matcher(roots, ['**/*.md']),
           dataStore,
           parser,
-          [new MarkdownResourceProvider(dataStore, parser, ['.md'])]
-        );
+          providers: [new MarkdownResourceProvider(dataStore, parser, ['.md'])],
+        });
         return { engine: new NoteCreationEngine(foam), notesRoot: roots[1] };
       };
       const trigger = TriggerFactory.createCommandTrigger(

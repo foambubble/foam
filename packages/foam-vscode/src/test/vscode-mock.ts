@@ -1715,15 +1715,14 @@ class TestFoam {
     };
 
     // Use the bootstrap function with file watcher
-    const foam = await bootstrap(
-      [fromVsCodeUri(workspaceFolder.uri)],
+    const foam = await bootstrap({
+      roots: [fromVsCodeUri(workspaceFolder.uri)],
       matcher,
-      foamWatcher,
+      watcher: foamWatcher,
       dataStore,
       parser,
       providers,
-      '.md'
-    );
+    });
 
     Logger.info('Mock Foam instance created with file watcher');
     return foam;

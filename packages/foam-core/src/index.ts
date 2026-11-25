@@ -12,7 +12,7 @@ export { FoamGraph } from './model/graph';
 export type { Connection } from './model/graph';
 export { FoamTags } from './model/tags';
 export type { ResourceProvider } from './model/provider';
-export type { Foam, Services } from './model/foam';
+export type { BootstrapOptions, Foam, Services } from './model/foam';
 export { bootstrap } from './model/foam';
 
 // Services

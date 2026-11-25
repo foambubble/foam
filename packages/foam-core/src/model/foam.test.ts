@@ -2,9 +2,10 @@ import { bootstrap } from './foam';
 import { Emitter } from '../common/event';
 import { URI } from './uri';
 import { GenericDataStore, IMatcher, IWatcher } from '../services/datastore';
+import { GlobMatcher } from '../services/glob-matcher';
 import { ResourceParser } from './note';
 import { ResourceProvider } from './provider';
-import { createTestNote } from '../../test/test-utils';
+import { createTestNote, InMemoryDataStore } from '../../test/test-utils';
 
 /**
  * A fake watcher whose events can be fired manually from tests, so we can
@@ -84,15 +85,14 @@ async function bootstrapWithWatcher(matcher: IMatcher) {
     async () => [],
     async () => null
   );
-  const foam = await bootstrap(
-    [URI.file('/workspace')],
+  const foam = await bootstrap({
+    roots: [URI.file('/workspace')],
     matcher,
     watcher,
     dataStore,
-    noopParser,
-    [notesProvider],
-    '.md'
-  );
+    parser: noopParser,
+    providers: [notesProvider],
+  });
   return { watcher, foam };
 }
 
@@ -223,15 +223,14 @@ describe('bootstrap change-event handling', () => {
       dispose: () => {},
     };
 
-    const foam = await bootstrap(
-      [URI.file('/workspace')],
+    const foam = await bootstrap({
+      roots: [URI.file('/workspace')],
       matcher,
       watcher,
       dataStore,
-      noopParser,
-      [racingProvider],
-      '.md'
-    );
+      parser: noopParser,
+      providers: [racingProvider],
+    });
 
     try {
       const uri = URI.file('/workspace/racy.md');
@@ -267,15 +266,14 @@ describe('bootstrap deletes during a watcher read', () => {
       },
       dispose: () => {},
     };
-    const foam = await bootstrap(
-      [URI.file('/workspace')],
-      new CountingMatcher(),
+    const foam = await bootstrap({
+      roots: [URI.file('/workspace')],
+      matcher: new CountingMatcher(),
       watcher,
       dataStore,
-      noopParser,
-      [heldProvider],
-      '.md'
-    );
+      parser: noopParser,
+      providers: [heldProvider],
+    });
     return { watcher, foam, releaseFetch };
   }
 
@@ -344,6 +342,71 @@ describe('bootstrap deletes during a watcher read', () => {
       await flush(0);
 
       expect(foam.workspace.find(uri)).toBeNull();
+    } finally {
+      foam.dispose();
+    }
+  });
+});
+
+describe('bootstrap defaults', () => {
+  const root = URI.file('/workspace');
+
+  it('loads notes, images and attachments given only roots and a data store', async () => {
+    const dataStore = new InMemoryDataStore();
+    dataStore.set(root.joinPath('note.md'), '# Note\n\nSee [[missing]].');
+    dataStore.set(root.joinPath('diagram.png'), '');
+    dataStore.set(root.joinPath('paper.pdf'), '');
+
+    const foam = await bootstrap({ roots: [root], dataStore });
+
+    try {
+      const loaded = foam.workspace
+        .list()
+        .map(r => `${r.uri.path} ${r.type}`)
+        .sort();
+      expect(loaded).toEqual([
+        '/workspace/diagram.png image',
+        '/workspace/note.md note',
+        '/workspace/paper.pdf attachment',
+      ]);
+      expect(foam.workspace.find('note').title).toEqual('Note');
+      expect([...foam.graph.placeholders.keys()]).toEqual(['missing']);
+    } finally {
+      foam.dispose();
+    }
+  });
+
+  it('leaves out files under .foam and .git', async () => {
+    const dataStore = new InMemoryDataStore();
+    dataStore.set(root.joinPath('note.md'), '# Note');
+    dataStore.set(root.joinPath('.foam', 'templates', 'new-note.md'), '# T');
+    dataStore.set(root.joinPath('.git', 'notes.md'), '# G');
+
+    const foam = await bootstrap({ roots: [root], dataStore });
+
+    try {
+      expect(foam.workspace.list().map(r => r.uri.path)).toEqual([
+        '/workspace/note.md',
+      ]);
+    } finally {
+      foam.dispose();
+    }
+  });
+
+  it('loads only the listed files the matcher matches', async () => {
+    const dataStore = new InMemoryDataStore();
+    dataStore.set(root.joinPath('note.md'), '# Note');
+    dataStore.set(root.joinPath('drafts', 'draft.md'), '# Draft');
+    const matcher = new GlobMatcher([
+      { uri: root, include: ['**/*'], exclude: ['drafts/**'] },
+    ]);
+
+    const foam = await bootstrap({ roots: [root], dataStore, matcher });
+
+    try {
+      expect(foam.workspace.list().map(r => r.uri.path)).toEqual([
+        '/workspace/note.md',
+      ]);
     } finally {
       foam.dispose();
     }

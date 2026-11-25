@@ -1,12 +1,7 @@
 import {
   Foam as CoreFoam,
+  BootstrapOptions,
   bootstrap as coreBootstrap,
-  IMatcher,
-  IWatcher,
-  IDataStore,
-  ResourceParser,
-  ResourceProvider,
-  URI,
   Logger,
 } from '@foam/core';
 import { FoamEmbeddings } from '../../ai/model/embeddings';
@@ -20,27 +15,14 @@ export interface Foam extends CoreFoam {
   embeddings: FoamEmbeddings;
 }
 
-export const bootstrap = async (
-  roots: URI[],
-  matcher: IMatcher,
-  watcher: IWatcher | undefined,
-  dataStore: IDataStore,
-  parser: ResourceParser,
-  initialProviders: ResourceProvider[],
-  defaultExtension: string = '.md',
-  embeddingProvider?: EmbeddingProvider
-): Promise<Foam> => {
-  const core = await coreBootstrap(
-    roots,
-    matcher,
-    watcher,
-    dataStore,
-    parser,
-    initialProviders,
-    defaultExtension
-  );
+export const bootstrap = async ({
+  embeddingProvider = new NoOpEmbeddingProvider(),
+  ...options
+}: BootstrapOptions & {
+  embeddingProvider?: EmbeddingProvider;
+}): Promise<Foam> => {
+  const core = await coreBootstrap(options);
 
-  embeddingProvider = embeddingProvider ?? new NoOpEmbeddingProvider();
   const embeddings = FoamEmbeddings.fromWorkspace(
     core.workspace,
     embeddingProvider,

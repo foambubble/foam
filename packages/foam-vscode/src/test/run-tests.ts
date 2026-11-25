@@ -5,19 +5,7 @@ import {
   E2E_RESULT_FILE_ENV,
   getE2eCompletionFailure,
 } from './support/e2e-run-result';
-
-function getVSCodePlatform(): string {
-  switch (process.platform) {
-    case 'darwin':
-      return process.arch === 'arm64' ? 'darwin-arm64' : 'darwin';
-    case 'win32':
-      return process.arch === 'arm64'
-        ? 'win32-arm64-archive'
-        : 'win32-x64-archive';
-    default: // linux
-      return process.arch === 'arm64' ? 'linux-arm64' : 'linux-x64';
-  }
-}
+import { VSCODE_TEST_VERSION, getVSCodePlatform } from './support/vscode-version';
 
 async function main() {
   try {
@@ -60,7 +48,7 @@ async function main() {
         '--disable-updates',
       ],
       platform: getVSCodePlatform(),
-      version: '1.136.0',
+      version: VSCODE_TEST_VERSION,
     });
 
     const failure = getE2eCompletionFailure(

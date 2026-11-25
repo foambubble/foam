@@ -62,7 +62,7 @@ The graph-view user doc describes the panel; it gains a sentence on hiding it.
   _verify: human_
 - **AC-7**: Given the panel hidden, when VS Code is reloaded and the graph
   opened on the same view, then it is still hidden.
-  _verify: human_
+  _verify: ui_
 
 ## Out of scope
 

@@ -100,7 +100,9 @@ function blockMath(eat: any, value: string, silent?: boolean) {
   let end: number;
   let formula: string;
   if (firstLine.includes('$$')) {
-    if (firstLine.indexOf('$$') !== firstLine.length - 2) {
+    // A single `$$`, ending the line
+    const single = firstLine.indexOf('$$') === firstLine.lastIndexOf('$$');
+    if (!single || !firstLine.endsWith('$$')) {
       return;
     }
     end = firstLineEnd;

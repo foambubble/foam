@@ -468,6 +468,10 @@
         "title": "Foam: Open Random Note"
       },
       {
+        "command": "foam-vscode.go-to-note",
+        "title": "Foam: Go to Note"
+      },
+      {
         "command": "foam-vscode.lint",
         "title": "Foam: Lint Workspace (Experimental)"
       },

@@ -82,6 +82,7 @@ Backlinks show you which notes reference the current note. This creates a web of
 
 Press `Ctrl+Shift+P` / `Cmd+Shift+P` and try these commands:
 
+- **"Foam: Go to Note"** - Find a note by its title, alias, or path
 - **"Foam: Open Random Note"** - Discover forgotten knowledge
 - **"Foam: Open Daily Note"** - Quick access to today's notes
 - **"Go to File"** (`Ctrl+P` / `Cmd+P`) - Fast file opening
@@ -104,6 +105,24 @@ Press `Ctrl+P` / `Cmd+P` and start typing:
 - **File names** - `machine` finds "machine-learning.md"
 - **Partial paths** - `daily/2025` finds daily notes from 2025
 - **Recent files** - Empty search shows recently opened files
+
+### Finding a Note by Its Alias
+
+Sometimes you look for a note by a name that isn't its title. A note titled "Einstein, Albert" can declare that name in its front matter:
+
+```markdown
+---
+alias: Einstein
+---
+
+# Einstein, Albert
+```
+
+Run **"Foam: Go to Note"** from the Command Palette to search your notes by **title**, **alias**, or **path**, all at once — so typing `einstein` finds the note above. It behaves like Quick Open, with aliases added, and only notes are listed.
+
+The command has no keyboard shortcut out of the box. To give it one, open **"Preferences: Open Keyboard Shortcuts"**, search for "Foam: Go to Note", and pick a binding — `Ctrl+Alt+P` / `Cmd+Alt+P` is free and sits next to `Ctrl+P`.
+
+Aliases also show up in **"Go to Symbol in Workspace"** (`Ctrl+T` / `Cmd+T`), which searches aliases only, alongside symbols contributed by other extensions.
 
 ## Link Management and Maintenance
 

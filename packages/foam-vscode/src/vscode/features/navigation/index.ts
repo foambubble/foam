@@ -6,6 +6,7 @@ import completionProvider from './link-completion';
 import workspaceSymbolProvider from './workspace-symbol-provider';
 import openResource from './open-resource';
 import openRandomNoteCommand from './open-random-note';
+import goToNoteCommand from './go-to-note';
 
 export default async function activate(
   context: ExtensionContext,
@@ -17,4 +18,5 @@ export default async function activate(
   await workspaceSymbolProvider(context, foamPromise);
   await openResource(context, foamPromise);
   await openRandomNoteCommand(context, foamPromise);
+  await goToNoteCommand(context, foamPromise);
 }

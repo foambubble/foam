@@ -91,11 +91,22 @@ duplicated.
   confirmed. AC-7 documents how to bind one. `ctrl+alt+p` / `cmd+alt+p` is a
   free chord in default VS Code and the obvious mnemonic next to `Ctrl+P`, and
   the docs will suggest it as the example binding.
+- **No picker `title`.** → Go to File shows only a prompt, so this shows only a
+  placeholder ("Search notes by title, alias or path"). The sibling picker in
+  `export-html-page` sets a `title`, because it is one step of a wizard.
 - **Why `detail` for aliases rather than folding them into `description`?** →
   Keeps the first line looking like Go to File (name, then path) and shows the
   aliases only on notes that have them. The `Alias: ` prefix is a deliberate
   cost: it is matchable text, so a query that is a subsequence of `alias` will
   score aliased notes. It is one word to drop if that proves annoying.
+- **Why a `.test.ts` for the item builder, when it touches `vscode`?** →
+  `docs/dev/testing-conventions.md:12` reserves `.test.ts` for code with no VS
+  Code dependency, and this builder calls `workspace.asRelativePath` and
+  `window.showQuickPick`. The precedent followed is the sibling
+  `workspace-symbol-provider.test.ts:6` — the other alias-search feature in
+  this same folder — which imports `vscode` and runs against the mock in
+  `test:unit`. Real-host coverage lives in the `.spec.ts`, which is not
+  `@unit-ready`.
 - **Which notes does the picker offer?** → `type === 'note'`, so attachments
   are out (AC-4). This is where "pure superset of Go to File" stops being
   literally true: Go to File lists every file in the workspace, while this

@@ -3,10 +3,7 @@ import {
   Config,
   dailyNoteName,
   DEFAULT_DAILY_NOTE_TEMPLATE,
-  IgnoredDailyNoteSettingsNotice,
-  ignoredDailyNoteSettingsNotice,
   prepareDailyNote,
-  URI,
 } from '@foam/core';
 import { Foam } from '@foam/core';
 import {
@@ -14,7 +11,7 @@ import {
   getTemplatesDir,
 } from '../../../vscode/services/template-service';
 import { NoteFactory } from '../../../vscode/services/note-factory';
-import { focusNote, readFile, writeFile } from '../../services/editor';
+import { readFile, writeFile } from '../../services/editor';
 import { TemplateLoader } from '@foam/core/scripting';
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -54,31 +51,19 @@ export async function openDailyNoteFor(date?: Date, foam?: Foam) {
 // ─── Note creation ────────────────────────────────────────────────────────────
 
 export const CREATE_DAILY_NOTE_WARNING_RESPONSE = 'Create daily note template';
-export const OPEN_DAILY_NOTE_TEMPLATE_RESPONSE = 'Open daily note template';
 
 /**
  * Creates a daily note using the unified creation engine (supports JS templates).
- * Creates nothing, returning `undefined`, when `foam.openDailyNote.*` settings
- * Foam no longer reads would have placed the note and the user does not
- * create a template that keeps them.
  */
 export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
   const templateUri = await getDailyNoteTemplateUri();
-  const loader = new TemplateLoader(readFile, workspace.isTrusted);
-  let template = templateUri && (await loader.loadTemplate(templateUri));
+  const template =
+    templateUri &&
+    (await new TemplateLoader(readFile, workspace.isTrusted).loadTemplate(
+      templateUri
+    ));
 
-  const notice = ignoredDailyNoteSettingsNotice(
-    template,
-    Config.getLegacyDailyNoteSettings(),
-    foam.workspace.roots
-  );
-  if (notice) {
-    const keepingTemplate = await askToKeepLegacySettings(templateUri, notice);
-    if (!keepingTemplate) {
-      return undefined;
-    }
-    template = await loader.loadTemplate(keepingTemplate);
-  } else if (!templateUri) {
+  if (!templateUri) {
     // Fire-and-forget: must not block daily note creation.
     // The user can click the button to create a template at any time.
     window
@@ -88,8 +73,11 @@ export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
       )
       .then(async action => {
         if (action === CREATE_DAILY_NOTE_WARNING_RESPONSE) {
+          // Must match where getDailyNoteTemplateUri looks, which follows
+          // `foam.templates.folder` — otherwise the file lands somewhere Foam
+          // never reads and this warning comes back every time.
           await writeFile(
-            dailyNoteTemplateTarget(),
+            getTemplatesDir().joinPath('daily-note.md'),
             DEFAULT_DAILY_NOTE_TEMPLATE
           );
         }
@@ -110,54 +98,4 @@ export async function createDailyNoteIfNotExists(targetDate: Date, foam: Foam) {
     fallbackFilepath: daily.fallbackFilepath,
     onFileExists: 'open',
   });
-}
-
-/**
- * Must match where getDailyNoteTemplateUri looks, which follows
- * `foam.templates.folder` — otherwise the file lands somewhere Foam never
- * reads and the warning comes back every time.
- */
-const dailyNoteTemplateTarget = () =>
-  getTemplatesDir().joinPath('daily-note.md');
-
-/**
- * Says the settings are ignored and offers what keeps what they did: writing
- * the template the notice holds, or opening the template to add a filepath.
- * Returns the template to create the note from, or `undefined` when no note
- * should be created.
- */
-async function askToKeepLegacySettings(
-  templateUri: URI | undefined,
-  notice: IgnoredDailyNoteSettingsNotice
-): Promise<URI | undefined> {
-  const options = { modal: true, detail: notice.detail };
-  switch (notice.fix.kind) {
-    case 'create-template': {
-      const action = await window.showWarningMessage(
-        notice.message,
-        options,
-        CREATE_DAILY_NOTE_WARNING_RESPONSE
-      );
-      if (action !== CREATE_DAILY_NOTE_WARNING_RESPONSE) {
-        return undefined;
-      }
-      const target = dailyNoteTemplateTarget();
-      await writeFile(target, notice.fix.template);
-      return target;
-    }
-    case 'add-filepath': {
-      const action = await window.showWarningMessage(
-        notice.message,
-        options,
-        OPEN_DAILY_NOTE_TEMPLATE_RESPONSE
-      );
-      if (action === OPEN_DAILY_NOTE_TEMPLATE_RESPONSE && templateUri) {
-        await focusNote(templateUri, false);
-      }
-      return undefined;
-    }
-    case 'none':
-      await window.showWarningMessage(notice.message, options);
-      return undefined;
-  }
 }

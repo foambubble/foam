@@ -318,7 +318,6 @@ describe('loadWorkspaceFromDirectory', () => {
       {
         '.vscode/settings.json': JSON.stringify({
           'foam.files.defaultNoteExtension': 'mdx',
-          'foam.openDailyNote.directory': 'journals',
           'foam.templates.folder': 'my-templates',
         }),
         'note.mdx': '# MDX Note',
@@ -327,7 +326,6 @@ describe('loadWorkspaceFromDirectory', () => {
         const uris = workspace.list().map(r => r.uri.toFsPath());
         expect(uris.some(u => u.endsWith('note.mdx'))).toBe(true);
         expect(Config.getDefaultNoteExtension()).toBe('.mdx');
-        expect(Config.getLegacyDailyNoteSettings().directory).toBe('journals');
         expect(Config.getTemplatesFolder()).toBe('my-templates');
       }
     );
@@ -338,7 +336,6 @@ describe('loadWorkspaceFromDirectory', () => {
       const uris = workspace.list().map(r => r.uri.toFsPath());
       expect(uris.some(u => u.endsWith('note.md'))).toBe(true);
       expect(Config.getDefaultNoteExtension()).toBe('.md');
-      expect(Config.getLegacyDailyNoteSettings()).toEqual({});
       expect(Config.getTemplatesFolder()).toBe('.foam/templates');
     });
   });

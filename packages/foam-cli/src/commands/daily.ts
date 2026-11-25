@@ -65,8 +65,7 @@ export interface DailyNote {
 
 /**
  * Resolve the daily note the way desktop Foam does: the template's
- * `filepath` when it has one, otherwise `journal/YYYY-MM-DD.md`. Refuses while
- * `foam.openDailyNote.*` settings Foam no longer reads would have placed it.
+ * `filepath` when it has one, otherwise `journal/YYYY-MM-DD.md`.
  */
 export async function resolveDailyNoteFile(
   date: Date,
@@ -89,7 +88,6 @@ export async function resolveDailyNoteFile(
     templateUri,
     foam,
     async uri => (await dataStore.read(uri)) ?? '',
-    config.getLegacyDailyNoteSettings(),
     { locale: config.getDateLocale(), isTrusted }
   );
   const noteUri = asAbsoluteUri(note.filepath, foam.workspace.roots);

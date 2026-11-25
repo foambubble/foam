@@ -1,6 +1,5 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { URI, legacyDailyNoteTemplate } from '@foam/core';
 import { parseDateArg, runDailyCommand } from './daily';
 import type { CommandRunResult } from '../support/with-telemetry';
 import { withTmpWorkspace, TestLogger } from '../test/test-utils';
@@ -55,64 +54,6 @@ describe('where foam daily puts the note without a template', () => {
       expect(exitCodeOf(code)).toBe(0);
       expect(logger.logs[0]).toBe(path.join(rootDir, 'journal', '2026-05-01.md'));
     }));
-
-  it('refuses while the openDailyNote settings would have placed it, printing a template that keeps them', () =>
-    withTmpWorkspace(
-      {
-        '.vscode/settings.json': JSON.stringify({
-          'foam.openDailyNote.directory': 'diary',
-          'foam.openDailyNote.filenameFormat': 'dd-mm-yyyy',
-        }),
-      },
-      async ({ rootDir }) => {
-        const result = runDailyCommand(['--date', '2026-05-01', '--create', '--workspace', rootDir], new TestLogger());
-
-        await expect(result).rejects.toThrow(
-          'foam.openDailyNote.directory and foam.openDailyNote.filenameFormat are no longer used.'
-        );
-        await expect(result).rejects.toThrow(
-          legacyDailyNoteTemplate({ directory: 'diary', filenameFormat: 'dd-mm-yyyy' }, [URI.file(rootDir)])
-        );
-        expect(fs.readdirSync(rootDir).sort()).toEqual(['.vscode']);
-      }
-    ));
-
-  it('prints journal/YYYY-MM-DD.md when the openDailyNote settings spell out what Foam does without them', () =>
-    withTmpWorkspace(
-      {
-        '.vscode/settings.json': JSON.stringify({
-          'foam.openDailyNote.directory': 'journal',
-          'foam.openDailyNote.filenameFormat': 'yyyy-mm-dd',
-        }),
-      },
-      async ({ rootDir }) => {
-        const logger = new TestLogger();
-        const code = await runDailyCommand(['--date', '2026-05-01', '--path-only', '--workspace', rootDir], logger);
-        expect(exitCodeOf(code)).toBe(0);
-        expect(logger.logs[0]).toBe(path.join(rootDir, 'journal', '2026-05-01.md'));
-      }
-    ));
-
-  it('puts it where the openDailyNote settings did once the template they print is saved', () =>
-    withTmpWorkspace(
-      {
-        '.vscode/settings.json': JSON.stringify({
-          'foam.openDailyNote.directory': 'diary',
-          'foam.openDailyNote.filenameFormat': 'dd-mm-yyyy',
-        }),
-      },
-      async ({ rootDir }) => {
-        fs.mkdirSync(path.join(rootDir, '.foam', 'templates'), { recursive: true });
-        fs.writeFileSync(
-          path.join(rootDir, '.foam', 'templates', 'daily-note.md'),
-          legacyDailyNoteTemplate({ directory: 'diary', filenameFormat: 'dd-mm-yyyy' }, [URI.file(rootDir)])
-        );
-        const logger = new TestLogger();
-        const code = await runDailyCommand(['--date', '2026-05-01', '--path-only', '--workspace', rootDir], logger);
-        expect(exitCodeOf(code)).toBe(0);
-        expect(logger.logs[0]).toBe(path.join(rootDir, 'diary', '01-05-2026.md'));
-      }
-    ));
 });
 
 // ─── What the new note contains ───────────────────────────────────────────────
@@ -178,23 +119,6 @@ describe('keeping the daily note inside the workspace', () => {
   // The escape target is named after the temp workspace, so a run that does
   // escape can't leave a folder that a later run would trip over.
   const escapeTarget = (rootDir: string) => `${path.basename(rootDir)}-escaped`;
-
-  it('refuses an openDailyNote directory that leads out of the workspace, without offering a template', () =>
-    withTmpWorkspace({}, async ({ rootDir }) => {
-      fs.mkdirSync(path.join(rootDir, '.vscode'));
-      fs.writeFileSync(
-        path.join(rootDir, '.vscode', 'settings.json'),
-        JSON.stringify({
-          'foam.openDailyNote.directory': `../${escapeTarget(rootDir)}`,
-        })
-      );
-
-      const result = runDailyCommand(['--date', '2026-05-01', '--create', '--workspace', rootDir], new TestLogger());
-
-      await expect(result).rejects.toThrow('cannot keep daily notes outside the workspace');
-      await expect(result).rejects.not.toThrow('foam_template');
-      expect(fs.existsSync(path.join(rootDir, '..', escapeTarget(rootDir)))).toBe(false);
-    }));
 
   it('refuses a template filepath that leads out of the workspace', () =>
     withTmpWorkspace({}, async ({ rootDir }) => {

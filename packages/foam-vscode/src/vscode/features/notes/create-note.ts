@@ -160,13 +160,18 @@ export async function createNote(args: CreateNoteArgs, foam: Foam) {
   // under a workspace root and as workspace-relative otherwise (into the root
   // its first segment names). A placeholder's note goes where its link points
   // instead, so it is resolved the way links are.
+  // A path string takes the root's scheme: the workspace may not be on disk.
+  const notePathUri =
+    typeof args.notePath === 'string'
+      ? foam.workspace.roots[0].forPath(args.notePath)
+      : undefined;
   const fallbackFilepath =
     args.notePath === undefined
       ? undefined
       : typeof args.notePath !== 'string'
       ? args.notePath
-      : !URI.file(args.notePath).isAbsolute()
-      ? URI.file(args.notePath)
+      : !notePathUri.isAbsolute()
+      ? notePathUri
       : args.sourceLink
       ? foam.workspace.resolveUri(args.notePath)
       : foam.workspace.resolveNoteUri(args.notePath);

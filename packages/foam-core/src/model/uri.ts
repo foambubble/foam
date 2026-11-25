@@ -87,7 +87,12 @@ export class URI {
   }
 
   /**
-   * @deprecated Will not work with web extension. Use only for testing.
+   * Turns a path on the local file system into a `file` URI.
+   *
+   * Where the workspace may not be on the local file system, as in VS Code
+   * (virtual workspaces, the web), the scheme is wrong: derive URIs from
+   * the host's instead, e.g. `root.joinPath(...)` or `root.forPath(...)`.
+   *
    * @param value the path to turn into a URI
    * @returns the file URI
    */

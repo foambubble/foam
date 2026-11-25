@@ -89,6 +89,8 @@ function listOrphans(workspace, graph, rootDir: string): NoteItem[]; // ❌
 
 Path strings appear only at I/O boundaries (`IDataStore` converting URI ↔ fs path), external wire formats (CLI args, MCP inputs, JSON), and human-readable display fields alongside the URI.
 
+`URI.file(path)` is for paths on the local file system, so it's fine in the CLI, the MCP server and tests. Don't use it in `foam-vscode` source: a VS Code workspace may be virtual or in the browser, where `file:` is the wrong scheme. Take URIs from VS Code (`fromVsCodeUri`) or derive them from one (`root.joinPath(...)`, `root.forPath(...)`).
+
 **Static imports only.** No `await import(...)` or `import(...)` in source or tests. For late-bound mocks use a top-level `vi.mock`, dependency injection, or an explicit hook.
 
 **No wrappers that just rename a call.** Before extracting a helper, ask whether it adds clarity, reuse, or non-trivial logic. An `applyNoteEdits(text, issues)` that only calls `TextEdit.apply` is noise — call `TextEdit.apply`.

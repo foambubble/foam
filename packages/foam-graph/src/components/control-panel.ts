@@ -30,9 +30,7 @@ export class ControlPanel extends LitElement {
       user-select: none;
       transform-origin: top right;
       /* allow-discrete holds display: block until the fade-out ends */
-      transition:
-        opacity 150ms ease-out,
-        scale 150ms ease-out,
+      transition: opacity 150ms ease-out, scale 150ms ease-out,
         display 150ms allow-discrete;
     }
 
@@ -250,10 +248,14 @@ export class ControlPanel extends LitElement {
     }
 
     /* over the first section's header, so it costs the panel no height */
-    .hide-controls {
+    .panel-actions {
       position: absolute;
       top: 0;
       right: 0;
+      display: flex;
+    }
+
+    .panel-actions button {
       display: flex;
       align-items: center;
       padding: 6px 7px;
@@ -264,15 +266,9 @@ export class ControlPanel extends LitElement {
       opacity: 0.6;
     }
 
-    .hide-controls:hover,
-    .hide-controls:focus-visible {
+    .panel-actions button:hover,
+    .panel-actions button:focus-visible {
       opacity: 1;
-    }
-
-    .panel-footer {
-      display: flex;
-      justify-content: flex-end;
-      padding: 3px 6px;
     }
 
     .add-group-btn {
@@ -399,6 +395,8 @@ export class ControlPanel extends LitElement {
     zoomOnSelect: true,
   };
   @property({ type: Object }) graphScope: GraphScope = 'full';
+  /** Whether the view differs from what Reset view brings back. */
+  @property({ type: Boolean }) viewChanged = false;
 
   private static readonly _SPECIAL_TYPES = [
     'tag',
@@ -432,21 +430,46 @@ export class ControlPanel extends LitElement {
 
   render() {
     return html`
-      <button
-        class="hide-controls"
-        title="Hide the controls panel"
-        aria-label="Hide the controls panel"
-        @click=${() => this._emit('hide-controls', null)}
-      >
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-          <path
-            d="M1.5 1.5 L8.5 8.5 M8.5 1.5 L1.5 8.5"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-          />
-        </svg>
-      </button>
+      <div class="panel-actions">
+        ${this.viewChanged
+          ? html`<button
+              class="reset-view"
+              title="Reset view"
+              aria-label="Reset view"
+              @click=${() => this._emit('reset-view', null)}
+            >
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 10 10"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M1.5 5.25 A3.5 3.5 0 1 0 5 1.75" />
+                <path d="M6.5 0.5 L5 1.75 L6.5 3" />
+              </svg>
+            </button>`
+          : null}
+        <button
+          class="hide-controls"
+          title="Hide the controls panel"
+          aria-label="Hide the controls panel"
+          @click=${() => this._emit('hide-controls', null)}
+        >
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path
+              d="M1.5 1.5 L8.5 8.5 M8.5 1.5 L1.5 8.5"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+      </div>
 
       <details open>
         <summary>Groups</summary>
@@ -880,16 +903,6 @@ export class ControlPanel extends LitElement {
             : null}
         </div>
       </details>
-
-      <div class="panel-footer">
-        <button
-          class="icon-btn"
-          title="Discard your changes to this view and use its configured settings"
-          @click=${() => this._emit('reset-view', null)}
-        >
-          ↺ Reset view
-        </button>
-      </div>
     `;
   }
 

@@ -36,6 +36,34 @@ describe('foam-control-panel', () => {
     panel.remove();
   });
 
+  it('draws reset only while the view has changed', () => {
+    const panel = new ControlPanel();
+
+    panel.viewChanged = false;
+    expect(renderedMarkup(panel.render())).not.toContain('class="reset-view"');
+
+    panel.viewChanged = true;
+    expect(renderedMarkup(panel.render())).toContain('class="reset-view"');
+  });
+
+  it('resets the view from an icon whose tooltip names it', async () => {
+    const panel = await mountPanel();
+    panel.viewChanged = true;
+    await panel.updateComplete;
+    const events: Event[] = [];
+    panel.addEventListener('reset-view', event => events.push(event));
+
+    const reset =
+      panel.shadowRoot!.querySelector<HTMLButtonElement>('.reset-view')!;
+    reset.click();
+
+    expect(reset.title).toBe('Reset view');
+    expect(reset.getAttribute('aria-label')).toBe('Reset view');
+    expect(reset.textContent!.trim()).toBe('');
+    expect(events).toHaveLength(1);
+    panel.remove();
+  });
+
   // AC-1: a hidden panel draws nothing over the graph, though it is still
   // there — `display: block` on the host would otherwise outrank `hidden`
   it('draws nothing while hidden', async () => {

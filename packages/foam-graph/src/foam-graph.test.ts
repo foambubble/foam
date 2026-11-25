@@ -2,11 +2,16 @@ import { describe, expect, it } from 'vitest';
 import type { TemplateResult } from 'lit';
 
 import { FoamGraph } from './foam-graph';
+import type { ControlPanel } from './components/control-panel';
 import { makeGraph, renderedElements, renderedMarkup } from './test-utils';
 
 /** The control panel the graph drew, which is there hidden or shown. */
 const panelOf = (root: HTMLElement) =>
-  root.querySelector<HTMLElement>('foam-control-panel')!;
+  root.querySelector<ControlPanel>('foam-control-panel')!;
+
+/** Whether the graph offers Reset view, i.e. tells its panel the view changed. */
+const offersReset = (element: FoamGraph) =>
+  panelOf(renderedElements(element.render())).viewChanged;
 
 describe('foam-graph', () => {
   it('can show/hide the control panel', () => {
@@ -124,6 +129,116 @@ describe('foam-graph', () => {
     const markup = renderedMarkup(element.render());
     expect(markup).not.toContain('foam-control-panel');
     expect(markup).not.toContain('class="show-controls"');
+  });
+
+  it('offers no reset on a view that shows its configured settings', () => {
+    const element = new FoamGraph();
+    element.showControls = true;
+    element.applyViewState({});
+
+    expect(offersReset(element)).toBe(false);
+  });
+
+  it('offers reset once the user changes the view', () => {
+    const element = new FoamGraph();
+    element.showControls = true;
+    element.applyViewState({});
+
+    (element as any)._onLabelMaxLengthChange(7);
+
+    expect(offersReset(element)).toBe(true);
+  });
+
+  it('withdraws reset when the user undoes their change', () => {
+    const element = new FoamGraph();
+    element.showControls = true;
+    element.applyViewState({});
+    const configured = element.getViewState().labelMaxLength;
+
+    (element as any)._onLabelMaxLengthChange(7);
+    (element as any)._onToggleNodeType({ type: 'tag', visible: false });
+    (element as any)._onLabelMaxLengthChange(configured);
+    (element as any)._onToggleNodeType({ type: 'tag', visible: true });
+
+    expect(offersReset(element)).toBe(false);
+  });
+
+  it('withdraws reset once the view is reset', () => {
+    const element = new FoamGraph();
+    element.showControls = true;
+    element.applyViewState({ labelMaxLength: 7 });
+
+    (element as any)._onResetView();
+
+    expect(offersReset(element)).toBe(false);
+  });
+
+  it('offers reset for a restored state that differs from the configured one', () => {
+    const element = new FoamGraph();
+    element.showControls = true;
+
+    element.applyViewState({ labelMaxLength: 7 });
+
+    expect(offersReset(element)).toBe(true);
+  });
+
+  // a view saves a full snapshot after any change, so one changed and then
+  // changed back reopens with every setting saved
+  it('offers no reset for a restored state equal to the configured one', () => {
+    const element = new FoamGraph();
+    element.showControls = true;
+    element.applyViewState({});
+    const snapshot = element.getViewState();
+
+    element.applyViewState(snapshot);
+
+    expect(offersReset(element)).toBe(false);
+  });
+
+  it('measures changes against the view config, not the built-in defaults', () => {
+    const element = new FoamGraph();
+    element.showControls = true;
+    element.graphStyle = { showNodesOfType: { tag: false } };
+    element.applyViewState({});
+
+    expect(offersReset(element)).toBe(false);
+
+    (element as any)._onToggleNodeType({ type: 'tag', visible: true });
+
+    expect(offersReset(element)).toBe(true);
+  });
+
+  it('counts a colour mode picked equal to the configured one as no change', () => {
+    const element = new FoamGraph();
+    element.showControls = true;
+    element.graphStyle = { colorMode: 'directory' };
+    element.applyViewState({});
+
+    (element as any)._onStyleChange({ colorMode: 'directory' });
+
+    expect(offersReset(element)).toBe(false);
+  });
+
+  // type filters for the types a graph holds are filled in on load, for the
+  // live state and for what a reset brings back alike
+  it('offers no reset on an untouched view once its graph has loaded', () => {
+    const element = new FoamGraph();
+    element.showControls = true;
+    element.applyViewState({});
+    element.graphData = makeGraph({
+      nodeInfo: {
+        project: {
+          id: 'project',
+          type: 'project',
+          title: 'Project',
+          properties: {},
+          tags: [{ label: 'topic' }],
+        },
+      },
+    });
+    (element as any).updated(new Map([['graphData', null]]));
+
+    expect(offersReset(element)).toBe(false);
   });
 
   it('derives visible graph data from raw graph data', () => {

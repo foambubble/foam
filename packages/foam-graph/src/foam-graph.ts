@@ -13,7 +13,11 @@ import {
 } from './lib/graph-view-model';
 import { mergeStyles, resolveStyle } from './lib/style';
 import { hashString, hashToHSL } from './lib/colors';
-import { DEFAULT_LABEL_MAX_LENGTH } from './lib/labels';
+import {
+  defaultViewState,
+  isSameViewSetting,
+  layerViewState,
+} from './lib/view-state';
 import type {
   GraphData,
   GraphStyle,
@@ -35,41 +39,6 @@ import type { GraphCanvas } from './components/graph-canvas';
 import type { GroupDraft } from './components/control-panel';
 import './components/graph-canvas';
 import './components/control-panel';
-
-/**
- * Built-in defaults for the interactive display state — the base layer a
- * view restore starts from, under the declared style and the saved state.
- */
-const defaultViewState = () => ({
-  showControlPanel: true,
-  showNodesOfType: {
-    placeholder: true,
-    image: false,
-    attachment: false,
-    note: true,
-    tag: true,
-  } as Record<string, boolean>,
-  groups: [] as GroupRule[],
-  localStylePatch: {} as GraphStyle,
-  labels: { fade: 0 } as Labels,
-  forces: {
-    collide: 1,
-    repel: 15,
-    link: 25,
-    velocityDecay: 0.4,
-  } as Forces,
-  selection: {
-    neighborDepth: 1,
-    centerOnSelect: true,
-    zoomOnSelect: true,
-  } as Selection,
-  graphScope: 'full' as GraphScope,
-  nodeFontSizeMultiplier: 1,
-  nodeSizeMultiplier: 1,
-  linkWidthMultiplier: 2,
-  animateLinks: 'forward' as LinkAnimation,
-  labelMaxLength: DEFAULT_LABEL_MAX_LENGTH,
-});
 
 @customElement('foam-graph')
 export class FoamGraph extends LitElement {
@@ -184,6 +153,33 @@ export class FoamGraph extends LitElement {
   private get resolvedStyle(): ResolvedStyle {
     const merged = mergeStyles(this.graphStyle, this.localStylePatch);
     return resolveStyle(merged, getDefaultStyle());
+  }
+
+  /**
+   * Whether the view shows anything other than what Reset view brings back:
+   * the same layering from an empty saved state, with type filters filled in
+   * for the graph's types as on load. Styles are compared resolved, so a
+   * local patch that repeats the declared style is no change.
+   */
+  private get viewChanged(): boolean {
+    const configured = layerViewState(this.graphStyle, {});
+    const configuredStyle = resolveStyle(
+      mergeStyles(this.graphStyle, configured.localStylePatch),
+      getDefaultStyle()
+    );
+    if (this.graphModel) {
+      configured.showNodesOfType = deriveNodeTypeFilters(
+        this.graphModel,
+        configuredStyle,
+        configured.showNodesOfType
+      );
+    }
+    return (
+      !isSameViewSetting(
+        { ...this.getViewState(), localStylePatch: undefined },
+        { ...configured, localStylePatch: undefined }
+      ) || !isSameViewSetting(this.resolvedStyle, configuredStyle)
+    );
   }
 
   private get visibleFocusNodeId(): string | null {
@@ -321,6 +317,7 @@ export class FoamGraph extends LitElement {
             .forces=${this.forces}
             .selection=${this.selection}
             .graphScope=${this.graphScope}
+            .viewChanged=${this.viewChanged}
             @graph-scope-change=${(e: CustomEvent) => {
               this.graphScope = e.detail;
               this._emitViewStateChange();
@@ -426,61 +423,20 @@ export class FoamGraph extends LitElement {
    */
   applyViewState(state: GraphViewState) {
     this.userLayer = state;
-    const defaults = defaultViewState();
-    this.showControlPanel = defaults.showControlPanel;
-    this.showNodesOfType = defaults.showNodesOfType;
-    this.groups = defaults.groups;
-    this.localStylePatch = defaults.localStylePatch;
-    this.labels = defaults.labels;
-    this.forces = defaults.forces;
-    this.selection = defaults.selection;
-    this.graphScope = defaults.graphScope;
-    this.nodeFontSizeMultiplier = defaults.nodeFontSizeMultiplier;
-    this.nodeSizeMultiplier = defaults.nodeSizeMultiplier;
-    this.linkWidthMultiplier = defaults.linkWidthMultiplier;
-    this.animateLinks = defaults.animateLinks;
-    this.labelMaxLength = defaults.labelMaxLength;
-
-    // the declared style (base settings + view config) sits between the
-    // defaults and the saved state, as on a cold load
-    if (this.graphStyle?.groups) this.groups = this.graphStyle.groups;
-    if (this.graphStyle?.showNodesOfType) {
-      this.showNodesOfType = {
-        ...this.showNodesOfType,
-        ...this.graphStyle.showNodesOfType,
-      };
-    }
-
-    if (state.showControlPanel !== undefined) {
-      this.showControlPanel = state.showControlPanel;
-    }
-    if (state.showNodesOfType) {
-      this.showNodesOfType = {
-        ...this.showNodesOfType,
-        ...state.showNodesOfType,
-      };
-    }
-    if (state.groups) this.groups = state.groups;
-    if (state.localStylePatch) this.localStylePatch = state.localStylePatch;
-    if (state.labels !== undefined) this.labels = state.labels;
-    if (state.forces) this.forces = state.forces;
-    if (state.selection) this.selection = state.selection;
-    if (state.graphScope !== undefined) this.graphScope = state.graphScope;
-    if (state.nodeFontSizeMultiplier !== undefined) {
-      this.nodeFontSizeMultiplier = state.nodeFontSizeMultiplier;
-    }
-    if (state.nodeSizeMultiplier !== undefined) {
-      this.nodeSizeMultiplier = state.nodeSizeMultiplier;
-    }
-    if (state.linkWidthMultiplier !== undefined) {
-      this.linkWidthMultiplier = state.linkWidthMultiplier;
-    }
-    if (state.animateLinks !== undefined) {
-      this.animateLinks = state.animateLinks;
-    }
-    if (state.labelMaxLength !== undefined) {
-      this.labelMaxLength = state.labelMaxLength;
-    }
+    const layered = layerViewState(this.graphStyle, state);
+    this.showControlPanel = layered.showControlPanel;
+    this.showNodesOfType = layered.showNodesOfType;
+    this.groups = layered.groups;
+    this.localStylePatch = layered.localStylePatch;
+    this.labels = layered.labels;
+    this.forces = layered.forces;
+    this.selection = layered.selection;
+    this.graphScope = layered.graphScope;
+    this.nodeFontSizeMultiplier = layered.nodeFontSizeMultiplier;
+    this.nodeSizeMultiplier = layered.nodeSizeMultiplier;
+    this.linkWidthMultiplier = layered.linkWidthMultiplier;
+    this.animateLinks = layered.animateLinks;
+    this.labelMaxLength = layered.labelMaxLength;
 
     if (this.graphModel) {
       this.showNodesOfType = deriveNodeTypeFilters(

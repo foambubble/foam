@@ -4,7 +4,10 @@
 
 A new command `foam-vscode.go-to-note` ("Foam: Go to Note") in
 `packages/foam-vscode/src/vscode/features/navigation/go-to-note.ts`, registered
-from that folder's `index.ts` and contributed in `package.json`. It builds one
+from that folder's `index.ts` and contributed in `package.json`. The items and
+their order are domain code with no `vscode` import, in
+`packages/foam-vscode/src/go-to-note/` beside `src/lint/` and
+`src/daily-note/`; the command is the adapter around them. It builds one
 quick pick item per note and hands the whole list to
 `vscode.window.showQuickPick`, which does the filtering. The maintainer's steer
 on the PR settles the spec's first open question in favour of VS Code owning
@@ -18,13 +21,13 @@ matcher sees. Following the picker already in
 same shape: `label` is the note title, `description` is the workspace-relative
 path, and — new here — `detail` is `Alias: <a>, <b>` for notes that declare
 aliases. Opening the picker with `matchOnDescription` and `matchOnDetail` makes
-all three matchable, so a query hits titles, paths *and* aliases: everything Go
+all three matchable, so a query hits titles, paths _and_ aliases: everything Go
 to File can find among notes, plus aliases.
 
 The one thing VS Code will not do for us is the order the list opens in. Go to
 File opens on recently used editors; an alphabetical list of every note is the
 most visible way this command would fail to feel like it (AC-5). `NoteRecency`
-in `note-recency.ts` holds the notes the user has been on, most recent first,
+in `go-to-note/note-recency.ts` holds the notes the user has been on, most recent first,
 and `createNoteItems` sorts by `recency.rank(uri)` then by title — so the list
 opens on what the user was just reading and falls back to alphabetical for
 everything never visited. Because unvisited notes all rank equal, the title
@@ -38,7 +41,7 @@ the same note. The VS Code side is one subscription in `activate` —
 `onDidChangeActiveTab` from `services/editor.ts:189`, which already folds
 together `onDidChangeActiveTextEditor`, `onDidChangeTabs` and
 `onDidChangeTabGroups` — resolving `getActiveTabUri(workspace)` through
-`workspace.find` and recording the *resource's* URI, so the key always matches
+`workspace.find` and recording the _resource's_ URI, so the key always matches
 the one `createNoteItems` ranks by rather than relying on the tab URI being
 spelled identically. `visit()` is idempotent for a URI already at the front, so
 that helper's documented duplicate firing needs no debounce here.
@@ -58,44 +61,48 @@ shared instead of duplicated.
 
 ## Work breakdown
 
-1. `go-to-note.test.ts` — failing unit tests for the item builder (AC-1 to
-   AC-4, and the ordering half of AC-5) and for the `package.json`
-   contribution (AC-8).
-2. `note-recency.test.ts` — failing unit tests for the recency ordering:
-   most recent first, revisits, never-visited, section links, the limit.
+1. `go-to-note/note-items.test.ts` — failing unit tests for the item builder
+   (AC-1 to AC-4, and the ordering half of AC-5).
+2. `go-to-note/note-recency.test.ts` — failing unit tests for the recency
+   ordering: most recent first, revisits, never-visited, section links, the
+   limit.
 3. `go-to-note.spec.ts` — failing integration tests for AC-6 (stub
-   `window.showQuickPick`, run the command, assert the note is in the editor)
-   and AC-5 (open two of three notes, assert the order the command offers).
-4. `note-recency.ts` — `NoteRecency` with `visit()` and `rank()`.
-5. `go-to-note.ts` — exported `createNoteItems(workspace, recency)` building
-   the items, `goToNote(workspace, recency)` showing the picker and delegating
+   `window.showQuickPick`, run the command, assert the note is in the editor),
+   AC-5 (open two of three notes, assert the order the command offers), the
+   match flags the picker is opened with, and the `package.json` contribution
+   (AC-8).
+4. `go-to-note/note-recency.ts` — `NoteRecency` with `visit()` and `rank()`.
+5. `go-to-note/note-items.ts` — `createNoteItems(workspace, recency, describe)`
+   building the items; `describe` turns a note's URI into the path shown.
+6. `go-to-note.ts` — `goToNote(workspace, recency)` building the items with
+   `workspace.asRelativePath` as `describe`, showing the picker and delegating
    the pick to `OPEN_COMMAND`, and `activate` registering the command plus the
    tab subscription. Telemetry via `getTelemetry()?.trackCommand(...)`, as
    `open-random-note.ts:12` does.
-6. Wire it: `features/navigation/index.ts`, `contributes.commands` and
+7. Wire it: `features/navigation/index.ts`, `contributes.commands` and
    `contributes.keybindings` in `packages/foam-vscode/package.json`.
-7. `docs/user/getting-started/navigation.md` — a subsection next to the
+8. `docs/user/getting-started/navigation.md` — a subsection next to the
    existing **Quick Open** one: what the command finds, its shortcut, how to
    rebind it, and that `Ctrl+T` still works (AC-9).
 
 ## AC verification map
 
-- AC-1 → `go-to-note.test.ts`: the item for a note titled `Objectives and Key
-  Results` with `alias: OKRs` is labelled with the title and carries the alias
-  in `detail`; the picker is opened with `matchOnDetail`. See Risks — the match
-  itself is VS Code's, and is AC-7.
-- AC-2 → `go-to-note.test.ts`: a note with no aliases still produces an item
+- AC-1 → `note-items.test.ts`: the item for a note titled `Objectives and Key
+Results` with `alias: OKRs` is labelled with the title and carries the alias
+  in `detail`; `go-to-note.spec.ts` checks the picker is opened with
+  `matchOnDetail`. See Risks — the match itself is VS Code's, and is AC-7.
+- AC-2 → `note-items.test.ts`: a note with no aliases still produces an item
   whose `label` is its title (and no `detail`), and `label` is what VS Code
   matches by default.
-- AC-3 → `go-to-note.test.ts`: a note with two aliases produces exactly one
+- AC-3 → `note-items.test.ts`: a note with two aliases produces exactly one
   item, both aliases on the one `detail` line.
-- AC-4 → `go-to-note.test.ts`: a workspace with a note and a `.png` attachment
+- AC-4 → `note-items.test.ts`: a workspace with a note and a `.png` attachment
   yields one item, for the note.
 - AC-5 → `go-to-note.spec.ts`: three notes created, two of them opened in the
   editor, and the command then offers them most-recently-opened first with the
   never-opened one in the alphabetical tail. This is the e2e that covers the
   recency subscription as well as the ordering. Underneath it,
-  `go-to-note.test.ts` holds the item ordering given a recency list, and
+  `note-items.test.ts` holds the item ordering given a recency list, and
   `note-recency.test.ts` the ordering rules themselves (revisits, section
   links, the limit) — neither of which the e2e can reach cheaply.
 - AC-6 → `go-to-note.spec.ts`: with `showQuickPick` stubbed to return the item
@@ -103,19 +110,18 @@ shared instead of duplicated.
 - AC-7 → human: type `okrs` and part of a path into the real picker. This is
   the criterion that covers VS Code's matching and the recency subscription,
   neither of which a test can reach.
-- AC-8 → `go-to-note.test.ts`: `package.json` contributes the command with
-  title `Foam: Go to Note`, does not hide it from the palette with a
-  `when: false` menu entry, and binds it to `ctrl+alt+p` / `cmd+alt+p`. Reads
-  `package.json` the way `settings-defaults.test.ts:6` does. The spec marks
-  this `human`; a unit test covers it more cheaply, and the palette and the
-  shortcut are still worth one look by hand.
+- AC-8 → `go-to-note.spec.ts`: the extension's `packageJSON` contributes the
+  command with title `Foam: Go to Note`, does not hide it from the palette
+  with a `when: false` menu entry, and binds it to `ctrl+alt+p` /
+  `cmd+alt+p`. The spec marks this `human`; the test covers the contribution,
+  and the palette and the shortcut are still worth one look by hand.
 - AC-9 → human: read the docs change.
 
 ## Decisions
 
 - **Does Foam filter, or does the VS Code picker?** → The picker, per the
   maintainer's instruction on PR #1793 ("make it look as much as possible as VS
-  Code does the UI and the matching"). This moves the *matching* out of Foam:
+  Code does the UI and the matching"). This moves the _matching_ out of Foam:
   the unit tests prove the alias, title and path are in the fields VS Code
   matches and that the matching flags are set, not that a given query returns a
   given note. That part is VS Code's fuzzy matcher and is verified by hand
@@ -134,7 +140,7 @@ shared instead of duplicated.
   restart, which is what Go to File does, but it is state to migrate and
   invalidate for a list the user rebuilds within a few navigations. Left out
   until someone misses it.
-- **Recency tracks the active *tab*, not the active text editor.** →
+- **Recency tracks the active _tab_, not the active text editor.** →
   `getActiveTabUri` already resolves custom editors, notebooks and the Markdown
   preview's webview label back to a note (`services/editor.ts:160`), so reading
   a note in preview counts as visiting it. A note is recorded only if
@@ -152,15 +158,15 @@ shared instead of duplicated.
   aliases only on notes that have them. The `Alias: ` prefix is a deliberate
   cost: it is matchable text, so a query that is a subsequence of `alias` will
   score aliased notes. It is one word to drop if that proves annoying.
-- **Why a `.test.ts` for the item builder, when it touches `vscode`?** →
+- **The item builder takes the path formatter as a parameter.** →
   `docs/dev/testing-conventions.md:12` reserves `.test.ts` for code with no VS
-  Code dependency, and this builder calls `workspace.asRelativePath` and
-  `window.showQuickPick`. The precedent followed is the sibling
-  `workspace-symbol-provider.test.ts:6` — the other alias-search feature in
-  this same folder — which imports `vscode` and runs against the mock in
-  `test:unit`. Real-host coverage lives in the `.spec.ts`, which is not
-  `@unit-ready`. `note-recency.ts` has no `vscode` import at all, so its test
-  is a plain unit test.
+  Code dependency, and the path shown comes from `workspace.asRelativePath`,
+  which also prefixes the folder name in a multi-root workspace. Passing it in
+  as `describe` keeps `note-items.ts` free of `vscode`, so its tests are plain
+  unit tests, and leaves the multi-root formatting to VS Code. What does need
+  `vscode` — the options the picker is opened with, the contribution, the
+  recency subscription, opening the pick — is in `go-to-note.spec.ts`, which
+  is not `@unit-ready` because the recency test needs real editor events.
 - **Which notes does the picker offer?** → `type === 'note'`, so attachments
   are out (AC-4). This is where "pure superset of Go to File" stops being
   literally true: Go to File lists every file in the workspace, while this
@@ -178,7 +184,7 @@ shared instead of duplicated.
   the picker means no test can type a query. If VS Code ever stopped matching
   `detail` under `matchOnDetail`, every unit test would still pass and alias
   search would be silently dead. The `matchOnDetail: true` assertion in
-  `go-to-note.test.ts` is the closest guard available; the real check is AC-7's
+  `go-to-note.spec.ts` is the closest guard available; the real check is AC-7's
   by-hand pass.
 - **The recency subscription needs a real editor.** The mock `vscode` in
   `src/test/vscode-mock.ts:1871` returns no-op disposables for
@@ -199,11 +205,10 @@ shared instead of duplicated.
   and which re-runs per keystroke — but it is O(notes) of allocation per open,
   and VS Code renders only what is visible. No benchmark is warranted yet.
 - **Wiring.** The item builder can be perfect while the command is never
-  registered, or registered but missing from the palette. AC-6's spec covers
-  registration end to end through `commands.executeCommand`, and AC-8's test
-  covers the contribution; `features/navigation/index.ts` is the one line
-  neither would catch if the spec were skipped in a unit-only run — the spec is
-  not `@unit-ready`, so that line is only exercised by `yarn test:e2e`.
+  registered, or registered but missing from the palette. AC-6's test covers
+  registration end to end through `commands.executeCommand`, and AC-8's covers
+  the contribution. Both are in `go-to-note.spec.ts`, which is not
+  `@unit-ready`, so the wiring is only exercised by `yarn test:e2e`.
 - **`ctrl+alt+p` on Linux.** `Ctrl+Alt+<key>` chords are the ones most often
   taken by desktop environments and by AltGr layouts, where `Ctrl+Alt+P` can
   produce a character instead. VS Code will show the binding either way; the

@@ -6,13 +6,7 @@ const DEFAULT_LIMIT = 50;
 /** Fragment and query point into a note, not at a different one. */
 const keyOf = (uri: URI) => uri.asPlain().toString();
 
-/**
- * The notes the user has been on, most recent first.
- *
- * `Go to Note` orders by this so the picker opens on what the user was just
- * reading, the way `Go to File` opens on recently used editors, rather than
- * alphabetically from the top of the workspace.
- */
+/** The notes visited, most recent first, up to a limit. */
 export class NoteRecency {
   private keys: string[] = [];
 

@@ -109,7 +109,7 @@ export async function openVSCode(
   await cdp.send('Emulation.setFocusEmulationEnabled', { enabled: true });
 
   window = new VSCodeWindow(page, screenshotDir, settingsFile, settings);
-  await page.getByRole('main').waitFor({ timeout: 60_000 });
+  await window.waitForFoamContributions();
   await window.activateFoam();
   return window;
 }
@@ -122,6 +122,18 @@ export class VSCodeWindow {
     private readonly settingsFile: string,
     private settings: Record<string, unknown>
   ) {}
+
+  /**
+   * Waits until VS Code has registered Foam's contributions. The palette
+   * lists the commands registered when it opens, so a command run before
+   * then is not found. Commands are registered with the views, which are
+   * drawn.
+   */
+  async waitForFoamContributions() {
+    await this.page
+      .getByRole('button', { name: /^Connections/ })
+      .waitFor({ timeout: 60_000 });
+  }
 
   /**
    * Foam activates on demand, and VS Code runs a command only once its
@@ -274,7 +286,7 @@ export class VSCodeWindow {
     const loaded = this.page.waitForEvent('load');
     await this.runCommand('Developer: Reload Window');
     await loaded;
-    await this.page.getByRole('main').waitFor();
+    await this.waitForFoamContributions();
   }
 
   /** Saves a screenshot of the window under the run's results; returns its path. */

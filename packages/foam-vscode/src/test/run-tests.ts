@@ -5,7 +5,10 @@ import {
   E2E_RESULT_FILE_ENV,
   getE2eCompletionFailure,
 } from './support/e2e-run-result';
-import { VSCODE_TEST_VERSION, getVSCodePlatform } from './support/vscode-version';
+import {
+  VSCODE_TEST_VERSION,
+  getVSCodePlatform,
+} from './support/vscode-version';
 
 async function main() {
   try {

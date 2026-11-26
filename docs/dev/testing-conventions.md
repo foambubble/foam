@@ -154,7 +154,7 @@ test('hovering a wikilink shows the note it links to', async () => {
 
 - **Find things by role and accessible name**, as Playwright's `getByRole` does. VS Code's CSS classes change between versions. The harness in `src/test/ui/vscode-window.ts` is the one place allowed to read VS Code internals, and only where nothing accessible exists.
 - **Assert the behaviour, not the element.** Check what is drawn after the action the criterion describes, not only that a button exists.
-- **Screenshots**: a failing test saves `failure.png` and prints its path. `await vscode.screenshot('name')` saves named ones, which is how a test leaves evidence for a criterion a person judges. They go under `packages/foam-vscode/out/ui-test-results/<file>/<test>/`, which each run empties first.
+- **Screenshots**: a failing test saves `failure.png` and prints its path. `await vscode.screenshot('name')` saves named ones, which is how a test leaves evidence for a criterion a person judges. They go under `packages/foam-vscode/out/ui-test-results/<file>/<test>/`. A test empties its own folder when it runs, so screenshots from tests you didn't run stay.
 
 Run them from a built checkout (`yarn build`), on a machine with a display. On Linux without one, prefix the command with `xvfb-run`:
 

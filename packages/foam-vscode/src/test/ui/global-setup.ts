@@ -1,5 +1,4 @@
 import path from 'path';
-import { mkdirSync, rmSync } from 'fs';
 import { downloadAndUnzipVSCode } from '@vscode/test-electron';
 import type { TestProject } from 'vitest/node' with { 'resolution-mode': 'import' };
 import {
@@ -13,17 +12,13 @@ declare module 'vitest' {
     vscodeExecutable: string;
     /** This package's root, passed as `--extensionDevelopmentPath`. */
     extensionDevelopmentPath: string;
-    /** Where screenshots go; emptied at the start of each run. */
+    /** Where screenshots go, one folder per test. */
     uiTestResultsDir: string;
   }
 }
 
 export default async function setup(project: TestProject) {
   const root = project.config.root;
-  const resultsDir = path.join(root, 'out', 'ui-test-results');
-  rmSync(resultsDir, { recursive: true, force: true });
-  mkdirSync(resultsDir, { recursive: true });
-
   const executable = await downloadAndUnzipVSCode({
     version: VSCODE_TEST_VERSION,
     platform: getVSCodePlatform(),
@@ -32,5 +27,8 @@ export default async function setup(project: TestProject) {
 
   project.provide('vscodeExecutable', executable);
   project.provide('extensionDevelopmentPath', root);
-  project.provide('uiTestResultsDir', resultsDir);
+  project.provide(
+    'uiTestResultsDir',
+    path.join(root, 'out', 'ui-test-results')
+  );
 }

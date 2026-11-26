@@ -67,9 +67,9 @@ DOM order, not line order, so `editorLines` and `hoverText` read Monaco's
 nowhere else.
 
 `src/test/ui/global-setup.ts` downloads VS Code with `@vscode/test-electron`'s
-`downloadAndUnzipVSCode`, the way `run-tests.ts` does. It empties
-`out/ui-test-results/` and hands the executable path and the results dir to
-tests through Vitest's `provide`/`inject`. The version and the platform helper
+`downloadAndUnzipVSCode`, the way `run-tests.ts` does, and hands the
+executable path and the results dir, `out/ui-test-results/`, to tests
+through Vitest's `provide`/`inject`. The version and the platform helper
 move from `run-tests.ts:9-21,62-63` into `src/test/support/vscode-version.ts`,
 which both runners import. The script is
 `"test:ui": "yarn build && vitest run --config vitest.ui.config.mts"`. Yarn v1
@@ -176,8 +176,9 @@ Settled with the maintainer on 2026-11-25:
 
   No third-party changed-files action, given the tj-actions compromise.
 - **Screenshots** → `packages/foam-vscode/out/ui-test-results/<file>/<test>/<name>.png`
-  and `failure.png`. They're build output, emptied by each run, and uploaded
-  as an artifact by `ui-tests.yml` and `claude.yml`.
+  and `failure.png`. They're build output. Each test empties its own
+  folder when it runs, so separate runs don't wipe each other's evidence.
+  They're uploaded as an artifact by `ui-tests.yml` and `claude.yml`.
 
 Made while planning:
 

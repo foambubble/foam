@@ -30,6 +30,8 @@ const BASE_SETTINGS: Record<string, unknown> = {
 
 const WINDOW_SIZE = { width: 1280, height: 800 };
 
+const clearedScreenshotDirs = new Set<string>();
+
 export interface OpenVSCodeOptions {
   /** The workspace's files, by path relative to its root. */
   files: Record<string, string>;
@@ -53,6 +55,11 @@ export async function openVSCode(
   const userDataDir = path.join(dir, 'user-data');
   const settingsFile = path.join(userDataDir, 'User', 'settings.json');
   const screenshotDir = currentTestScreenshotDir();
+  // a test's screenshots replace those of its last run, and no other test's
+  if (!clearedScreenshotDirs.has(screenshotDir)) {
+    rmSync(screenshotDir, { recursive: true, force: true });
+    clearedScreenshotDirs.add(screenshotDir);
+  }
 
   for (const [file, content] of Object.entries(options.files)) {
     mkdirSync(path.dirname(path.join(workspace, file)), { recursive: true });

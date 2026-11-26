@@ -1,9 +1,9 @@
 name: UI tests
 
 # The `*.ui.ts` tests drive a real VS Code window, so they stay out of CI:
-# a pull request runs only the UI tests it adds, and the whole set runs
-# weekly against main and when started by hand, as before a release
-# (docs/dev/releasing-foam.md).
+# a pull request runs only the UI tests it adds, or all of them if it changes
+# the harness they share. The whole set also runs weekly against main and
+# when started by hand, as before a release (docs/dev/releasing-foam.md).
 
 on:
   pull_request:
@@ -11,6 +11,8 @@ on:
       - main
     paths:
       - 'packages/foam-vscode/src/**/*.ui.ts'
+      - 'packages/foam-vscode/src/test/ui/**'
+      - 'packages/foam-vscode/vitest.ui.config.mts'
   schedule:
     - cron: '0 6 * * 1'
   workflow_dispatch:
@@ -33,6 +35,11 @@ jobs:
         id: select
         run: |
           if [ "$GITHUB_EVENT_NAME" != pull_request ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! git diff --quiet HEAD^1 HEAD -- packages/foam-vscode/src/test/ui packages/foam-vscode/vitest.ui.config.mts; then
+            echo "This pull request changes the UI test harness, so every UI test runs."
             echo "run=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi

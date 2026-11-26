@@ -106,8 +106,8 @@ those files.
      to the active note, and opening one shows it in the editor.
 5. `.github/workflows/ui-tests.yml`. The cache keys in `ci.yml` (three jobs),
    `claude.yml`, `deploy-docs.yml`, which shares the key, and the new workflow
-   hash `vscode-version.ts` instead of `run-tests.ts`. `claude.yml` uploads `out/ui-test-results` with
-   `if: always()`.
+   hash `vscode-version.ts` instead of `run-tests.ts`. `claude.yml` uploads
+   `out/ui-test-results` with `if: always()`.
 6. Process:
    - `specs/README.md` and `docs/dev/testing-conventions.md` (AC-6), with
      matching lines in `AGENTS.md` (the test table and the Testing section) and
@@ -168,10 +168,14 @@ Settled with the maintainer on 2026-11-25:
   runner they describe.
 - **How the PR check finds added tests** → `ui-tests.yml`:
   - `pull_request` with a `paths` filter on
-    `packages/foam-vscode/src/**/*.ui.ts`;
-  - checkout `fetch-depth: 2`, then
-    `git diff --name-only --no-renames --diff-filter=A HEAD^1 HEAD` on the
-    merge commit, so a renamed test counts as added and runs;
+    `packages/foam-vscode/src/**/*.ui.ts` and on the harness,
+    `src/test/ui/**` and `vitest.ui.config.mts`;
+  - checkout `fetch-depth: 2`. If `HEAD^1..HEAD` on the merge commit touches
+    the harness, every UI test runs: AC-9 was amended in review on
+    2026-11-26, because a harness regression would otherwise show only in
+    the weekly run, after merge;
+  - otherwise `git diff --name-only --no-renames --diff-filter=A HEAD^1 HEAD`,
+    so a renamed test counts as added and runs;
   - a PR that adds none exits early.
 
   No third-party changed-files action, given the tj-actions compromise.

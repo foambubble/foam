@@ -72,7 +72,8 @@ the same standard.
 Choose it only for a criterion about the window that the VS Code API can't
 check: a webview's content, what completion or hover draws, a theme, what
 survives a reload. UI tests run outside CI: a pull request runs the ones it
-adds, and the whole set runs weekly, and by hand before a release. A
+adds, or all of them if it changes their harness, and the whole set runs
+weekly, and by hand before a release. A
 criterion that asks for judgment, such as "findable" or "legible", stays
 `human`.
 

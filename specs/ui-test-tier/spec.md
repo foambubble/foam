@@ -31,8 +31,9 @@ decisions:
 - They are written during implementation, for the mechanical `human` criteria.
 - They are reviewed like any other test.
 - They never run as part of CI, which is already slow and would gain little,
-  with one exception: a branch that adds a UI test runs it in that PR's
-  checks.
+  with two exceptions: a branch that adds a UI test runs it in that PR's
+  checks, and a branch that changes the harness every UI test runs on runs
+  them all (decided in review, 2026-11-26).
 - Otherwise they run weekly in a workflow of their own, and manually when a
   release is cut. For now, nothing else. They keep an executable list of
   expected behaviour without loading every PR.
@@ -122,6 +123,8 @@ Facts a plan will need:
 - **AC-9**: Given the GitHub workflows, then:
   - a pull request's checks run no UI test, except the `*.ui.ts` files that
     pull request adds, and only those;
+  - a pull request that changes the harness the UI tests share runs all of
+    them in its checks;
   - a workflow of their own runs all the UI tests on Linux, weekly against
     `main` and when started manually;
   - a failing run shows as a failed workflow run.

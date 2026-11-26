@@ -163,7 +163,7 @@ yarn workspace foam-vscode test:ui                                   # all of th
 yarn workspace foam-vscode test:ui src/vscode/features/notes/connections.ui.ts
 ```
 
-UI tests stay out of CI, which is slow enough already. The exception is a pull request that adds a `.ui.ts`: its checks run the UI tests it adds, and only those. A pull request that changes an existing UI test doesn't run it, so its author does. The [UI tests workflow](../../.github/workflows/ui-tests.yml) runs the whole set weekly against `main`, and by hand before a release.
+UI tests stay out of CI, which is slow enough already. There are two exceptions. A pull request that adds a `.ui.ts` runs the UI tests it adds, and only those. A pull request that changes the harness they share (`src/test/ui/` or `vitest.ui.config.mts`) runs them all. A pull request that changes an existing UI test doesn't run it, so its author does. The [UI tests workflow](../../.github/workflows/ui-tests.yml) runs the whole set weekly against `main`, and by hand before a release.
 
 ## Graph Webview (`@foam/graph-view`)
 

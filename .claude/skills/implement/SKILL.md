@@ -32,9 +32,9 @@ order of work.
 2. **Write the failing tests.** Every acceptance criterion needs at least one,
    at the level it declares (`unit`, `e2e`, `ui`), following the plan's
    verification map when there is one. A criterion often needs more than one
-   case — the happy path and the edges it implies. Add ordinary unit tests for internals
-   the criteria don't reach, and keep those separate from the ones that stand
-   for a criterion, so the map stays readable.
+   case — the happy path and the edges it implies. Add ordinary unit tests
+   for internals the criteria don't reach, and keep those separate from the
+   ones that stand for a criterion, so the map stays readable.
 
    Run the suite and confirm each new test fails *for the reason its criterion
    describes* — a test failing on a typo proves nothing.
@@ -56,8 +56,9 @@ order of work.
 4. **Run everything from the repo root**: `yarn test` and `yarn lint`, which
    Lerna runs across every package — a change to `@foam/core` breaks
    `foam-vscode` and `@foam/cli` without touching a file in either. Fix what
-   you broke. `yarn test` runs no UI test, and CI runs only the ones a PR
-   adds, so also run every `*.ui.ts` you added or changed. While iterating,
+   you broke. `yarn test` runs no UI test, and a PR's checks run only the
+   ones it adds (all of them if it changes the UI test harness), so also run
+   every `*.ui.ts` you added or changed. While iterating,
    `yarn workspace <name> test:unit` is the fast loop, but it is not what you
    report.
 

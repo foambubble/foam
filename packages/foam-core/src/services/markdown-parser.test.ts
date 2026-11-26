@@ -18,6 +18,16 @@ Logger.setLevel('error');
 const parser = createMarkdownParser([]);
 const createNoteFromMarkdown = (content: string, path?: string) =>
   parser.parse(path ? URI.file(path) : getRandomURI(), content);
+const createCache = (): ParserCache => {
+  const entries = new Map<string, ParserCacheEntry>();
+  return {
+    get: uri => entries.get(uri.toString()),
+    has: uri => entries.has(uri.toString()),
+    set: (uri, entry) => void entries.set(uri.toString(), entry),
+    del: uri => void entries.delete(uri.toString()),
+    clear: () => entries.clear(),
+  };
+};
 
 describe('Markdown parsing', () => {
   it('should create a Resource from a markdown file', () => {
@@ -314,6 +324,112 @@ I link to an [interesting topic][1] and an [[internal-note]]
       );
       expect(note.links).toHaveLength(1);
       expect(note.links[0].type).toBe('link');
+    });
+  });
+
+  describe('Math', () => {
+    const linksIn = (markdown: string) =>
+      createNoteFromMarkdown(markdown).links.map(l => l.rawText);
+
+    it('#1317 - skips wikilinks in inline math', () => {
+      expect(
+        linksIn('The ring $\\mathbb C[[t]]$ of power series, see [[algebra]].')
+      ).toEqual(['[[algebra]]']);
+    });
+
+    it('skips wikilinks in inline display math', () => {
+      expect(linksIn('Display $$\\mathbb C[[u]]$$ and [[algebra]]')).toEqual([
+        '[[algebra]]',
+      ]);
+    });
+
+    it('skips wikilinks in a display math block, whatever its lines look like', () => {
+      const note = createNoteFromMarkdown(`Some text
+$$
+x^2 [[a]]
+- y^2 [[b]]
+
+# [[c]]
+$$
+See [[algebra]]`);
+      expect(note.links.map(l => l.rawText)).toEqual(['[[algebra]]']);
+      expect(note.sections).toEqual([]);
+    });
+
+    it('skips wikilinks in math inside lists and quotes', () => {
+      expect(
+        linksIn(`- item $[[a]]$
+
+  $$
+  [[b]]
+  $$
+
+> quote $[[c]]$
+> $$
+> [[d]]
+> $$`)
+      ).toEqual([]);
+    });
+
+    it('skips tags in math', () => {
+      const note = createNoteFromMarkdown('$x #y$ and #real');
+      expect(note.tags.map(t => t.label)).toEqual(['real']);
+    });
+
+    it('keeps wikilinks between dollars that do not delimit math', () => {
+      // a closing `$` followed by a digit
+      expect(linksIn('$5 and [[note]] costs $10')).toEqual(['[[note]]']);
+      // an opening `$` preceded by a letter
+      expect(linksIn('a$[[note]]$b')).toEqual(['[[note]]']);
+      // an escaped opening `$`
+      expect(linksIn('\\$[[note]]$')).toEqual(['[[note]]']);
+      // the first `$` after the opening one is followed by a letter
+      expect(linksIn('$x$y [[note]]$')).toEqual(['[[note]]']);
+    });
+
+    it('keeps wikilinks after display math that is never closed', () => {
+      expect(linksIn('$$\n[[a]]\n\n[[b]]')).toEqual(['[[a]]', '[[b]]']);
+      expect(linksIn('$$x$$ and [[a]]')).toEqual(['[[a]]']);
+    });
+
+    it('gives the range of a wikilink that follows math', () => {
+      const note = createNoteFromMarkdown('$x$ and [[note]]');
+      expect(note.links[0].range).toEqual(Range.create(0, 8, 0, 16));
+    });
+
+    it('keeps math, with its delimiters, in titles and section labels', () => {
+      const note = createNoteFromMarkdown(
+        '# Area $x^2$ and $$y$$\n\n## Ring $R[[t]]$'
+      );
+      expect(note.title).toEqual('Area $x^2$ and $$y$$');
+      expect(note.sections.map(s => s.label)).toEqual([
+        'Area $x^2$ and $$y$$',
+        'Ring $R[[t]]$',
+      ]);
+    });
+
+    it('reads wikilinks between dollars when math is disabled', () => {
+      const parser = createMarkdownParser([], undefined, undefined, {
+        math: false,
+      });
+      const note = parser.parse(getRandomURI(), 'The ring $R[[t]]$');
+      expect(note.links.map(l => l.rawText)).toEqual(['[[t]]']);
+    });
+
+    it('does not share cached notes between parsers with different math options', () => {
+      const cache = createCache();
+      const uri = getRandomURI();
+      const content = 'The ring $R[[t]]$';
+      const withMath = createMarkdownParser([], cache);
+      const withoutMath = createMarkdownParser([], cache, undefined, {
+        math: false,
+      });
+
+      expect(withMath.parse(uri, content).links).toEqual([]);
+      expect(withoutMath.parse(uri, content).links.map(l => l.rawText)).toEqual(
+        ['[[t]]']
+      );
+      expect(withMath.parse(uri, content).links).toEqual([]);
     });
   });
 
@@ -910,17 +1026,6 @@ and some content`
     });
   });
   describe('Parse observer', () => {
-    const createCache = (): ParserCache => {
-      const entries = new Map<string, ParserCacheEntry>();
-      return {
-        get: uri => entries.get(uri.toString()),
-        has: uri => entries.has(uri.toString()),
-        set: (uri, entry) => void entries.set(uri.toString(), entry),
-        del: uri => void entries.delete(uri.toString()),
-        clear: () => entries.clear(),
-      };
-    };
-
     it('reports the size of every parsed note', () => {
       const samples = [];
       const parser = createMarkdownParser([], undefined, s => samples.push(s));

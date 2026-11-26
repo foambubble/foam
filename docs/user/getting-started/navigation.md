@@ -108,19 +108,19 @@ Press `Ctrl+P` / `Cmd+P` and start typing:
 
 ### Finding a Note by Its Alias
 
-Sometimes you look for a note by a name that isn't its title. A note titled "Einstein, Albert" can declare that name in its front matter:
+Sometimes you look for a note by a name that appears nowhere in its title or its file name — the acronym you always say out loud, or an old name for the same thing. List those names as aliases in the note's front matter:
 
 ```markdown
 ---
-alias: Einstein
+alias: OKRs
 ---
 
-# Einstein, Albert
+# Objectives and Key Results
 ```
 
-Run **"Foam: Go to Note"** from the Command Palette to search your notes by **title**, **alias**, or **path**, all at once — so typing `einstein` finds the note above. It behaves like Quick Open, with aliases added, and only notes are listed.
+Press `Ctrl+Alt+P` / `Cmd+Alt+P`, or run **"Foam: Go to Note"** from the Command Palette, to search your notes by **title**, **alias**, or **path**, all at once — so typing `okrs` finds the note above, which `Ctrl+P` could not. It behaves like Quick Open, with aliases added: the notes you visited most recently come first, and only notes are listed.
 
-The command has no keyboard shortcut out of the box. To give it one, open **"Preferences: Open Keyboard Shortcuts"**, search for "Foam: Go to Note", and pick a binding — `Ctrl+Alt+P` / `Cmd+Alt+P` is free and sits next to `Ctrl+P`.
+To change the shortcut, open **"Preferences: Open Keyboard Shortcuts"**, search for "Foam: Go to Note", and pick another binding.
 
 Aliases also show up in **"Go to Symbol in Workspace"** (`Ctrl+T` / `Cmd+T`), which searches aliases only, alongside symbols contributed by other extensions.
 

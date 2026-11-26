@@ -1001,6 +1001,11 @@
       {
         "command": "foam-vscode.open-daily-note-for-date",
         "key": "alt+h"
+      },
+      {
+        "command": "foam-vscode.go-to-note",
+        "key": "ctrl+alt+p",
+        "mac": "cmd+alt+p"
       }
     ]
   },

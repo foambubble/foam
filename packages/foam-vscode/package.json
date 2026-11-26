@@ -468,6 +468,10 @@
         "title": "Foam: Open Random Note"
       },
       {
+        "command": "foam-vscode.go-to-note",
+        "title": "Foam: Go to Note"
+      },
+      {
         "command": "foam-vscode.lint",
         "title": "Foam: Lint Workspace (Experimental)"
       },
@@ -997,6 +1001,11 @@
       {
         "command": "foam-vscode.open-daily-note-for-date",
         "key": "alt+h"
+      },
+      {
+        "command": "foam-vscode.go-to-note",
+        "key": "ctrl+alt+p",
+        "mac": "cmd+alt+p"
       }
     ]
   },

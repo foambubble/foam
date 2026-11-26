@@ -53,6 +53,10 @@ export const closeEditors = async () => {
   await wait(100);
 };
 
+/**
+ * Deletes a file or folder, and resolves once the Foam workspace no longer
+ * lists anything at its path.
+ */
 export const deleteFile = async (file: URI | { uri: URI }) => {
   const uri = 'uri' in file ? file.uri : file;
   // Deleted through a WorkspaceEdit rather than `fs.delete` so that VS Code
@@ -67,7 +71,9 @@ export const deleteFile = async (file: URI | { uri: URI }) => {
   const applied = await vscode.workspace.applyEdit(edit);
   if (!applied) {
     Logger.error(`deleteFile: VS Code refused to delete ${uri.path}`);
+    return;
   }
+  await waitForNoteRemovedFromFoamWorkspace(uri);
 };
 
 /**
@@ -114,19 +120,29 @@ export const waitForNoteInFoamWorkspace = async (uri: URI, timeout = 5000) => {
   );
 };
 
+/**
+ * Waits until the Foam workspace lists no resource at `uri`, nor under it if
+ * it is a folder.
+ */
 export const waitForNoteRemovedFromFoamWorkspace = async (
   uri: URI,
   timeout = 5000
 ) => {
   const start = Date.now();
   const foam = await getFoamFromVSCode();
-  const workspace = foam.workspace;
+  const folderPrefix = uri.path + '/';
+  const isListed = () =>
+    foam.workspace
+      .list()
+      .some(
+        r => r.uri.path === uri.path || r.uri.path.startsWith(folderPrefix)
+      );
 
   while (Date.now() - start < timeout) {
-    if (!workspace.find(uri.path)) {
+    if (!isListed()) {
       return true;
     }
-    await wait(100);
+    await wait(10);
   }
   throw new Error(
     `Timeout waiting for note ${uri.toString()} to be removed from Foam workspace`

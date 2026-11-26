@@ -3,8 +3,6 @@ import { createTestNote, createTestWorkspace } from '@foam/core/test';
 import { createNoteItems } from './note-items';
 import { NoteRecency } from './note-recency';
 
-const byPath = (uri: URI) => uri.path;
-
 describe('createNoteItems', () => {
   it('labels a note with its title and shows the aliases it can be found by (#1792)', () => {
     const workspace = createTestWorkspace();
@@ -16,7 +14,7 @@ describe('createNoteItems', () => {
       })
     );
 
-    const items = createNoteItems(workspace, new NoteRecency(), byPath);
+    const items = createNoteItems(workspace, new NoteRecency());
 
     expect(items).toHaveLength(1);
     expect(items[0].label).toEqual('Objectives and Key Results');
@@ -29,7 +27,7 @@ describe('createNoteItems', () => {
       createTestNote({ uri: '/relativity.md', title: 'Relativity' })
     );
 
-    const items = createNoteItems(workspace, new NoteRecency(), byPath);
+    const items = createNoteItems(workspace, new NoteRecency());
 
     expect(items).toHaveLength(1);
     expect(items[0].label).toEqual('Relativity');
@@ -46,7 +44,7 @@ describe('createNoteItems', () => {
       })
     );
 
-    const items = createNoteItems(workspace, new NoteRecency(), byPath);
+    const items = createNoteItems(workspace, new NoteRecency());
 
     expect(items).toHaveLength(1);
     expect(items[0].detail).toEqual('Alias: OKRs, Goal setting');
@@ -63,20 +61,47 @@ describe('createNoteItems', () => {
       })
     );
 
-    const items = createNoteItems(workspace, new NoteRecency(), byPath);
+    const items = createNoteItems(workspace, new NoteRecency());
 
     expect(items.map(i => i.label)).toEqual(['A note']);
   });
 
-  it('describes a note by its path, and orders notes never visited by title', () => {
+  it('orders notes never visited by title', () => {
     const workspace = createTestWorkspace();
     workspace.set(createTestNote({ uri: '/zebra.md', title: 'Zebra' }));
     workspace.set(createTestNote({ uri: '/apple.md', title: 'Apple' }));
 
-    const items = createNoteItems(workspace, new NoteRecency(), byPath);
+    const items = createNoteItems(workspace, new NoteRecency());
 
     expect(items.map(i => i.label)).toEqual(['Apple', 'Zebra']);
-    expect(items[0].description).toEqual(workspace.find('apple').uri.path);
+  });
+
+  it('describes a note by its path in the workspace', () => {
+    const workspace = createTestWorkspace([URI.file('/home/me/garden')]);
+    workspace.set(
+      createTestNote({
+        uri: '/home/me/garden/plants/courgettes.md',
+        title: 'Courgettes',
+      })
+    );
+
+    const items = createNoteItems(workspace, new NoteRecency());
+
+    expect(items[0].description).toEqual('plants/courgettes.md');
+  });
+
+  it('starts the path with the root folder name when the workspace has several roots', () => {
+    const workspace = createTestWorkspace([
+      URI.file('/home/me/garden'),
+      URI.file('/home/me/work'),
+    ]);
+    workspace.set(
+      createTestNote({ uri: '/home/me/work/goals/okrs.md', title: 'OKRs' })
+    );
+
+    const items = createNoteItems(workspace, new NoteRecency());
+
+    expect(items[0].description).toEqual('work/goals/okrs.md');
   });
 
   it('offers recently visited notes first, most recent first (#1792)', () => {
@@ -88,7 +113,7 @@ describe('createNoteItems', () => {
     recency.visit(workspace.find('mango').uri);
     recency.visit(workspace.find('zebra').uri);
 
-    const items = createNoteItems(workspace, recency, byPath);
+    const items = createNoteItems(workspace, recency);
 
     expect(items.map(i => i.label)).toEqual(['Zebra', 'Mango', 'Apple']);
   });

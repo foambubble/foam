@@ -1,12 +1,5 @@
-import {
-  Disposable,
-  ExtensionContext,
-  commands,
-  window,
-  workspace as vsCodeWorkspace,
-} from 'vscode';
+import { Disposable, ExtensionContext, commands, window } from 'vscode';
 import { Foam, FoamWorkspace } from '@foam/core';
-import { toVsCodeUri } from '../../utils/vsc-utils';
 import { getTelemetry } from '../../services/telemetry';
 import { getActiveTabUri, onDidChangeActiveTab } from '../../services/editor';
 import { createNoteItems } from '../../../go-to-note/note-items';
@@ -19,14 +12,14 @@ export const GO_TO_NOTE_COMMAND = {
 };
 
 export async function goToNote(workspace: FoamWorkspace, recency: NoteRecency) {
-  const items = createNoteItems(workspace, recency, uri =>
-    vsCodeWorkspace.asRelativePath(toVsCodeUri(uri))
+  const picked = await window.showQuickPick(
+    createNoteItems(workspace, recency),
+    {
+      placeHolder: 'Search notes by title, alias or path',
+      matchOnDescription: true,
+      matchOnDetail: true,
+    }
   );
-  const picked = await window.showQuickPick(items, {
-    placeHolder: 'Search notes by title, alias or path',
-    matchOnDescription: true,
-    matchOnDetail: true,
-  });
   if (!picked) {
     return;
   }

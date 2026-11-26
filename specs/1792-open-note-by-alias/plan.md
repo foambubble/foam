@@ -72,10 +72,10 @@ shared instead of duplicated.
    match flags the picker is opened with, and the `package.json` contribution
    (AC-8).
 4. `go-to-note/note-recency.ts` — `NoteRecency` with `visit()` and `rank()`.
-5. `go-to-note/note-items.ts` — `createNoteItems(workspace, recency, describe)`
-   building the items; `describe` turns a note's URI into the path shown.
-6. `go-to-note.ts` — `goToNote(workspace, recency)` building the items with
-   `workspace.asRelativePath` as `describe`, showing the picker and delegating
+5. `go-to-note/note-items.ts` — `createNoteItems(workspace, recency)`
+   building the items, with the path from core's `uriToWorkspacePath`.
+6. `go-to-note.ts` — `goToNote(workspace, recency)` showing the picker over
+   those items and delegating
    the pick to `OPEN_COMMAND`, and `activate` registering the command plus the
    tab subscription. Telemetry via `getTelemetry()?.trackCommand(...)`, as
    `open-random-note.ts:12` does.
@@ -158,15 +158,18 @@ Results` with `alias: OKRs` is labelled with the title and carries the alias
   aliases only on notes that have them. The `Alias: ` prefix is a deliberate
   cost: it is matchable text, so a query that is a subsequence of `alias` will
   score aliased notes. It is one word to drop if that proves annoying.
-- **The item builder takes the path formatter as a parameter.** →
+- **The path comes from core, not `workspace.asRelativePath`.** →
   `docs/dev/testing-conventions.md:12` reserves `.test.ts` for code with no VS
-  Code dependency, and the path shown comes from `workspace.asRelativePath`,
-  which also prefixes the folder name in a multi-root workspace. Passing it in
-  as `describe` keeps `note-items.ts` free of `vscode`, so its tests are plain
-  unit tests, and leaves the multi-root formatting to VS Code. What does need
-  `vscode` — the options the picker is opened with, the contribution, the
-  recency subscription, opening the pick — is in `go-to-note.spec.ts`, which
-  is not `@unit-ready` because the recency test needs real editor events.
+  Code dependency, and a workspace-relative path needs none: core's
+  `uriToWorkspacePath` gives it. With more than one root, the path starts with
+  the root's folder name, as `asRelativePath` and Go to File do, so notes at
+  the same path in two roots stay apart and typing a root's name finds its
+  notes. The one thing core cannot see is a display name given to a folder in
+  a `.code-workspace` file; the picker shows the directory name instead. What
+  does need `vscode` — the options the picker is opened with, the
+  contribution, the recency subscription, opening the pick — is in
+  `go-to-note.spec.ts`, which is not `@unit-ready` because the recency test
+  needs real editor events.
 - **Which notes does the picker offer?** → `type === 'note'`, so attachments
   are out (AC-4). This is where "pure superset of Go to File" stops being
   literally true: Go to File lists every file in the workspace, while this

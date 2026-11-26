@@ -86,9 +86,9 @@ those files.
      (`VIEW_STATE_DEBOUNCE_MS`, 250 ms, in `foam-graph/src/host-bridge.ts:4`,
      which isn't exported), reload, open the graph again, and expect the show
      control and no hide control. The graph is opened after the reload, as
-     the criterion says, rather than relying on its restored tab: with no
-     `onWebviewPanel:foam-graph` activation event, that tab stays blank until
-     something else activates Foam.
+     the criterion says. Building this showed that a restored graph tab stayed
+     blank until something else activated Foam; `1e6bc167` on `main` fixed
+     that with an `onWebviewPanel:foam-graph` activation event.
    - Red first: temporarily drop `showControlPanel` from what
      `saveViewState` (`view-state-store.ts:31`) stores, run it, and confirm it
      fails at the post-reload assertion with a failure screenshot path

@@ -82,11 +82,19 @@ describe('go-to-note command', () => {
     await deleteFile(note.uri);
   });
 
-  it('offers the notes visited in this window first, most recent first (#1792)', async () => {
-    const unvisited = await createFile('# Apple', ['go-to-note-apple.md']);
+  it('offers the notes visited in this window first, most recent first, then the rest by title (#1792)', async () => {
+    const unvisitedBanana = await createFile('# Banana', [
+      'go-to-note-banana.md',
+    ]);
+    const unvisitedApple = await createFile('# Apple', ['go-to-note-apple.md']);
     const visitedEarlier = await createFile('# Mango', ['go-to-note-mango.md']);
     const visitedLast = await createFile('# Zebra', ['go-to-note-zebra.md']);
-    for (const note of [unvisited, visitedEarlier, visitedLast]) {
+    for (const note of [
+      unvisitedBanana,
+      unvisitedApple,
+      visitedEarlier,
+      visitedLast,
+    ]) {
       await waitForNoteInFoamWorkspace(note.uri);
     }
     await showInEditor(visitedEarlier.uri);
@@ -110,12 +118,14 @@ describe('go-to-note command', () => {
         offered.findIndex(item => item.uri.path === uri.path);
       expect(offeredAt(visitedLast.uri)).toEqual(0);
       expect(offeredAt(visitedEarlier.uri)).toEqual(1);
-      expect(offeredAt(visitedEarlier.uri)).toBeLessThan(
-        offeredAt(unvisited.uri)
+      expect(offeredAt(unvisitedApple.uri)).toBeGreaterThan(1);
+      expect(offeredAt(unvisitedApple.uri)).toBeLessThan(
+        offeredAt(unvisitedBanana.uri)
       );
     });
 
-    await deleteFile(unvisited.uri);
+    await deleteFile(unvisitedBanana.uri);
+    await deleteFile(unvisitedApple.uri);
     await deleteFile(visitedEarlier.uri);
     await deleteFile(visitedLast.uri);
   });

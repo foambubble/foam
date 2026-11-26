@@ -98,9 +98,10 @@ Results` with `alias: OKRs` is labelled with the title and carries the alias
   item, both aliases on the one `detail` line.
 - AC-4 → `note-items.test.ts`: a workspace with a note and a `.png` attachment
   yields one item, for the note.
-- AC-5 → `go-to-note.spec.ts`: three notes created, two of them opened in the
-  editor, and the command then offers them most-recently-opened first with the
-  never-opened one in the alphabetical tail. This is the e2e that covers the
+- AC-5 → `go-to-note.spec.ts`: four notes created, two of them opened in the
+  editor, and the command then offers them most-recently-opened first, with
+  the two never opened after them in title order (created in the other order,
+  so the order offered is the sort's, not creation's). This is the e2e that covers the
   recency subscription as well as the ordering. Underneath it,
   `note-items.test.ts` holds the item ordering given a recency list, and
   `note-recency.test.ts` the ordering rules themselves (revisits, section

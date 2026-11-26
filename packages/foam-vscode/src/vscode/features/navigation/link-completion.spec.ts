@@ -777,6 +777,9 @@ const accept = async (
   const edit = new vscode.WorkspaceEdit();
   edit.replace(doc.uri, item.range as vscode.Range, String(item.insertText));
   await vscode.workspace.applyEdit(edit);
+  // VS Code gives a dirty file a text editor after a delay, so that none is
+  // open holds only up to the command, not after it
+  expect(vscode.window.activeTextEditor).toBeUndefined();
   await vscode.commands.executeCommand(
     item.command.command,
     ...(item.command.arguments ?? [])
@@ -819,7 +822,6 @@ describe('Accepting a completion when no text editor is open', () => {
       }
     );
 
-    expect(vscode.window.activeTextEditor).toBeUndefined();
     expect(doc.getText()).toBe('See [[completion-target-no-editor]] here');
 
     await deleteFile(target);
@@ -852,7 +854,6 @@ describe('Accepting a completion with linkFormat set to link', () => {
       }
     );
 
-    expect(vscode.window.activeTextEditor).toBeUndefined();
     expect(doc.getText()).toBe(
       'See [Completion Target](completion-target.md) here'
     );

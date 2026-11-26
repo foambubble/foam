@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import {
   computeFitZoom,
@@ -10,6 +10,7 @@ import {
 } from './graph-canvas';
 import {
   RecordingContext,
+  blankContext,
   drawingsAt,
   isFilledAt,
   makeNode,
@@ -22,6 +23,7 @@ import type {
   NodeState,
   ResolvedStyle,
 } from '../lib/types';
+import type { VisibleGraph } from '../lib/graph-view-model';
 
 type PlacedNode = GraphModelNode & { x: number; y: number };
 
@@ -523,6 +525,67 @@ describe('tap size (AC-5)', () => {
 
     expect(isFilledAt(ctx, hitColor, 0.5, 0)).toBe(true);
     expect(isFilledAt(ctx, hitColor, 1, 0)).toBe(false);
+  });
+});
+
+describe('graph data set after the canvas is created', () => {
+  const graphOf = (links: Array<[string, string]>): VisibleGraph => {
+    const ids = [...new Set(links.flat())];
+    return {
+      nodeInfo: Object.fromEntries(
+        ids.map(id => [id, makeNode({ id, title: id })])
+      ),
+      nodes: ids.map(id => ({ id })),
+      links: links.map(([source, target]) => ({ source, target })),
+    };
+  };
+
+  /** A canvas in the document, its force graph created and running. */
+  const mountCanvas = async () => {
+    const getContext = vi
+      .spyOn(HTMLCanvasElement.prototype, 'getContext')
+      .mockImplementation(() => blankContext() as any);
+    const canvas = new GraphCanvas();
+    canvas.style = makeStyle();
+    document.body.append(canvas);
+    onTestFinished(() => {
+      canvas.remove();
+      getContext.mockRestore();
+    });
+    await canvas.updateComplete;
+    return canvas;
+  };
+
+  it('lays out a graph set as soon as the canvas is created, and fits it once the layout stops', async () => {
+    const canvas = await mountCanvas();
+    const fit = vi.spyOn(canvas, 'zoomToFit');
+
+    canvas.visibleGraph = graphOf([
+      ['a', 'b'],
+      ['b', 'c'],
+    ]);
+
+    await expect(canvas.updateComplete).resolves.toBe(true);
+    expect(fit).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(fit).toHaveBeenCalledOnce());
+  });
+
+  it('fits a later graph once its layout stops, when asked to', async () => {
+    const canvas = await mountCanvas();
+    const fit = vi.spyOn(canvas, 'zoomToFit');
+    canvas.visibleGraph = graphOf([['a', 'b']]);
+    await canvas.updateComplete;
+    await vi.waitFor(() => expect(fit).toHaveBeenCalledOnce());
+
+    canvas.visibleGraph = graphOf([
+      ['a', 'b'],
+      ['b', 'c'],
+    ]);
+    await expect(canvas.updateComplete).resolves.toBe(true);
+    canvas.fitWhenSettled();
+
+    expect(fit).toHaveBeenCalledOnce();
+    await vi.waitFor(() => expect(fit).toHaveBeenCalledTimes(2));
   });
 });
 

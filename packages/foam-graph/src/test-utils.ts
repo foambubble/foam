@@ -161,6 +161,15 @@ export class RecordingContext {
   }
 }
 
+/**
+ * A 2D context that takes every call a force graph makes and draws nothing,
+ * for a canvas a real force graph runs on: happy-dom's canvas has no context.
+ */
+export const blankContext = (): CanvasRenderingContext2D =>
+  new Proxy(new RecordingContext(), {
+    get: (ctx, key) => (key in ctx ? Reflect.get(ctx, key) : () => {}),
+  }) as unknown as CanvasRenderingContext2D;
+
 /** The drawings with a shape centred on (x, y). */
 export const drawingsAt = (ctx: RecordingContext, x: number, y: number) =>
   ctx.drawings

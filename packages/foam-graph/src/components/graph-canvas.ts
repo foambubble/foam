@@ -599,7 +599,6 @@ export class GraphCanvas extends LitElement {
 
     this.rs.data.links = visibleGraph.links.map(link => ({ ...link }));
     this.graphInstance.graphData(this.rs.data as any);
-    (this.graphInstance.d3Force('link') as any)?.links(this.rs.data.links);
   }
 
   private _emit(eventName: string, detail: unknown) {

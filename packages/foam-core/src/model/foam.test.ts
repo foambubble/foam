@@ -330,6 +330,58 @@ describe('bootstrap deletes during a watcher read', () => {
     }
   });
 
+  it('does not add a note whose file is reported deleted before its create event is read', async () => {
+    const { watcher, foam, releaseFetch } = await bootstrapWithHeldFetch();
+    const uri = URI.file('/workspace/created-then-deleted.md');
+
+    try {
+      watcher.fireCreate(uri);
+      watcher.fireDelete(uri);
+      releaseFetch();
+      await flush(DEBOUNCE_SETTLE_MS);
+
+      expect(foam.workspace.find(uri)).toBeNull();
+    } finally {
+      foam.dispose();
+    }
+  });
+
+  it('adds a note whose file is created again after its deletion was reported', async () => {
+    const { watcher, foam, releaseFetch } = await bootstrapWithHeldFetch();
+    const uri = URI.file('/workspace/created-again.md');
+
+    try {
+      watcher.fireCreate(uri);
+      watcher.fireDelete(uri);
+      watcher.fireCreate(uri);
+      releaseFetch();
+      await flush(DEBOUNCE_SETTLE_MS);
+
+      expect(foam.workspace.find(uri)).not.toBeNull();
+    } finally {
+      foam.dispose();
+    }
+  });
+
+  it('does not re-add a note deleted while its change event waited for an earlier one', async () => {
+    const { watcher, foam, releaseFetch } = await bootstrapWithHeldFetch();
+    const uri = URI.file('/workspace/changed-then-deleted.md');
+    foam.workspace.set(createTestNote({ uri: uri.path }));
+
+    try {
+      watcher.fireChange(uri);
+      watcher.fireChange(uri);
+      await flush(0);
+      watcher.fireDelete(uri);
+      releaseFetch();
+      await flush(0);
+
+      expect(foam.workspace.find(uri)).toBeNull();
+    } finally {
+      foam.dispose();
+    }
+  });
+
   it('does not add a new note whose folder is deleted while its create event is being read', async () => {
     const { watcher, foam, releaseFetch } = await bootstrapWithHeldFetch();
     const uri = URI.file('/workspace/moved-folder/new-note.md');

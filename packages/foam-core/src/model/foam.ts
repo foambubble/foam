@@ -16,6 +16,7 @@ import {
   defaultAttachmentExtensions,
 } from '../services/attachment-provider';
 import { ALWAYS_EXCLUDED } from '../vscode-settings';
+import { getDirectory } from '../utils/path';
 
 export interface Services {
   dataStore: IDataStore;
@@ -106,29 +107,52 @@ export const bootstrap = async ({
   const subscriptions: IDisposable[] = [];
 
   if (watcher) {
-    // A read that is still in flight when its resource is deleted must not put
-    // the resource back: the file it read may have moved or gone since.
-    const readsInFlight = new Map<string, Set<{ deleted: boolean }>>();
+    // A read requested before its file, or a folder above it, is deleted must
+    // not put the resource back: by the time it runs, the path may hold a
+    // newer file, whose creation and deletion the watcher may never report.
+    // Requests and deletions take turns from one counter; deletions are
+    // recorded only while a read is pending.
+    let turn = 0;
+    let pendingReads = 0;
+    const deletedAt = new Map<string, number>();
+    const recordDeletion = (path: string) => {
+      if (pendingReads > 0) {
+        deletedAt.set(path.replace(/\/$/, ''), ++turn);
+      }
+    };
+    const requestRead = () => {
+      pendingReads++;
+      return ++turn;
+    };
+    const settleRead = () => {
+      if (--pendingReads === 0) {
+        deletedAt.clear();
+      }
+    };
+    const isDeletedSince = (uri: URI, requestedAt: number) => {
+      let path = uri.path;
+      for (;;) {
+        if ((deletedAt.get(path) ?? 0) > requestedAt) {
+          return true;
+        }
+        const parent = getDirectory(path);
+        if (parent === path) {
+          return false;
+        }
+        path = parent;
+      }
+    };
     subscriptions.push(
-      workspace.onDidDelete(resource => {
-        readsInFlight.get(resource.uri.path)?.forEach(r => (r.deleted = true));
-      })
+      workspace.onDidDelete(resource => recordDeletion(resource.uri.path))
     );
-    const fetchAndSetUnlessDeleted = async (uri: URI) => {
-      const read = { deleted: false };
-      const reads = readsInFlight.get(uri.path) ?? new Set();
-      reads.add(read);
-      readsInFlight.set(uri.path, reads);
+    const fetchAndSetUnlessDeleted = async (uri: URI, requestedAt: number) => {
       try {
         const resource = await workspace.fetch(uri);
-        if (resource && !read.deleted) {
+        if (resource && !isDeletedSince(uri, requestedAt)) {
           workspace.set(resource);
         }
       } finally {
-        reads.delete(read);
-        if (reads.size === 0) {
-          readsInFlight.delete(uri.path);
-        }
+        settleRead();
       }
     };
 
@@ -140,8 +164,9 @@ export const bootstrap = async ({
       watcher.onDidChange(uri => {
         if (matcher.isMatch(uri)) {
           const key = uri.toString();
-          const next = (pendingChanges.get(key) ?? Promise.resolve()).then(
-            () => fetchAndSetUnlessDeleted(uri)
+          const requestedAt = requestRead();
+          const next = (pendingChanges.get(key) ?? Promise.resolve()).then(() =>
+            fetchAndSetUnlessDeleted(uri, requestedAt)
           );
           pendingChanges.set(key, next);
           next.finally(() => {
@@ -155,17 +180,22 @@ export const bootstrap = async ({
 
     // Coalesce a burst of creates into a single refresh, then
     // process every accumulated URI. (issue #1668)
-    const onDidCreateBatch = Event.debounce<URI, URI[]>(
+    const onDidCreateBatch = Event.debounce<
+      URI,
+      { uri: URI; requestedAt: number }[]
+    >(
       watcher.onDidCreate,
-      (batch, uri) => (batch ? [...batch, uri] : [uri]),
+      (batch, uri) => [...(batch ?? []), { uri, requestedAt: requestRead() }],
       CREATE_DEBOUNCE_MS
     );
     subscriptions.push(
-      onDidCreateBatch(async uris => {
+      onDidCreateBatch(async creates => {
         await matcher.refresh();
-        for (const uri of uris) {
+        for (const { uri, requestedAt } of creates) {
           if (matcher.isMatch(uri)) {
-            await fetchAndSetUnlessDeleted(uri);
+            await fetchAndSetUnlessDeleted(uri, requestedAt);
+          } else {
+            settleRead();
           }
         }
       })
@@ -177,12 +207,8 @@ export const bootstrap = async ({
         // event, without its files
         const folderPrefix = uri.path.endsWith('/') ? uri.path : uri.path + '/';
         // A read of a file not indexed yet has no resource for the workspace
-        // to delete, so nothing else marks it
-        for (const [path, reads] of readsInFlight) {
-          if (path === uri.path || path.startsWith(folderPrefix)) {
-            reads.forEach(r => (r.deleted = true));
-          }
-        }
+        // to delete, so nothing else records it
+        recordDeletion(uri.path);
         if (workspace.delete(uri)) {
           return;
         }

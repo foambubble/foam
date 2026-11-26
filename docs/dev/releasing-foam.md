@@ -94,6 +94,7 @@ Nothing in CI enforces any of this; it's a review-time and release-time responsi
 2. Sanity checks
    - `yarn reset`
    - `yarn test`
+   - Start the [UI tests workflow](../../.github/workflows/ui-tests.yml) on `main`: Actions → UI tests → Run workflow, or `gh workflow run ui-tests.yml --ref main`. These tests drive a real VS Code window and run nowhere else before a release. If it fails, look at the failure and its `ui-test-results` screenshots before going ahead.
 3. Make sure every shipped change since the last release has a fragment in `.changeset/`
    - If not, write the missing ones — see [Generating fragments from git history](#generating-fragments-from-git-history)
    - **If any change touched `@foam/core`, confirm `foam-vscode` and `@foam/cli` are also covered by a fragment** (see the warning above). Their bundles pick up core changes at build time, but Changesets will not bump their versions automatically.

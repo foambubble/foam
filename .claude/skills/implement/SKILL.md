@@ -30,22 +30,37 @@ order of work.
    disagree.
 
 2. **Write the failing tests.** Every acceptance criterion needs at least one,
-   at the level it declares (`unit`, `e2e`), following the plan's verification
-   map when there is one. A criterion often needs more than one case — the
-   happy path and the edges it implies. Add ordinary unit tests for internals
-   the criteria don't reach, and keep those separate from the ones that stand
-   for a criterion, so the map stays readable.
+   at the level it declares (`unit`, `e2e`, `ui`), following the plan's
+   verification map when there is one. A criterion often needs more than one
+   case — the happy path and the edges it implies. Add ordinary unit tests
+   for internals the criteria don't reach, and keep those separate from the
+   ones that stand for a criterion, so the map stays readable.
 
    Run the suite and confirm each new test fails *for the reason its criterion
    describes* — a test failing on a typo proves nothing.
+
+   A `human` criterion that is a mechanical fact about the window — something
+   a test could read off it, like a webview's content, what completion draws,
+   or what survives a reload — gets a UI test, a `*.ui.ts`
+   (`docs/dev/testing-conventions.md`). Write it before the change, run it
+   with `yarn workspace foam-vscode test:ui <file>`, see it fail for the
+   criterion's reason, make it pass, and change the criterion to
+   `_verify: ui_` in the same PR. A `human` criterion that asks for judgment,
+   such as "findable" or "legible", stays `human`. Save screenshots of the
+   behaviour from a UI test (`vscode.screenshot(name)`), and say in your
+   report where they are: under `packages/foam-vscode/out/ui-test-results/`
+   locally, and in the run's `ui-test-results` artifact in CI.
 
 3. **Implement** until they pass, and keep the diff to what the criteria need.
 
 4. **Run everything from the repo root**: `yarn test` and `yarn lint`, which
    Lerna runs across every package — a change to `@foam/core` breaks
    `foam-vscode` and `@foam/cli` without touching a file in either. Fix what
-   you broke. While iterating, `yarn workspace <name> test:unit` is the fast
-   loop, but it is not what you report.
+   you broke. `yarn test` runs no UI test, and a PR's checks run only the
+   ones it adds (all of them if it changes the UI test harness), so also run
+   every `*.ui.ts` you added or changed. While iterating,
+   `yarn workspace <name> test:unit` is the fast loop, but it is not what you
+   report.
 
 5. **Consolidate before anyone else reads it.** Re-read the whole diff
    (`git diff origin/main...HEAD`) as one change rather than as the sequence

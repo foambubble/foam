@@ -4,7 +4,7 @@ This document explains the testing strategy and conventions used in the Foam VS 
 
 ## Test File Types
 
-We use two distinct types of test files, each serving different purposes:
+We use two distinct types of test files, each serving different purposes, plus [UI tests](#ui-tests) for what only a real VS Code window shows:
 
 ### `.test.ts` Files - Pure Unit Tests
 
@@ -53,6 +53,7 @@ This dual-environment capability allows us to:
 - **`yarn test:unit-without-specs`**: Runs only `.test.ts` files
 - **`yarn test:e2e`**: Runs all `.spec.ts` files in full VS Code extension host
 - **`yarn test`**: Runs both unit and e2e test suites sequentially
+- **`yarn workspace foam-vscode test:ui [files]`**: Runs `.ui.ts` files in a real VS Code window — see [UI tests](#ui-tests)
 
 ## Mock Environment Migration
 
@@ -128,6 +129,41 @@ When adding new tests:
    - Reserve real VS Code specs for complex integration scenarios (comprehensive)
 
 This testing strategy gives us the best of both worlds: fast feedback during development and comprehensive integration verification when needed.
+
+## UI tests
+
+A `.spec.ts` calls the VS Code API but can't see the window. A `.ui.ts` drives a real VS Code window and reads what is drawn: a webview such as the graph, editor widgets such as completion and hover, theme colours, what survives a window reload. Write one for an acceptance criterion declared `_verify: ui_`, which is a criterion about the window that the VS Code API can't check. If the API can check it, write a `.spec.ts`.
+
+Each test opens its own window, with this checkout's extension, a fresh profile, and a workspace of files the test defines. It runs on the same pinned VS Code build as e2e (`src/test/support/vscode-version.ts`), driven by Vitest and `playwright-core`:
+
+```typescript
+import { expect, test } from 'vitest';
+import { openVSCode } from '../../../test/ui/vscode-window';
+
+test('hovering a wikilink shows the note it links to', async () => {
+  const vscode = await openVSCode({
+    files: { 'a.md': 'See [[b]].\n', 'b.md': '# B\n\nThe b note.\n' },
+  });
+  await vscode.openFile('a.md');
+  await vscode.hoverText('[[b]]');
+  await expect
+    .poll(() => vscode.page.getByRole('tooltip').innerText())
+    .toContain('The b note.');
+});
+```
+
+- **Find things by role and accessible name**, as Playwright's `getByRole` does. VS Code's CSS classes change between versions. The harness in `src/test/ui/vscode-window.ts` is the one place allowed to read VS Code internals, and only where nothing accessible exists.
+- **Assert the behaviour, not the element.** Check what is drawn after the action the criterion describes, not only that a button exists.
+- **Screenshots**: a failing test saves `failure.png` and prints its path. `await vscode.screenshot('name')` saves named ones, which is how a test leaves evidence for a criterion a person judges. They go under `packages/foam-vscode/out/ui-test-results/<file>/<test>/`. A test empties its own folder when it runs, so screenshots from tests you didn't run stay.
+
+Run them from a built checkout (`yarn build`), on a machine with a display. On Linux without one, prefix the command with `xvfb-run`:
+
+```bash
+yarn workspace foam-vscode test:ui                                   # all of them
+yarn workspace foam-vscode test:ui src/vscode/features/notes/connections.ui.ts
+```
+
+UI tests stay out of CI, which is slow enough already. There are two exceptions. A pull request that adds a `.ui.ts` runs the UI tests it adds, and only those. A pull request that changes the harness they share (`src/test/ui/` or `vitest.ui.config.mts`) runs them all. A pull request that changes an existing UI test doesn't run it, so its author does. The [UI tests workflow](../../.github/workflows/ui-tests.yml) runs the whole set weekly against `main`, and by hand before a release.
 
 ## Graph Webview (`@foam/graph-view`)
 

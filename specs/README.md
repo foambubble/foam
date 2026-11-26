@@ -52,8 +52,8 @@ a spec would. A change to user-visible behaviour usually does.
 
 ## Writing acceptance criteria
 
-Use Given-When-Then, and say how each criterion is verified — `unit`, `e2e` or
-`human`:
+Use Given-When-Then, and say how each criterion is verified — `unit`, `e2e`,
+`ui` or `human`:
 
 ```markdown
 - **AC-1**: Given a daily note for Monday and no note for Sunday, when the
@@ -66,6 +66,16 @@ A declared verification is a promise, not an aspiration. CI runs the whole
 `foam-vscode` suite, unit and e2e, on every pull request, so `e2e` is fair to
 declare. `human` means somebody looks at it before merge, and is a promise to
 the same standard.
+
+`ui` is a `*.ui.ts` test that drives a real VS Code window
+([testing conventions](../docs/dev/testing-conventions.md#ui-tests)).
+Choose it only for a criterion about the window that the VS Code API can't
+check: a webview's content, what completion or hover draws, a theme, what
+survives a reload. UI tests run outside CI: a pull request runs the ones it
+adds, or all of them if it changes their harness, and the whole set runs
+weekly, and by hand before a release. A
+criterion that asks for judgment, such as "findable" or "legible", stays
+`human`.
 
 Keep solution approaches out of `spec.md`. They belong in `plan.md`, which the
 code reviewer deliberately does not read — a reviewer who knows the intended

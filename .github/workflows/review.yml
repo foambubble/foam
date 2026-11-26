@@ -81,6 +81,13 @@ jobs:
             no test that proves it is a finding, and so is a test that asserts
             something weaker than its criterion.
 
+            A `*.ui.ts` file is a UI test: it drives a real VS Code window,
+            and you cannot run it here. Read each one the diff adds or
+            changes against the wording of the criterion it stands for. It
+            must perform what the criterion describes and assert the outcome
+            as drawn, not only that an element exists. List under "Review by
+            hand" each UI test you could not confirm by reading, and why.
+
             Read the diff with:
 
               git diff origin/main...HEAD -- . ':!specs/**/plan.md'

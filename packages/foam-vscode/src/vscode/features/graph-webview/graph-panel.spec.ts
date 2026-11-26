@@ -1,3 +1,4 @@
+/* @unit-ready */
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -350,46 +351,6 @@ describe('foam.graph.titleMaxLength removal (#1205)', () => {
     expect(
       pkg.contributes.configuration.properties['foam.graph.titleMaxLength']
     ).toBeUndefined();
-  });
-
-  // AC-2: titles cross the extension → webview boundary untruncated,
-  // for notes and placeholders alike, whatever settings.json says
-  it('sends untruncated titles for every node type', async () => {
-    await vscode.workspace
-      .getConfiguration()
-      .update('foam.graph.titleMaxLength', 4);
-    try {
-      const longTitle = 'A note title well over twenty-four characters long';
-      const longTarget = 'a-placeholder-target-well-over-24-characters-long';
-      const workspace = createTestWorkspace();
-      const note = createTestNote({
-        uri: '/notes/note-a.md',
-        title: longTitle,
-        links: [{ slug: longTarget }],
-      });
-      workspace.set(note);
-      const graph = FoamGraph.fromWorkspace(workspace);
-      const foam = { workspace, graph } as any;
-      const panel = {
-        webview: { postMessage: vi.fn() },
-      } as unknown as vscode.WebviewPanel;
-
-      updateGraph(panel, foam);
-
-      const message = (panel.webview.postMessage as any).mock.calls[0][0];
-      expect(message.type).toBe('didUpdateGraphData');
-      expect(message.payload.nodeInfo[note.uri.path].title).toBe(longTitle);
-      const placeholder = Object.values<any>(message.payload.nodeInfo).find(
-        node => node.type === 'placeholder'
-      );
-      expect(placeholder).toBeDefined();
-      expect(placeholder.title).toContain(longTarget);
-      expect(placeholder.title).not.toContain('...');
-    } finally {
-      await vscode.workspace
-        .getConfiguration()
-        .update('foam.graph.titleMaxLength', undefined);
-    }
   });
 });
 

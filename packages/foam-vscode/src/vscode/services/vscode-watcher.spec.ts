@@ -1,6 +1,10 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+/* @unit-ready */
 import { URI } from '@foam/core';
+import { wait } from '../../test/test-utils';
 import { VsCodeWatcher } from './watcher';
+
+// longer than the 100ms VsCodeWatcher waits before reporting a change
+const AFTER_DEBOUNCE_MS = 150;
 
 // Minimal stubs for VS Code types used by VsCodeWatcher
 
@@ -48,9 +52,6 @@ function makeSaveEvent() {
 }
 
 describe('VsCodeWatcher', () => {
-  beforeEach(() => { vi.useFakeTimers(); });
-  afterEach(() => { vi.useRealTimers(); });
-
   it('forwards create and delete events immediately', () => {
     const fsWatcher = makeFsWatcher();
     const watcher = new VsCodeWatcher(fsWatcher as any);
@@ -67,7 +68,7 @@ describe('VsCodeWatcher', () => {
     expect(deleted).toHaveLength(1);
   });
 
-  it('debounces rapid change events for the same URI', () => {
+  it('debounces rapid change events for the same URI', async () => {
     const fsWatcher = makeFsWatcher();
     const watcher = new VsCodeWatcher(fsWatcher as any);
 
@@ -80,11 +81,11 @@ describe('VsCodeWatcher', () => {
     fsWatcher.fire.change(uri);
 
     expect(changed).toHaveLength(0);
-    vi.advanceTimersByTime(100);
+    await wait(AFTER_DEBOUNCE_MS);
     expect(changed).toHaveLength(1);
   });
 
-  it('emits separate change events for different URIs', () => {
+  it('emits separate change events for different URIs', async () => {
     const fsWatcher = makeFsWatcher();
     const watcher = new VsCodeWatcher(fsWatcher as any);
 
@@ -94,11 +95,11 @@ describe('VsCodeWatcher', () => {
     fsWatcher.fire.change(makeUri('/notes/a.md'));
     fsWatcher.fire.change(makeUri('/notes/b.md'));
 
-    vi.advanceTimersByTime(100);
+    await wait(AFTER_DEBOUNCE_MS);
     expect(changed).toHaveLength(2);
   });
 
-  it('fires a change event when a document is saved (symlink augmentation)', () => {
+  it('fires a change event when a document is saved (symlink augmentation)', async () => {
     const fsWatcher = makeFsWatcher();
     const saveEvent = makeSaveEvent();
     const watcher = new VsCodeWatcher(fsWatcher as any, saveEvent as any);
@@ -109,11 +110,11 @@ describe('VsCodeWatcher', () => {
     saveEvent.fire({ uri: makeUri('/symlinked/note.md') });
 
     expect(changed).toHaveLength(0);
-    vi.advanceTimersByTime(100);
+    await wait(AFTER_DEBOUNCE_MS);
     expect(changed).toHaveLength(1);
   });
 
-  it('deduplicates a save event and a file system change for the same URI within 100ms', () => {
+  it('deduplicates a save event and a file system change for the same URI within 100ms', async () => {
     const fsWatcher = makeFsWatcher();
     const saveEvent = makeSaveEvent();
     const watcher = new VsCodeWatcher(fsWatcher as any, saveEvent as any);
@@ -125,11 +126,11 @@ describe('VsCodeWatcher', () => {
     fsWatcher.fire.change(uri);
     saveEvent.fire({ uri });
 
-    vi.advanceTimersByTime(100);
+    await wait(AFTER_DEBOUNCE_MS);
     expect(changed).toHaveLength(1);
   });
 
-  it('disposes cleanly without firing pending timers', () => {
+  it('disposes cleanly without firing pending timers', async () => {
     const fsWatcher = makeFsWatcher();
     const watcher = new VsCodeWatcher(fsWatcher as any);
 
@@ -139,7 +140,7 @@ describe('VsCodeWatcher', () => {
     fsWatcher.fire.change(makeUri('/notes/a.md'));
     watcher.dispose();
 
-    vi.advanceTimersByTime(100);
+    await wait(AFTER_DEBOUNCE_MS);
     expect(changed).toHaveLength(0);
     expect(fsWatcher.dispose).toHaveBeenCalled();
   });
@@ -162,7 +163,7 @@ describe('VsCodeWatcher', () => {
       ]);
     });
 
-    it('forwards change events from every watcher', () => {
+    it('forwards change events from every watcher', async () => {
       const w1 = makeFsWatcher();
       const w2 = makeFsWatcher();
       const watcher = new VsCodeWatcher([w1, w2] as any);
@@ -173,7 +174,7 @@ describe('VsCodeWatcher', () => {
       w1.fire.change(makeUri('/root1/a.md'));
       w2.fire.change(makeUri('/root2/b.md'));
 
-      vi.advanceTimersByTime(100);
+      await wait(AFTER_DEBOUNCE_MS);
       expect(changed).toHaveLength(2);
     });
 

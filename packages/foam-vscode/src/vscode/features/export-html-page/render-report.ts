@@ -12,7 +12,7 @@ import {
   toSlug,
 } from '@foam/core';
 import { createFoamMarkdownIt } from '../preview/foam-markdown-it';
-import { createHtmlPageLinkResolver } from '../preview/link-resolvers';
+import { createHtmlPageLinkResolver } from './link-resolver';
 import { collectInReportBacklinks } from './backlinks';
 import { commonPathBase, slugForUri } from './slug';
 import { installIdScoping } from './id-scoping';

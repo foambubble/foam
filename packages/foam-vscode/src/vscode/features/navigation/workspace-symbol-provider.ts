@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { Foam } from '@foam/core';
-import { FoamWorkspace } from '@foam/core';
+import { FoamWorkspace, isSubsequence } from '@foam/core';
 import { toVsCodeRange, toVsCodeUri } from '../../utils/vsc-utils';
 
 export default async function activate(
@@ -36,8 +36,8 @@ export class FoamWorkspaceSymbolProvider
       .list()
       .flatMap(resource =>
         resource.aliases
-          .filter(
-            alias => query === '' || this.matchesQuery(query, alias.title)
+          .filter(alias =>
+            isSubsequence(query.toLowerCase(), alias.title.toLowerCase())
           )
           .map(
             alias =>
@@ -52,32 +52,5 @@ export class FoamWorkspaceSymbolProvider
               )
           )
       );
-  }
-
-  /**
-   * Check if a candidate string matches a query using subsequence matching.
-   * Characters of query must appear in their order in the candidate (case-insensitive).
-   * This follows VS Code's recommended approach for symbol providers.
-   *
-   * Examples:
-   * - "alt" matches "alternative title"
-   * - "altit" matches "alternative title"
-   * - "title alt" does not match "alternative title" (wrong order)
-   */
-  matchesQuery(query: string, candidate: string): boolean {
-    const queryLower = query.toLowerCase();
-    const candidateLower = candidate.toLowerCase();
-
-    let queryIndex = 0;
-    for (
-      let i = 0;
-      i < candidateLower.length && queryIndex < queryLower.length;
-      i++
-    ) {
-      if (candidateLower[i] === queryLower[queryIndex]) {
-        queryIndex++;
-      }
-    }
-    return queryIndex === queryLower.length;
   }
 }

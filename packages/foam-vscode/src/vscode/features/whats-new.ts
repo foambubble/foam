@@ -13,14 +13,6 @@ export function parseWhatsNewTitle(content: string): string | undefined {
 }
 
 /**
- * Computes a hash of the file content.
- * Any change to the file produces a different hash, triggering a new notification.
- */
-export function computeContentHash(content: string): string {
-  return hash(content);
-}
-
-/**
  * Reads WHATS_NEW.md from the extension directory.
  * Returns undefined if the file does not exist.
  */
@@ -53,7 +45,7 @@ export default async function activate(context: ExtensionContext) {
     return;
   }
 
-  const contentHash = computeContentHash(content);
+  const contentHash = hash(content);
   const lastSeen = context.globalState.get<string>(WHATS_NEW_LAST_SEEN_KEY);
   if (lastSeen === contentHash) {
     return;

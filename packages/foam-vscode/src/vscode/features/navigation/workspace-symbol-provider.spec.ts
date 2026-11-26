@@ -3,6 +3,7 @@
 import * as vscode from 'vscode';
 import { FoamWorkspaceSymbolProvider } from './workspace-symbol-provider';
 import { createTestNote, createTestWorkspace } from '../../../test/test-utils';
+import { FoamWorkspace, Range, Resource, URI } from '@foam/core';
 
 describe('FoamWorkspaceSymbolProvider Integration', () => {
   let provider: FoamWorkspaceSymbolProvider;
@@ -132,5 +133,257 @@ describe('FoamWorkspaceSymbolProvider Integration', () => {
     // Should not return sections (those are handled by VS Code's markdown provider)
     expect(symbols.find(s => s.name === 'Section Heading')).toBeUndefined();
     expect(symbols.find(s => s.name === 'Main Title')).toBeUndefined();
+  });
+
+  describe('matching aliases against the query', () => {
+    const matchingAliases = (alias: string, query: string) => {
+      const workspace = createTestWorkspace();
+      workspace.set(createTestNote({ uri: '/note.md', aliases: [alias] }));
+      return new FoamWorkspaceSymbolProvider(workspace)
+        .provideWorkspaceSymbols(query)
+        .map(symbol => symbol.name);
+    };
+
+    it('should match empty query', () => {
+      const provider = new FoamWorkspaceSymbolProvider(new FoamWorkspace());
+      const result = provider.provideWorkspaceSymbols('');
+      expect(result).toEqual([]);
+    });
+
+    it('should match subsequence in alias title', () => {
+      for (const query of ['alt', 'altit', 'title', 'tit']) {
+        expect(matchingAliases('alternative title', query)).toEqual([
+          'alternative title',
+        ]);
+      }
+    });
+
+    it('should not match wrong order', () => {
+      expect(matchingAliases('alternative title', 'title alt')).toEqual([]);
+      expect(matchingAliases('alternative title', 'zyx')).toEqual([]);
+    });
+
+    it('should be case insensitive', () => {
+      expect(matchingAliases('alternative title', 'ALT')).toEqual([
+        'alternative title',
+      ]);
+      expect(matchingAliases('ALTERNATIVE TITLE', 'alt')).toEqual([
+        'ALTERNATIVE TITLE',
+      ]);
+      expect(matchingAliases('Alternative Title', 'AlT')).toEqual([
+        'Alternative Title',
+      ]);
+    });
+
+    it('should match exact strings', () => {
+      expect(matchingAliases('alternative title', 'alternative title')).toEqual(
+        ['alternative title']
+      );
+      expect(matchingAliases('alternative title', '')).toEqual([
+        'alternative title',
+      ]);
+    });
+  });
+
+  describe('provideWorkspaceSymbols', () => {
+    it('should return empty array when workspace is empty', () => {
+      const provider = new FoamWorkspaceSymbolProvider(new FoamWorkspace());
+
+      const result = provider.provideWorkspaceSymbols('test');
+      expect(result).toEqual([]);
+    });
+
+    it('should return empty array when no aliases match', () => {
+      const workspace = new FoamWorkspace();
+      const provider = new FoamWorkspaceSymbolProvider(workspace);
+
+      const resource: Resource = {
+        uri: URI.file('/test.md'),
+        type: 'note',
+        title: 'Test Note',
+        properties: {},
+        sections: [],
+        blocks: [],
+        tags: [],
+        aliases: [
+          {
+            title: 'different alias',
+            range: Range.create(0, 0, 0, 10),
+          },
+        ],
+        links: [],
+        footnotes: [],
+        tasks: [],
+      };
+      workspace.set(resource);
+
+      const result = provider.provideWorkspaceSymbols('notfound');
+      expect(result).toEqual([]);
+    });
+
+    it('should return matching aliases from single resource', () => {
+      const workspace = new FoamWorkspace();
+      const provider = new FoamWorkspaceSymbolProvider(workspace);
+
+      const aliasRange = Range.create(2, 0, 2, 20);
+      const resource: Resource = {
+        uri: URI.file('/test.md'),
+        type: 'note',
+        title: 'Test Note',
+        properties: {},
+        sections: [],
+        blocks: [],
+        tags: [],
+        aliases: [
+          {
+            title: 'alternative title',
+            range: aliasRange,
+          },
+          {
+            title: 'another name',
+            range: aliasRange,
+          },
+        ],
+        links: [],
+        footnotes: [],
+        tasks: [],
+      };
+      workspace.set(resource);
+
+      const result = provider.provideWorkspaceSymbols('alt');
+      expect(result).toHaveLength(1);
+      expect(result[0].name).toBe('alternative title');
+      expect(result[0].kind).toBe(vscode.SymbolKind.String);
+      expect(result[0].containerName).toBe('test.md');
+    });
+
+    it('should return matching aliases from multiple resources', () => {
+      const workspace = new FoamWorkspace();
+      const provider = new FoamWorkspaceSymbolProvider(workspace);
+
+      const aliasRange = Range.create(2, 0, 2, 20);
+
+      const resource1: Resource = {
+        uri: URI.file('/note1.md'),
+        type: 'note',
+        title: 'Note 1',
+        properties: {},
+        sections: [],
+        blocks: [],
+        tags: [],
+        aliases: [
+          {
+            title: 'alternative one',
+            range: aliasRange,
+          },
+        ],
+        links: [],
+        footnotes: [],
+        tasks: [],
+      };
+
+      const resource2: Resource = {
+        uri: URI.file('/note2.md'),
+        type: 'note',
+        title: 'Note 2',
+        properties: {},
+        sections: [],
+        blocks: [],
+        tags: [],
+        aliases: [
+          {
+            title: 'alternative two',
+            range: aliasRange,
+          },
+        ],
+        links: [],
+        footnotes: [],
+        tasks: [],
+      };
+
+      workspace.set(resource1);
+      workspace.set(resource2);
+
+      const result = provider.provideWorkspaceSymbols('alt');
+      expect(result).toHaveLength(2);
+      expect(result.map(s => s.name)).toContain('alternative one');
+      expect(result.map(s => s.name)).toContain('alternative two');
+      expect(result.map(s => s.containerName)).toContain('note1.md');
+      expect(result.map(s => s.containerName)).toContain('note2.md');
+    });
+
+    it('should return all aliases when query is empty', () => {
+      const workspace = new FoamWorkspace();
+      const provider = new FoamWorkspaceSymbolProvider(workspace);
+
+      const aliasRange = Range.create(2, 0, 2, 20);
+      const resource: Resource = {
+        uri: URI.file('/test.md'),
+        type: 'note',
+        title: 'Test Note',
+        properties: {},
+        sections: [],
+        blocks: [],
+        tags: [],
+        aliases: [
+          {
+            title: 'first alias',
+            range: aliasRange,
+          },
+          {
+            title: 'second alias',
+            range: aliasRange,
+          },
+        ],
+        links: [],
+        footnotes: [],
+        tasks: [],
+      };
+      workspace.set(resource);
+
+      const result = provider.provideWorkspaceSymbols('');
+      expect(result).toHaveLength(2);
+      expect(result.map(s => s.name)).toContain('first alias');
+      expect(result.map(s => s.name)).toContain('second alias');
+    });
+
+    it('should create SymbolInformation with correct properties', () => {
+      const workspace = new FoamWorkspace();
+      const provider = new FoamWorkspaceSymbolProvider(workspace);
+
+      const aliasRange = Range.create(2, 5, 2, 25);
+      const resource: Resource = {
+        uri: URI.file('/path/to/note.md'),
+        type: 'note',
+        title: 'Test Note',
+        properties: {},
+        sections: [],
+        blocks: [],
+        tags: [],
+        aliases: [
+          {
+            title: 'test alias',
+            range: aliasRange,
+          },
+        ],
+        links: [],
+        footnotes: [],
+        tasks: [],
+      };
+      workspace.set(resource);
+
+      const result = provider.provideWorkspaceSymbols('test');
+      expect(result).toHaveLength(1);
+
+      const symbol = result[0];
+      expect(symbol.name).toBe('test alias');
+      expect(symbol.kind).toBe(vscode.SymbolKind.String);
+      expect(symbol.containerName).toBe('note.md');
+      expect(symbol.location.uri.toString()).toContain('/path/to/note.md');
+      expect(symbol.location.range.start.line).toBe(2);
+      expect(symbol.location.range.start.character).toBe(5);
+      expect(symbol.location.range.end.line).toBe(2);
+      expect(symbol.location.range.end.character).toBe(25);
+    });
   });
 });

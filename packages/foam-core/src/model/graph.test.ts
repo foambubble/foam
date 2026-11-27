@@ -1,4 +1,8 @@
-import { createTestNote, createTestWorkspace } from '../../test/test-utils';
+import {
+  createNoteFromMarkdown,
+  createTestNote,
+  createTestWorkspace,
+} from '../../test/test-utils';
 import { FoamGraph } from './graph';
 import { URI } from './uri';
 
@@ -218,6 +222,28 @@ describe('Graph', () => {
     expect(graph.getLinks(noteA.uri).map(l => l.target)).toEqual([
       attachmentABis.uri,
     ]);
+  });
+
+  it('should return a link to a section of the same note once among its connections (#1801)', () => {
+    const note = createNoteFromMarkdown(
+      '/double-backlinks.md',
+      `# Double Backlinks Bug
+
+## topic-100
+
+- link to [[#topic-200]]
+
+## topic-200
+`
+    );
+    const ws = createTestWorkspace().set(note);
+    const graph = FoamGraph.fromWorkspace(ws);
+
+    const connections = graph.getConnections(note.uri);
+
+    expect(connections).toHaveLength(1);
+    expect(connections[0].source.path).toEqual(note.uri.path);
+    expect(connections[0].target.path).toEqual(note.uri.path);
   });
 });
 

@@ -54,9 +54,12 @@ export class FoamGraph implements IDisposable {
   }
 
   public getConnections(uri: URI): Connection[] {
+    // A link from a note to itself is in both its links and its backlinks
     return [
       ...(this.links.get(uri.path) || []),
-      ...(this.backlinks.get(uri.path) || []),
+      ...(this.backlinks.get(uri.path) || []).filter(
+        c => c.source.path !== uri.path
+      ),
     ];
   }
 
